@@ -1,6 +1,7 @@
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import SignalSection from './components/SignalSection';
+import MarqueeSection from './components/MarqueeSection';
 import WorkflowSection from './components/WorkflowSection';
 import CommandCenter from './components/CommandCenter';
 import PlatformRoles from './components/PlatformRoles';
@@ -13,8 +14,9 @@ export default function App() {
       <Navbar />
       <Hero />
       <SignalSection />
-      <WorkflowSection />
-      <CommandCenter />
+      <MarqueeSection />
+      {/* <WorkflowSection /> */}
+      {/* <CommandCenter /> */}
       <PlatformRoles />
       <Newsletter />
       <Footer />

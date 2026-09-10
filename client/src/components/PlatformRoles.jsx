@@ -20,16 +20,33 @@ export default function PlatformRoles() {
 
           <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
             {[
-              { i: <Smartphone className="w-6 h-6 text-brand-600" />, r: "Citizen App", d: "Report issues in 3 clicks. Track progress transparently with real-time updates." },
-              { i: <MonitorDot className="w-6 h-6 text-teal-600" />, r: "Admin Portal", d: "Oversee the entire city. Make data-driven operational decisions from a powerful command center." },
-              { i: <HardHat className="w-6 h-6 text-amber-600" />, r: "Field Worker App", d: "Receive optimized routes, clear task instructions, and simple one-tap completion logs on the go." }
+              { 
+                img: "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80",
+                r: "Citizen App", 
+                d: "Report issues in 3 clicks. Track progress transparently with real-time updates." 
+              },
+              { 
+                img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+                r: "Admin Portal", 
+                d: "Oversee the entire city. Make data-driven operational decisions from a powerful command center." 
+              },
+              { 
+                img: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=800&q=80",
+                r: "Field Worker App", 
+                d: "Receive optimized routes, clear task instructions, and simple one-tap completion logs on the go." 
+              }
             ].map((role, i) => (
-              <div key={i} className="bg-white rounded-2xl p-8 border border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-brand-200 transition-all duration-300 text-center flex flex-col items-center shadow-sm">
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100 mb-6 transform -rotate-3">
-                  {role.i}
-                </div>
-                <h3 className="text-sm font-extrabold text-slate-900 mb-2 uppercase tracking-wide">{role.r}</h3>
-                <p className="text-[13px] text-slate-500 leading-relaxed font-medium">{role.d}</p>
+              <div key={i} className="p-4 bg-white border border-gray-200 hover:-translate-y-1 transition duration-300 rounded-2xl shadow-sm hover:shadow-lg shadow-black/5 w-full flex flex-col h-full">
+                  <img className="rounded-xl h-48 w-full object-cover" src={role.img} alt={role.r} />
+                  <p className="text-gray-900 text-xl font-semibold ml-2 mt-5">
+                      {role.r}
+                  </p>
+                  <p className="text-slate-500 text-sm/6 mt-2 ml-2 mb-4 flex-grow">
+                      {role.d}
+                  </p>
+                  <button type="button" className="bg-brand-600 hover:bg-brand-700 transition cursor-pointer mt-auto mb-2 ml-2 mr-2 px-6 py-2.5 font-semibold rounded-xl text-white text-sm w-fit self-start">
+                      Learn More
+                  </button>
               </div>
             ))}
           </div>
