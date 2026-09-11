@@ -1,15 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, AlertTriangle, Activity, BarChart3, Layers, Map, ArrowRight } from 'lucide-react';
 
 export default function SignalSection() {
   const [activeMarker, setActiveMarker] = useState(0);
+  const sectionRef = useRef(null);
+  const bgRef = useRef(null);
+  const leftRef = useRef(null);
+  const rightRef = useRef(null);
 
-  // Rotate through markers to simulate live map activity
   useEffect(() => {
+    let animationFrameId;
+
+    const handleScroll = () => {
+      if (!sectionRef.current) return;
+
+      const rect = sectionRef.current.getBoundingClientRect();
+      const elementCenter = rect.top + rect.height / 2;
+      const viewportCenter = window.innerHeight / 2;
+      
+      // If the section is in the viewport
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        const offset = elementCenter - viewportCenter;
+        
+        animationFrameId = requestAnimationFrame(() => {
+          if (bgRef.current) bgRef.current.style.transform = `translateY(${offset * 0.25}px)`;
+          if (leftRef.current) leftRef.current.style.transform = `translateY(${offset * 0.1}px)`;
+          if (rightRef.current) rightRef.current.style.transform = `translateY(${offset * -0.15}px)`;
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Init
+    
     const interval = setInterval(() => {
       setActiveMarker((prev) => (prev + 1) % 3);
     }, 4000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(animationFrameId);
+    };
   }, []);
 
   const stats = [
@@ -48,9 +80,12 @@ export default function SignalSection() {
   const currentMarker = markerData[activeMarker];
 
   return (
-    <section className="relative w-full py-20 lg:py-28 overflow-hidden bg-[#080B12] border-t border-white/[0.02]">
+    <section ref={sectionRef} className="sticky top-0 min-h-screen flex items-center justify-center w-full py-20 lg:py-28 overflow-hidden bg-[#080B12] border-t border-white/[0.02] z-0">
       {/* Background glowing effects */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div 
+        ref={bgRef}
+        className="absolute inset-0 pointer-events-none will-change-transform"
+      >
         <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#4F8CFF]/10 blur-[120px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#7C5CFC]/10 blur-[150px]"></div>
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
@@ -60,7 +95,10 @@ export default function SignalSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           
           {/* Left Content */}
-          <div className="flex flex-col max-w-xl animate-fade-in">
+          <div 
+            ref={leftRef}
+            className="flex flex-col max-w-xl animate-fade-in will-change-transform"
+          >
             <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-[#4F8CFF]/20 bg-[#4F8CFF]/[0.08] px-3.5 py-1.5 backdrop-blur-sm w-fit">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4F8CFF] opacity-75"></span>
@@ -102,9 +140,13 @@ export default function SignalSection() {
           </div>
 
           {/* Right Map/Visual */}
-          <div className="relative w-full aspect-square md:aspect-[4/3] rounded-2xl border border-white/[0.08] bg-[#0F141D] shadow-2xl shadow-black/60 overflow-hidden flex items-center justify-center origin-center transform scale-[0.98] lg:scale-100">
-            
-            {/* Map Window Chrome */}
+          <div 
+            ref={rightRef}
+            className="w-full flex items-center justify-center will-change-transform"
+          >
+            <div className="relative w-full aspect-square md:aspect-[4/3] rounded-2xl border border-white/[0.08] bg-[#0F141D] shadow-2xl shadow-black/60 overflow-hidden flex items-center justify-center origin-center transform scale-[0.98] lg:scale-100">
+              
+              {/* Map Window Chrome */}
             <div className="absolute top-0 inset-x-0 h-10 border-b border-white/[0.06] bg-[#141A24]/80 backdrop-blur-md flex items-center px-4 z-20">
               <div className="flex gap-1.5">
                 <div className="h-2 w-2 rounded-full bg-[#FF5F57]/80" />
@@ -203,6 +245,7 @@ export default function SignalSection() {
               </div>
 
             </div>
+          </div>
           </div>
           
         </div>

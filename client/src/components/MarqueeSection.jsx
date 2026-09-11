@@ -26,7 +26,7 @@ export default function MarqueeSection() {
     ];
 
     return (
-        <section className="py-16 bg-white border-t border-slate-100 overflow-hidden">
+        <section className="relative z-10 py-16 bg-white border-t border-slate-100 overflow-hidden shadow-2xl">
             <style>{`
                 .marquee-inner {
                     animation: marqueeScroll linear infinite;
