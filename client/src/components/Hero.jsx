@@ -2,7 +2,7 @@ import { ArrowRight, Play, Shield, Zap, TrendingUp } from 'lucide-react';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-50/80 via-white to-white pt-28 pb-16 lg:pt-36 lg:pb-24">
+    <section className="relative min-h-screen flex flex-col overflow-hidden bg-gradient-to-b from-slate-50/80 via-white to-white pt-28 pb-16 lg:pt-36 lg:pb-24">
       {/* Background decorations */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.04)_1px,transparent_1px)] bg-[size:72px_72px]" />
@@ -148,6 +148,31 @@ export default function Hero() {
              </div>
           </div>
         </div>
+      </div>
+
+      {/* Footer Marquee Banner */}
+      <div className="relative w-full h-24 sm:h-32 z-30 flex items-center justify-center mt-auto border-t border-slate-100">
+         {/* Slanted Accent Background (Electric Blue) */}
+         <div className="absolute w-[110%] h-14 sm:h-16 bg-[#4F8CFF] rotate-[-2.5deg] z-0 shadow-lg origin-center"></div>
+         
+         {/* Horizontal Primary Marquee (Space Black, matching the next section) */}
+         <div className="absolute w-full h-14 sm:h-16 bg-brand-600 z-10 flex flex-col justify-center shadow-2xl border-y border-white/10">
+            <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
+               {/* Repeat array for seamless continuous loop */}
+               {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center whitespace-nowrap">
+                    {['Civic Intelligence', 'Real-time Alerts', 'Incident Reporting', 'City Dashboard', 'Smart Dispatch', 'AI Analytics'].map((text, idx) => (
+                      <div key={idx} className="flex items-center text-white font-extrabold text-sm sm:text-lg tracking-widest uppercase px-6 sm:px-10">
+                        {text}
+                        <svg className="w-5 h-5 sm:w-7 sm:h-7 mx-6 sm:mx-10 text-[#4F8CFF]" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    ))}
+                  </div>
+               ))}
+            </div>
+         </div>
       </div>
     </section>
   );
