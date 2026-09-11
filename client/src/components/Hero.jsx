@@ -83,164 +83,66 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Right — Dashboard Visual */}
-          <div className="relative animate-fade-in lg:ml-auto max-w-lg mx-auto origin-center lg:origin-right transform scale-90 sm:scale-95 lg:scale-90 xl:scale-95" style={{ animationDelay: '0.3s' }}>
-            {/* Main dashboard card */}
-            <div className="relative rounded-2xl border border-slate-200/70 bg-white p-1.5 shadow-2xl shadow-slate-900/[0.08]">
-              {/* Window chrome */}
-              <div className="flex items-center gap-2 rounded-t-xl bg-slate-50/80 px-4 py-3 border-b border-slate-100">
-                <div className="flex gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
-                </div>
-                <div className="ml-3 flex items-center gap-2 rounded-md bg-white/80 border border-slate-100 px-3 py-1 flex-1 max-w-xs">
-                  <div className="h-3 w-3 rounded-full bg-slate-200" />
-                  <span className="text-[10px] text-slate-400 font-medium">smartcity.dashboard/analytics</span>
-                </div>
-              </div>
+          {/* Right — Image Visual */}
+          <div className="relative animate-fade-in lg:ml-auto max-w-lg mx-auto transform flex justify-center items-center mt-16 lg:mt-4 pb-12">
+             {/* Brand Theme blob background */}
+             <div 
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] w-[320px] h-[300px] sm:w-[420px] sm:h-[400px] bg-gradient-to-tr from-brand-300 to-sky-200 -z-10" 
+                style={{ borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%' }}
+             />
 
-              {/* Dashboard content */}
-              <div className="rounded-b-xl bg-gradient-to-br from-slate-50/50 to-brand-50/20 p-4 sm:p-5">
-                {/* Top stats row */}
-                <div className="grid grid-cols-4 gap-2.5 mb-4">
-                  {[
-                    { label: 'Active Issues', value: '247', dot: 'bg-brand-500', trend: '↑ 12%', trendColor: 'text-brand-600' },
-                    { label: 'Resolved Today', value: '38', dot: 'bg-teal-500', trend: '↑ 8%', trendColor: 'text-teal-600' },
-                    { label: 'Avg Response', value: '2.4h', dot: 'bg-amber-500', trend: '↓ 15%', trendColor: 'text-emerald-600' },
-                    { label: 'Satisfaction', value: '94%', dot: 'bg-emerald-500', trend: '↑ 3%', trendColor: 'text-emerald-600' },
-                  ].map((stat) => (
-                    <div key={stat.label} className="rounded-xl bg-white p-3 shadow-sm border border-slate-100/80 hover:shadow-md transition-shadow duration-200">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <div className={`h-1.5 w-1.5 rounded-full ${stat.dot}`} />
-                        <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium truncate">{stat.label}</span>
-                      </div>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-base sm:text-lg font-bold text-slate-800">{stat.value}</span>
-                        <span className={`text-[9px] font-semibold ${stat.trendColor}`}>{stat.trend}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+             {/* Left curved line decoration */}
+             <svg className="absolute -left-4 sm:-left-8 top-[30%] w-10 sm:w-12 h-24 sm:h-32 text-brand-200 -z-10" viewBox="0 0 50 150" fill="none">
+               <path d="M 45 5 Q 5 75 45 145" stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" />
+             </svg>
 
-                {/* Map area */}
-                <div className="relative mb-4 rounded-xl bg-gradient-to-br from-brand-50/80 to-sky-50/60 border border-brand-100/40 h-44 sm:h-48 overflow-hidden">
-                  {/* Grid lines */}
-                  <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.04)_1px,transparent_1px)] bg-[size:20px_20px]" />
-                  {/* Roads */}
-                  <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-                    <line x1="0" y1="50%" x2="100%" y2="50%" stroke="rgba(148,163,184,0.15)" strokeWidth="2" />
-                    <line x1="30%" y1="0" x2="30%" y2="100%" stroke="rgba(148,163,184,0.15)" strokeWidth="2" />
-                    <line x1="65%" y1="0" x2="65%" y2="100%" stroke="rgba(148,163,184,0.15)" strokeWidth="2" />
-                    <line x1="10%" y1="30%" x2="90%" y2="30%" stroke="rgba(148,163,184,0.1)" strokeWidth="1" />
-                    <line x1="10%" y1="75%" x2="90%" y2="75%" stroke="rgba(148,163,184,0.1)" strokeWidth="1" />
-                    <line x1="50%" y1="10%" x2="50%" y2="90%" stroke="rgba(148,163,184,0.1)" strokeWidth="1" />
-                  </svg>
-                  {/* Issue markers */}
-                  <div className="absolute top-7 left-[15%] h-3 w-3 rounded-full bg-red-400 ring-[3px] ring-red-400/20 animate-pulse" />
-                  <div className="absolute top-[35%] left-[38%] h-3 w-3 rounded-full bg-amber-400 ring-[3px] ring-amber-400/20" />
-                  <div className="absolute top-[45%] right-[28%] h-3 w-3 rounded-full bg-teal-400 ring-[3px] ring-teal-400/20" />
-                  <div className="absolute bottom-[30%] left-[22%] h-3 w-3 rounded-full bg-brand-400 ring-[3px] ring-brand-400/20 animate-pulse" />
-                  <div className="absolute top-[20%] right-[15%] h-3 w-3 rounded-full bg-emerald-400 ring-[3px] ring-emerald-400/20" />
-                  <div className="absolute bottom-[20%] right-[35%] h-2.5 w-2.5 rounded-full bg-red-400 ring-[3px] ring-red-400/20" />
-                  <div className="absolute top-[60%] left-[55%] h-2.5 w-2.5 rounded-full bg-orange-400 ring-[3px] ring-orange-400/20" />
-                  {/* Live indicator */}
-                  <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 rounded-lg bg-white/90 backdrop-blur-sm px-2.5 py-1.5 text-[10px] font-semibold text-slate-500 shadow-sm border border-slate-100/60">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    </span>
-                    Live City Map
-                  </div>
-                </div>
+             {/* Main Portrait Image (Reliable transparent business professional) */}
+             <img 
+               src="https://img.icons8.com/3d-fluency/500/businesswoman.png" 
+               alt="UI UX Designer" 
+               className="relative z-0 w-full max-w-[280px] sm:max-w-[380px] object-contain drop-shadow-2xl translate-y-2 scale-110"
+             />
 
-                {/* Bottom charts */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  {/* Bar chart */}
-                  <div className="rounded-xl bg-white p-3 shadow-sm border border-slate-100/80">
-                    <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-[10px] font-semibold text-slate-400">Issues by Category</span>
-                      <span className="text-[9px] font-medium text-brand-500">This Week</span>
-                    </div>
-                    <div className="flex items-end gap-[5px] h-14">
-                      {[55, 40, 75, 30, 65, 20, 50].map((h, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 rounded-sm bg-gradient-to-t from-brand-600 to-brand-400 opacity-90 hover:opacity-100 transition-opacity"
-                          style={{ height: `${h}%` }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  {/* Donut chart */}
-                  <div className="rounded-xl bg-white p-3 shadow-sm border border-slate-100/80">
-                    <div className="text-[10px] font-semibold text-slate-400 mb-2.5">Resolution Rate</div>
-                    <div className="flex items-center gap-3">
-                      <div className="relative h-14 w-14 shrink-0">
-                        <svg className="h-14 w-14 -rotate-90" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="13" fill="none" stroke="#f1f5f9" strokeWidth="3" />
-                          <circle
-                            cx="18" cy="18" r="13"
-                            fill="none"
-                            stroke="url(#heroGrad)"
-                            strokeWidth="3"
-                            strokeDasharray="76.8 81.7"
-                            strokeLinecap="round"
-                          />
-                          <defs>
-                            <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#2563eb" />
-                              <stop offset="100%" stopColor="#14b8a6" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-slate-700">94%</span>
-                      </div>
-                      <div className="space-y-1.5 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-2 w-2 rounded-full bg-brand-500 shrink-0" />
-                          <span className="text-[10px] text-slate-500 truncate">Resolved</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-2 w-2 rounded-full bg-teal-400 shrink-0" />
-                          <span className="text-[10px] text-slate-500 truncate">In Progress</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-2 w-2 rounded-full bg-slate-200 shrink-0" />
-                          <span className="text-[10px] text-slate-500 truncate">Pending</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+             {/* Circular Badge - Top Right */}
+             <div className="absolute top-[5%] right-[-5%] sm:right-[-8%] w-20 h-20 sm:w-28 sm:h-28 bg-brand-900 rounded-full flex items-center justify-center text-white z-20 shadow-xl border-[3px] border-white">
+               {/* Text rotating around */}
+               <div className="absolute inset-0 animate-[spin_12s_linear_infinite]">
+                 <svg viewBox="0 0 100 100" className="w-full h-full text-[10px] sm:text-[10px] font-bold tracking-[0.15em] fill-current">
+                   <path id="curve" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="none" />
+                   <text>
+                     <textPath href="#curve" startOffset="0">
+                       • CIVIC AI • CIVIC AI • CIVIC AI
+                     </textPath>
+                   </text>
+                 </svg>
+               </div>
+               {/* Inner Arrow */}
+               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-brand-500 rounded-full flex items-center justify-center text-white -rotate-45">
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+               </div>
+             </div>
 
-            {/* Floating card — left */}
-            <div className="absolute -left-4 top-[28%] hidden rounded-xl bg-white p-3 shadow-xl shadow-slate-900/[0.06] border border-slate-100 animate-float lg:block">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50">
-                  <Zap className="h-4 w-4 text-teal-500" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-medium text-slate-400">AI Classified</div>
-                  <div className="text-xs font-bold text-slate-700">Pothole — <span className="text-red-500">High</span></div>
-                </div>
-              </div>
-            </div>
+             {/* Light Pill - Right */}
+             <div className="absolute bottom-[20%] right-[-5%] sm:right-[-12%] flex flex-col items-center gap-1 z-20 animate-float">
+               <div className="bg-white text-brand-700 font-bold px-4 py-2 sm:px-6 sm:py-2.5 rounded-full shadow-xl text-xs sm:text-sm border-2 border-brand-100">
+                 City Planner
+               </div>
+               {/* Cursor Arrow pointing UP LEFT */}
+               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 drop-shadow-md -translate-x-6 sm:-translate-x-8 -translate-y-12 sm:-translate-y-14" viewBox="0 0 16 22" fill="currentColor">
+                 <path d="M0 0l15.5 10.5-6.5 1 4.5 8-2.5 1.5-4.5-8-5 5.5v-18z" stroke="white" strokeWidth="1"/>
+               </svg>
+             </div>
 
-            {/* Floating card — right */}
-            <div className="absolute -right-3 bottom-[22%] hidden rounded-xl bg-white p-3 shadow-xl shadow-slate-900/[0.06] border border-slate-100 animate-float-delayed lg:block">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50">
-                  <TrendingUp className="h-4 w-4 text-emerald-500" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-medium text-slate-400">Resolution Time</div>
-                  <div className="text-xs font-bold text-emerald-600">↓ 45% Faster</div>
-                </div>
-              </div>
-            </div>
+             {/* Dark Pill - Left */}
+             <div className="absolute bottom-[5%] left-[-10%] sm:left-[-15%] flex flex-col items-center gap-1 z-20 animate-float-delayed">
+               {/* Cursor Arrow pointing UP RIGHT */}
+               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900 drop-shadow-md translate-x-12 sm:translate-x-16 translate-y-3 sm:translate-y-3" viewBox="0 0 16 22" fill="currentColor" style={{transform: 'scaleX(-1) rotate(-15deg)'}}>
+                 <path d="M0 0l15.5 10.5-6.5 1 4.5 8-2.5 1.5-4.5-8-5 5.5v-18z" stroke="white" strokeWidth="1"/>
+               </svg>
+               <div className="bg-slate-900 text-white font-bold px-4 py-2 sm:px-6 sm:py-2.5 rounded-full shadow-xl text-xs sm:text-sm border-2 border-white">
+                 Civic Engineer
+               </div>
+             </div>
           </div>
         </div>
       </div>

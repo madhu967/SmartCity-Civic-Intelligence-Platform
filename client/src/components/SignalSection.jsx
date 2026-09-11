@@ -139,113 +139,169 @@ export default function SignalSection() {
             </div>
           </div>
 
-          {/* Right Map/Visual */}
+          {/* Right Map/Visual (Now Dashboard Visual) */}
           <div 
             ref={rightRef}
             className="w-full flex items-center justify-center will-change-transform"
           >
-            <div className="relative w-full aspect-square md:aspect-[4/3] rounded-2xl border border-white/[0.08] bg-[#0F141D] shadow-2xl shadow-black/60 overflow-hidden flex items-center justify-center origin-center transform scale-[0.98] lg:scale-100">
-              
-              {/* Map Window Chrome */}
-            <div className="absolute top-0 inset-x-0 h-10 border-b border-white/[0.06] bg-[#141A24]/80 backdrop-blur-md flex items-center px-4 z-20">
-              <div className="flex gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-[#FF5F57]/80" />
-                <div className="h-2 w-2 rounded-full bg-[#FEBC2E]/80" />
-                <div className="h-2 w-2 rounded-full bg-[#28C840]/80" />
-              </div>
-              <div className="ml-4 flex items-center gap-2 rounded bg-black/40 border border-white/[0.05] px-2.5 py-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-[#4F8CFF] animate-pulse" />
-                <span className="text-[9px] text-gray-400 font-medium tracking-wide">smartcity.live/map</span>
-              </div>
-            </div>
-
-            {/* Map inner background */}
-            <div className="absolute inset-0 top-10 bg-gradient-to-br from-[#0F141D] to-[#141A24]">
-              {/* Map grid */}
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(79,140,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(79,140,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
-              
-              {/* Abstract Roads */}
-              <svg className="absolute inset-0 w-full h-full opacity-30" preserveAspectRatio="none">
-                <path d="M 0 40% Q 25% 45%, 50% 30% T 100% 50%" fill="none" stroke="#4F8CFF" strokeWidth="1.5" strokeOpacity="0.3" />
-                <path d="M 30% 0 L 30% 100%" fill="none" stroke="#7C5CFC" strokeWidth="1.5" strokeOpacity="0.2" />
-                <path d="M 65% 0 Q 70% 50%, 60% 100%" fill="none" stroke="#4F8CFF" strokeWidth="1" strokeOpacity="0.2" />
-              </svg>
-
-              {/* Glowing Ambient Center */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-[#4F8CFF] rounded-full opacity-[0.05] blur-[60px] animate-pulse"></div>
-
-              {/* Markers */}
-              <div className={`absolute top-[35%] left-[25%] transition-all duration-700 ease-in-out ${activeMarker === 0 ? 'scale-110 z-10' : 'scale-90 opacity-40 z-0'}`}>
-                <div className={`relative flex items-center justify-center w-8 h-8 rounded-full border border-white/10 shadow-lg ${activeMarker === 0 ? 'bg-[#4F8CFF]/20 border-[#4F8CFF]/50 shadow-[#4F8CFF]/20' : 'bg-black/40'}`}>
-                  <div className={`w-3 h-3 rounded-full ${activeMarker === 0 ? 'bg-[#4F8CFF]' : 'bg-gray-600'}`}></div>
-                  {activeMarker === 0 && <span className="absolute w-12 h-12 rounded-full border border-[#4F8CFF] animate-ping opacity-30"></span>}
+            <div className="relative origin-center transform scale-[0.9] sm:scale-95 lg:scale-100 w-full max-w-lg mx-auto">
+              {/* Main dashboard card */}
+              <div className="relative rounded-2xl border border-slate-200/20 bg-slate-900/40 backdrop-blur-xl p-1.5 shadow-2xl shadow-black/40">
+                {/* Window chrome */}
+                <div className="flex items-center gap-2 rounded-t-xl bg-slate-800/80 px-4 py-3 border-b border-slate-700">
+                  <div className="flex gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
+                  </div>
+                  <div className="ml-3 flex items-center gap-2 rounded-md bg-slate-900/80 border border-slate-700 px-3 py-1 flex-1 max-w-xs">
+                    <div className="h-3 w-3 rounded-full bg-slate-600" />
+                    <span className="text-[10px] text-slate-400 font-medium">smartcity.dashboard/analytics</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className={`absolute top-[55%] left-[65%] transition-all duration-700 ease-in-out ${activeMarker === 1 ? 'scale-110 z-10' : 'scale-90 opacity-40 z-0'}`}>
-                <div className={`relative flex items-center justify-center w-8 h-8 rounded-full border border-white/10 shadow-lg ${activeMarker === 1 ? 'bg-[#7C5CFC]/20 border-[#7C5CFC]/50 shadow-[#7C5CFC]/20' : 'bg-black/40'}`}>
-                  <div className={`w-3 h-3 rounded-full ${activeMarker === 1 ? 'bg-[#7C5CFC]' : 'bg-gray-600'}`}></div>
-                  {activeMarker === 1 && <span className="absolute w-12 h-12 rounded-full border border-[#7C5CFC] animate-ping opacity-30"></span>}
-                </div>
-              </div>
-
-              <div className={`absolute top-[25%] left-[75%] transition-all duration-700 ease-in-out ${activeMarker === 2 ? 'scale-110 z-10' : 'scale-90 opacity-40 z-0'}`}>
-                <div className={`relative flex items-center justify-center w-8 h-8 rounded-full border border-white/10 shadow-lg ${activeMarker === 2 ? 'bg-[#4F8CFF]/20 border-[#4F8CFF]/50 shadow-[#4F8CFF]/20' : 'bg-black/40'}`}>
-                  <div className={`w-3 h-3 rounded-full ${activeMarker === 2 ? 'bg-[#4F8CFF]' : 'bg-gray-600'}`}></div>
-                  {activeMarker === 2 && <span className="absolute w-12 h-12 rounded-full border border-[#4F8CFF] animate-ping opacity-30"></span>}
-                </div>
-              </div>
-
-              {/* Dynamic Floating Info Card */}
-              <div className="absolute inset-x-0 bottom-6 flex justify-center z-20 pointer-events-none px-4">
-                <div 
-                  className="w-full sm:w-[300px] p-4 rounded-xl border border-white/[0.08] shadow-2xl backdrop-blur-xl bg-[#0F141D]/90 transition-all duration-300 transform scale-100" 
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1.5 rounded-lg ${activeMarker === 1 ? 'bg-[#7C5CFC]/10' : 'bg-[#4F8CFF]/10'}`}>
-                        {currentMarker.icon}
+                {/* Dashboard content */}
+                <div className="rounded-b-xl bg-gradient-to-br from-slate-900/90 to-[#0F141D]/90 p-4 sm:p-5">
+                  {/* Top stats row */}
+                  <div className="grid grid-cols-4 gap-2.5 mb-4">
+                    {[
+                      { label: 'Active Issues', value: '247', dot: 'bg-brand-500', trend: '↑ 12%', trendColor: 'text-brand-400' },
+                      { label: 'Resolved Today', value: '38', dot: 'bg-teal-500', trend: '↑ 8%', trendColor: 'text-teal-400' },
+                      { label: 'Avg Response', value: '2.4h', dot: 'bg-amber-500', trend: '↓ 15%', trendColor: 'text-emerald-400' },
+                      { label: 'Satisfaction', value: '94%', dot: 'bg-emerald-500', trend: '↑ 3%', trendColor: 'text-emerald-400' },
+                    ].map((stat) => (
+                      <div key={stat.label} className="rounded-xl bg-slate-800/50 p-3 shadow-sm border border-slate-700/80 hover:bg-slate-800 transition-colors duration-200">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <div className={`h-1.5 w-1.5 rounded-full ${stat.dot}`} />
+                          <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium truncate">{stat.label}</span>
+                        </div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-base sm:text-lg font-bold text-slate-200">{stat.value}</span>
+                          <span className={`text-[9px] font-semibold ${stat.trendColor}`}>{stat.trend}</span>
+                        </div>
                       </div>
-                      <h4 className="text-white text-xs font-bold tracking-tight">
-                        {currentMarker.title}
-                      </h4>
-                    </div>
-                    <span className="text-[9px] font-semibold px-2 py-0.5 rounded bg-black/50 border border-white/5 text-gray-400">Just Now</span>
+                    ))}
                   </div>
-                  
-                  <div className="space-y-2 mb-3 bg-black/20 rounded-lg p-2.5 border border-white/[0.02]">
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-gray-500 font-medium">Status</span>
-                      <span className={`font-semibold flex items-center gap-1.5 ${activeMarker === 1 ? 'text-[#7C5CFC]' : 'text-[#4F8CFF]'}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${activeMarker === 1 ? 'bg-[#7C5CFC]' : 'bg-[#4F8CFF]'}`}></span>
-                        {currentMarker.status}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-gray-500 font-medium">Department</span>
-                      <span className="text-gray-200 font-medium">{currentMarker.dept}</span>
-                    </div>
 
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-gray-500 font-medium">Context</span>
-                      <span className="text-gray-300">{currentMarker.reports}</span>
+                  {/* Map area */}
+                  <div className="relative mb-4 rounded-xl bg-gradient-to-br from-slate-800/80 to-[#141A24]/60 border border-slate-700/40 h-44 sm:h-48 overflow-hidden">
+                    {/* Grid lines */}
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
+                    {/* Roads */}
+                    <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+                      <line x1="0" y1="50%" x2="100%" y2="50%" stroke="rgba(148,163,184,0.15)" strokeWidth="2" />
+                      <line x1="30%" y1="0" x2="30%" y2="100%" stroke="rgba(148,163,184,0.15)" strokeWidth="2" />
+                      <line x1="65%" y1="0" x2="65%" y2="100%" stroke="rgba(148,163,184,0.15)" strokeWidth="2" />
+                      <line x1="10%" y1="30%" x2="90%" y2="30%" stroke="rgba(148,163,184,0.1)" strokeWidth="1" />
+                      <line x1="10%" y1="75%" x2="90%" y2="75%" stroke="rgba(148,163,184,0.1)" strokeWidth="1" />
+                      <line x1="50%" y1="10%" x2="50%" y2="90%" stroke="rgba(148,163,184,0.1)" strokeWidth="1" />
+                    </svg>
+                    {/* Issue markers */}
+                    <div className="absolute top-7 left-[15%] h-3 w-3 rounded-full bg-red-400 ring-[3px] ring-red-400/20 animate-pulse" />
+                    <div className="absolute top-[35%] left-[38%] h-3 w-3 rounded-full bg-amber-400 ring-[3px] ring-amber-400/20" />
+                    <div className="absolute top-[45%] right-[28%] h-3 w-3 rounded-full bg-teal-400 ring-[3px] ring-teal-400/20" />
+                    <div className="absolute bottom-[30%] left-[22%] h-3 w-3 rounded-full bg-brand-400 ring-[3px] ring-brand-400/20 animate-pulse" />
+                    <div className="absolute top-[20%] right-[15%] h-3 w-3 rounded-full bg-emerald-400 ring-[3px] ring-emerald-400/20" />
+                    <div className="absolute bottom-[20%] right-[35%] h-2.5 w-2.5 rounded-full bg-red-400 ring-[3px] ring-red-400/20" />
+                    <div className="absolute top-[60%] left-[55%] h-2.5 w-2.5 rounded-full bg-orange-400 ring-[3px] ring-orange-400/20" />
+                    {/* Live indicator */}
+                    <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 rounded-lg bg-slate-900/90 backdrop-blur-sm px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 shadow-sm border border-slate-700/60">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      </span>
+                      Live City Map
                     </div>
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <button className="flex-1 py-1.5 text-[10px] font-bold text-white rounded bg-gradient-to-r from-[#4F8CFF] to-[#3d6ecc] hover:opacity-90 transition-opacity pointer-events-auto flex items-center justify-center gap-1">
-                      Assign Crew <ArrowRight className="w-3 h-3" />
-                    </button>
-                    <button className="flex-1 py-1.5 text-[10px] font-bold text-gray-300 rounded bg-[#141A24] hover:bg-gray-800 transition-colors border border-white/[0.05] pointer-events-auto">
-                      View Details
-                    </button>
+
+                  {/* Bottom charts */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {/* Bar chart */}
+                    <div className="rounded-xl bg-slate-800/50 p-3 shadow-sm border border-slate-700/80">
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span className="text-[10px] font-semibold text-slate-400">Issues by Category</span>
+                        <span className="text-[9px] font-medium text-brand-400">This Week</span>
+                      </div>
+                      <div className="flex items-end gap-[5px] h-14">
+                        {[55, 40, 75, 30, 65, 20, 50].map((h, i) => (
+                          <div
+                            key={i}
+                            className="flex-1 rounded-sm bg-gradient-to-t from-brand-500 to-brand-300 opacity-90 hover:opacity-100 transition-opacity"
+                            style={{ height: `${h}%` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    {/* Donut chart */}
+                    <div className="rounded-xl bg-slate-800/50 p-3 shadow-sm border border-slate-700/80">
+                      <div className="text-[10px] font-semibold text-slate-400 mb-2.5">Resolution Rate</div>
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-14 w-14 shrink-0">
+                          <svg className="h-14 w-14 -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="13" fill="none" stroke="#334155" strokeWidth="3" />
+                            <circle
+                              cx="18" cy="18" r="13"
+                              fill="none"
+                              stroke="url(#heroGradDark)"
+                              strokeWidth="3"
+                              strokeDasharray="76.8 81.7"
+                              strokeLinecap="round"
+                            />
+                            <defs>
+                              <linearGradient id="heroGradDark" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#3b82f6" />
+                                <stop offset="100%" stopColor="#2dd4bf" />
+                              </linearGradient>
+                            </defs>
+                          </svg>
+                          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-slate-200">94%</span>
+                        </div>
+                        <div className="space-y-1.5 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2 w-2 rounded-full bg-brand-500 shrink-0" />
+                            <span className="text-[10px] text-slate-400 truncate">Resolved</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2 w-2 rounded-full bg-teal-400 shrink-0" />
+                            <span className="text-[10px] text-slate-400 truncate">In Progress</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2 w-2 rounded-full bg-slate-600 shrink-0" />
+                            <span className="text-[10px] text-slate-400 truncate">Pending</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
+              {/* Floating card — left */}
+              <div className="absolute -left-4 top-[28%] hidden rounded-xl bg-slate-800 p-3 shadow-xl shadow-black/40 border border-slate-700 animate-float lg:block z-20">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-500/20">
+                    <Activity className="h-4 w-4 text-teal-400" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-medium text-slate-400">AI Classified</div>
+                    <div className="text-xs font-bold text-slate-200">Pothole — <span className="text-red-400">High</span></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating card — right */}
+              <div className="absolute -right-3 bottom-[22%] hidden rounded-xl bg-slate-800 p-3 shadow-xl shadow-black/40 border border-slate-700 animate-float-delayed lg:block z-20">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/20">
+                    <BarChart3 className="h-4 w-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-medium text-slate-400">Resolution Time</div>
+                    <div className="text-xs font-bold text-emerald-400">↓ 45% Faster</div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
           </div>
           
         </div>
