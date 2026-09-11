@@ -88,7 +88,10 @@ export default function Hero() {
              {/* Brand Theme blob background */}
              <div 
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] w-[320px] h-[300px] sm:w-[420px] sm:h-[400px] bg-gradient-to-tr from-brand-300 to-sky-200 -z-10" 
-                style={{ borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%' }}
+                style={{ 
+                  borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
+                  clipPath: 'inset(0 0 15% 0)'
+                }}
              />
 
              {/* Left curved line decoration */}
@@ -96,11 +99,11 @@ export default function Hero() {
                <path d="M 45 5 Q 5 75 45 145" stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" />
              </svg>
 
-             {/* Main Portrait Image (Reliable transparent business professional) */}
+             {/* Main Portrait Image (Civic worker in uniform with transparent background) */}
              <img 
-               src="https://img.icons8.com/3d-fluency/500/businesswoman.png" 
-               alt="UI UX Designer" 
-               className="relative z-0 w-full max-w-[280px] sm:max-w-[380px] object-contain drop-shadow-2xl translate-y-2 scale-110"
+               src="https://wsrv.nl/?url=https://pngimg.com/uploads/industrial_worker/industrial_worker_PNG11448.png&output=png" 
+               alt="Civic Worker in Uniform" 
+               className="relative z-0 w-full max-w-[280px] sm:max-w-[380px] object-contain drop-shadow-2xl translate-y-4 scale-110"
              />
 
              {/* Circular Badge - Top Right */}
