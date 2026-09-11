@@ -2,7 +2,7 @@ import { ArrowRight, Play, Shield, Zap, TrendingUp } from 'lucide-react';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex flex-col overflow-hidden bg-gradient-to-b from-slate-50/80 via-white to-white pt-28 pb-16 lg:pt-36 lg:pb-24">
+    <section className="relative flex flex-col overflow-hidden bg-gradient-to-b from-slate-50/80 via-white to-white pt-32 lg:pt-40">
       {/* Background decorations */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.04)_1px,transparent_1px)] bg-[size:72px_72px]" />
@@ -66,25 +66,10 @@ export default function Hero() {
               </a>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-slate-100 pt-8">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-teal-500" />
-                <span className="text-sm font-medium text-slate-400">Trusted by 50+ Cities</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-amber-500" />
-                <span className="text-sm font-medium text-slate-400">2hr Avg. Response</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-brand-500" />
-                <span className="text-sm font-medium text-slate-400">94% Resolution Rate</span>
-              </div>
-            </div>
           </div>
 
           {/* Right — Image Visual */}
-          <div className="relative animate-fade-in lg:ml-auto max-w-lg mx-auto transform flex justify-center items-center mt-16 lg:mt-4 pb-12">
+          <div className="relative animate-fade-in lg:ml-auto max-w-lg mx-auto transform flex justify-center items-center mt-12 lg:mt-0">
              {/* Brand Theme blob background */}
              <div 
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] w-[320px] h-[300px] sm:w-[420px] sm:h-[400px] bg-gradient-to-tr from-brand-300 to-sky-200 -z-10" 
@@ -150,13 +135,12 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Footer Marquee Banner */}
-      <div className="relative w-full h-24 sm:h-32 z-30 flex items-center justify-center mt-auto border-t border-slate-100">
-         {/* Slanted Accent Background (Electric Blue) */}
-         <div className="absolute w-[110%] h-14 sm:h-16 bg-[#4F8CFF] rotate-[-2.5deg] z-0 shadow-lg origin-center"></div>
+      <div className="relative w-full h-24 sm:h-32 z-30 flex items-center justify-center mt-2 lg:mt-4">
+         {/* Slanted Accent Background (Deepest Dark) */}
+         <div className="absolute w-[110%] h-14 sm:h-16 bg-brand-900 rotate-[-3.5deg] z-0 shadow-lg origin-center"></div>
          
-         {/* Horizontal Primary Marquee (Space Black, matching the next section) */}
-         <div className="absolute w-full h-14 sm:h-16 bg-brand-600 z-10 flex flex-col justify-center shadow-2xl border-y border-white/10">
+         {/* Horizontal Primary Marquee (Absolute Dark) */}
+         <div className="absolute w-full h-14 sm:h-16 bg-brand-950 z-10 flex flex-col justify-center shadow-2xl border-y border-white/5">
             <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
                {/* Repeat array for seamless continuous loop */}
                {[...Array(4)].map((_, i) => (
