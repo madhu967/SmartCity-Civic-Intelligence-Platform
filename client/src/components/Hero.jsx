@@ -135,20 +135,20 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="relative w-full h-24 sm:h-32 z-30 flex items-center justify-center mt-2 lg:mt-4">
-         {/* Slanted Accent Background (Deepest Dark) */}
-         <div className="absolute w-[110%] h-14 sm:h-16 bg-brand-900 rotate-[-3.5deg] z-0 shadow-lg origin-center"></div>
+      <div className="relative w-full h-16 sm:h-20 z-30 flex items-center justify-center mt-2 lg:mt-4">
+        {/* Slanted Accent Background */}
+         <div className="absolute w-[110%] h-10 sm:h-12 bg-brand-600 rotate-[-3.5deg] z-0 shadow-lg origin-center"></div>
          
-         {/* Horizontal Primary Marquee (Absolute Dark) */}
-         <div className="absolute w-full h-14 sm:h-16 bg-brand-950 z-10 flex flex-col justify-center shadow-2xl border-y border-white/5">
+         {/* Horizontal Primary Marquee */}
+         <div className="absolute w-full h-10 sm:h-12 bg-brand-800 z-10 flex flex-col justify-center shadow-xl border-y border-brand-600/40">
             <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
                {/* Repeat array for seamless continuous loop */}
                {[...Array(4)].map((_, i) => (
                   <div key={i} className="flex items-center whitespace-nowrap">
                     {['Civic Intelligence', 'Real-time Alerts', 'Incident Reporting', 'City Dashboard', 'Smart Dispatch', 'AI Analytics'].map((text, idx) => (
-                      <div key={idx} className="flex items-center text-white font-extrabold text-sm sm:text-lg tracking-widest uppercase px-6 sm:px-10">
+                      <div key={idx} className="flex items-center text-white font-extrabold text-xs sm:text-sm tracking-widest uppercase px-5 sm:px-8">
                         {text}
-                        <svg className="w-5 h-5 sm:w-7 sm:h-7 mx-6 sm:mx-10 text-[#4F8CFF]" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 mx-5 sm:mx-8 text-brand-300" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                           <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>

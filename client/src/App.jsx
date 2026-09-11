@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import SignalSection from './components/SignalSection';
+import AboutSection from './components/AboutSection';
 import MarqueeSection from './components/MarqueeSection';
 import WorkflowSection from './components/WorkflowSection';
 import CommandCenter from './components/CommandCenter';
@@ -35,6 +36,7 @@ export default function App() {
       <Navbar />
       <Hero />
       <SignalSection />
+      <AboutSection />
       <MarqueeSection />
       {/* <WorkflowSection /> */}
       {/* <CommandCenter /> */}
