@@ -8,7 +8,7 @@ export default function Navbar() {
     { label: 'Live Intelligence', href: '/#live-intelligence' },
     { label: 'Command Center', href: '/#command-center' },
     { label: 'Apps', href: '/#apps' },
-    { label: 'About', href: '/about' },
+    { label: 'About', href: '/#about' },
   ];
 
   useEffect(() => {

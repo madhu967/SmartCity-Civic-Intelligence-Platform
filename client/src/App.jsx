@@ -38,7 +38,7 @@ export default function App() {
     return <AuthPage />;
   }
 
-  if (currentPath === "/about") {
+  if (currentPath === "/about" || currentPath === "/#about") {
     return <AboutPage />;
   }
 
