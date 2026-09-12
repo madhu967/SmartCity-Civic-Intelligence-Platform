@@ -4,10 +4,10 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navItems = [
-    { label: 'Platform', href: '#platform' },
-    { label: 'Live Intelligence', href: '#live-intelligence' },
-    { label: 'Command Center', href: '#command-center' },
-    { label: 'Apps', href: '#apps' },
+    { label: 'Platform', href: '/#platform' },
+    { label: 'Live Intelligence', href: '/#live-intelligence' },
+    { label: 'Command Center', href: '/#command-center' },
+    { label: 'Apps', href: '/#apps' },
     { label: 'About', href: '/about' },
   ];
 

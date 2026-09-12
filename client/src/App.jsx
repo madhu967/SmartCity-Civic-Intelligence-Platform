@@ -45,13 +45,21 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
       <Navbar />
-      <Hero />
-      <SignalSection />
+      <div id="platform">
+        <Hero />
+      </div>
+      <div id="live-intelligence">
+        <SignalSection />
+      </div>
       <AboutSection />
       <MarqueeSection />
       {/* <WorkflowSection /> */}
-      {/* <CommandCenter /> */}
-      <PlatformRoles />
+      <div id="command-center">
+        <CommandCenter />
+      </div>
+      <div id="apps">
+        <PlatformRoles />
+      </div>
       <Newsletter />
       <Footer />
     </div>
