@@ -10,6 +10,7 @@ import PlatformRoles from "./components/PlatformRoles";
 import Newsletter from "./components/Newsletter";
 import Footer from "./components/Footer";
 import AuthPage from "./pages/AuthPage";
+import AboutPage from "./pages/AboutPage";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(
@@ -35,6 +36,10 @@ export default function App() {
     window.location.hash === "#login"
   ) {
     return <AuthPage />;
+  }
+
+  if (currentPath === "/about") {
+    return <AboutPage />;
   }
 
   return (

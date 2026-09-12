@@ -36,17 +36,34 @@ export default function PlatformRoles() {
                 d: "Receive optimized routes, clear task instructions, and simple one-tap completion logs on the go." 
               }
             ].map((role, i) => (
-              <div key={i} className="p-4 bg-white border border-gray-200 hover:-translate-y-1 transition duration-300 rounded-2xl shadow-sm hover:shadow-lg shadow-black/5 w-full flex flex-col h-full">
-                  <img className="rounded-xl h-48 w-full object-cover" src={role.img} alt={role.r} />
-                  <p className="text-gray-900 text-xl font-semibold ml-2 mt-5">
+              <div
+                key={i}
+                className="group h-full perspective-[1000px]"
+                tabIndex={0}
+                aria-label={`Learn more about the ${role.r}`}
+              >
+                <div className="relative h-full transform-3d transition-transform duration-700 group-hover:transform-[rotateY(180deg)] group-focus:transform-[rotateY(180deg)]">
+                  <div className="relative z-10 flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm shadow-black/5 backface-hidden">
+                    <img className="h-48 w-full rounded-xl object-cover" src={role.img} alt={role.r} />
+                    <p className="ml-2 mt-5 text-xl font-semibold text-gray-900">
                       {role.r}
-                  </p>
-                  <p className="text-slate-500 text-sm/6 mt-2 ml-2 mb-4 flex-grow">
+                    </p>
+                    <p className="mb-4 ml-2 mt-2 grow text-sm/6 text-slate-500">
                       {role.d}
-                  </p>
-                  <button type="button" className="bg-brand-600 hover:bg-brand-700 transition cursor-pointer mt-auto mb-2 ml-2 mr-2 px-6 py-2.5 font-semibold rounded-xl text-white text-sm w-fit self-start">
+                    </p>
+                  </div>
+
+                  <div className="absolute inset-0 flex h-full flex-col justify-between rounded-2xl border border-brand-200 bg-brand-950 p-6 text-white backface-hidden transform-[rotateY(180deg)]">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-300">Built for everyone</span>
+                      <h3 className="mt-5 text-2xl font-bold tracking-tight">{role.r}</h3>
+                      <p className="mt-4 text-sm leading-6 text-brand-100">{role.d}</p>
+                    </div>
+                    <button type="button" className="mt-8 w-fit rounded-xl bg-brand-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-400 focus:outline-none focus:ring-2 focus:ring-white/70">
                       Learn More
-                  </button>
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
