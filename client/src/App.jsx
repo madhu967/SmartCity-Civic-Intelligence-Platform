@@ -11,10 +11,16 @@ import Newsletter from "./components/Newsletter";
 import Footer from "./components/Footer";
 import AuthPage from "./pages/AuthPage";
 import AboutPage from "./pages/AboutPage";
+import UserDashboard from "./pages/UserDashboard";
+import ProfilePage from "./pages/ProfilePage";
+import CivicPage from "./pages/CivicPage";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(
     window.location.pathname + window.location.hash,
+  );
+  const [hasSavedSession, setHasSavedSession] = useState(
+    Boolean(localStorage.getItem("smart_city_token")),
   );
 
   useEffect(() => {
@@ -30,6 +36,22 @@ export default function App() {
     };
   }, []);
 
+  const logout = () => {
+    localStorage.removeItem("smart_city_token");
+    setHasSavedSession(false);
+    window.history.pushState({}, "", "/");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  };
+
+  if (
+    hasSavedSession &&
+    (currentPath === "/login" ||
+      currentPath === "/#login" ||
+      window.location.hash === "#login")
+  ) {
+    return <UserDashboard />;
+  }
+
   if (
     currentPath === "/login" ||
     currentPath === "/#login" ||
@@ -38,13 +60,25 @@ export default function App() {
     return <AuthPage />;
   }
 
+  if (currentPath === "/dashboard") {
+    return <UserDashboard />;
+  }
+
+  if (currentPath === "/profile") {
+    return <ProfilePage />;
+  }
+
+  if (currentPath === "/reports" || currentPath === "/activity" || currentPath === "/notifications") {
+    return <CivicPage pagePath={currentPath} />;
+  }
+
   if (currentPath === "/about" || currentPath === "/#about") {
     return <AboutPage />;
   }
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
-      <Navbar />
+      <Navbar isAuthenticated={hasSavedSession} onLogout={logout} />
       <div id="platform">
         <Hero />
       </div>
@@ -54,9 +88,9 @@ export default function App() {
       <AboutSection />
       <MarqueeSection />
       {/* <WorkflowSection /> */}
-      <div id="command-center">
+      {/* <div id="command-center">
         <CommandCenter />
-      </div>
+      </div> */}
       <div id="apps">
         <PlatformRoles />
       </div>

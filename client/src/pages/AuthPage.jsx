@@ -1,52 +1,98 @@
 import React, { useState } from 'react';
+import { apiRequest, redirectToDashboard } from '../config/api';
+
+const initialForm = {
+  name: '',
+  email: '',
+  password: '',
+};
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [form, setForm] = useState(initialForm);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const updateField = (event) => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      [event.target.name]: event.target.value,
+    }));
+  };
+
+  const submitForm = async (event) => {
+    event.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const data = await apiRequest(isLogin ? '/auth/login' : '/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(isLogin ? {
+          email: form.email,
+          password: form.password,
+        } : form),
+      });
+
+      localStorage.setItem('smart_city_token', data.token);
+      redirectToDashboard();
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const switchMode = () => {
+    setIsLogin((currentMode) => !currentMode);
+    setForm(initialForm);
+    setError('');
+  };
+
+  const inputClass = 'w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all';
+  const mobileInputClass = 'w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 outline-none transition-all';
+  const errorMessage = error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>;
 
   return (
-    <div className="relative min-h-screen w-full bg-slate-50 overflow-hidden font-sans">
-      
-      {/* Back button */}
-      <a 
-        href="/" 
+    <div className="relative min-h-screen w-full overflow-hidden bg-slate-50 font-sans">
+      <a
+        href="/"
         onClick={() => {
           window.location.hash = '';
         }}
-        className="absolute top-6 left-6 z-50 flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors bg-white/80 backdrop-blur px-3 py-1.5 rounded-full shadow-sm border border-slate-200"
+        className="absolute left-6 top-6 z-50 flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-medium text-slate-500 shadow-sm backdrop-blur transition-colors hover:text-slate-900"
       >
         <span>&larr;</span> Home
       </a>
 
-      {/* DESKTOP VIEW */}
-      <div className="hidden md:block w-full h-screen relative">
-        
-        {/* Image Pane (Slides Left/Right) */}
-        <div 
-          className="absolute top-0 left-0 h-full w-1/2 z-20"
-          style={{ 
+      <div className="auth-desktop-view relative h-screen w-full">
+        <div
+          className="absolute left-0 top-0 z-20 h-full w-1/2"
+          style={{
             transform: isLogin ? 'translateX(0%)' : 'translateX(100%)',
-            transition: 'transform 1s cubic-bezier(0.82,0.085,0.395,0.895)'
+            transition: 'transform 1s cubic-bezier(0.82,0.085,0.395,0.895)',
           }}
         >
-          <div className="w-full h-full relative overflow-hidden bg-slate-900">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-600/40 to-slate-900/70 z-10 mix-blend-multiply" />
-            <img 
-              src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&q=80&w=1600" 
-              alt="Cityscape" 
-              className="absolute inset-0 w-full h-full object-cover object-center opacity-90"
+          <div className="relative h-full w-full overflow-hidden bg-slate-900">
+            <div className="absolute inset-0 z-10 bg-linear-to-br from-brand-600/40 to-slate-900/70 mix-blend-multiply" />
+            <img
+              src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&q=80&w=1600"
+              alt="Cityscape"
+              className="absolute inset-0 h-full w-full object-cover object-center opacity-90"
             />
-            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-12 text-white">
-              <h2 className="text-4xl font-bold mb-4 tracking-tight">
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-12 text-center text-white">
+              <h2 className="mb-4 text-4xl font-bold tracking-tight">
                 {isLogin ? 'New to SmartCity?' : 'Already have an account?'}
               </h2>
-              <p className="text-lg text-brand-100 mb-8 max-w-sm font-light">
-                {isLogin 
-                  ? 'Sign up to report issues, track resolutions, and help build a better community.' 
+              <p className="mb-8 max-w-sm text-lg font-light text-brand-100">
+                {isLogin
+                  ? 'Sign up to report issues, track resolutions, and help build a better community.'
                   : 'Log in to access your dashboard, track your reports, and stay updated.'}
               </p>
-              <button 
-                onClick={() => setIsLogin(!isLogin)}
-                className="px-8 py-3 rounded-full border-2 border-white/30 hover:border-white text-white font-bold tracking-wide transition-all hover:bg-white/10 cursor-pointer"
+              <button
+                type="button"
+                onClick={switchMode}
+                className="cursor-pointer rounded-full border-2 border-white/30 px-8 py-3 font-bold tracking-wide text-white transition-all hover:border-white hover:bg-white/10"
               >
                 {isLogin ? 'Create Account' : 'Log In'}
               </button>
@@ -54,191 +100,134 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* Forms Pane (Slides Right/Left) */}
-        <div 
-          className="absolute top-0 left-1/2 h-full w-1/2 bg-white flex items-center justify-center z-10"
+        <div
+          className="absolute left-1/2 top-0 z-10 flex h-full w-1/2 items-center justify-center bg-white"
           style={{
             transform: isLogin ? 'translateX(0%)' : 'translateX(-100%)',
-            transition: 'transform 1s cubic-bezier(0.82,0.085,0.395,0.895)'
+            transition: 'transform 1s cubic-bezier(0.82,0.085,0.395,0.895)',
           }}
         >
-          <div className="w-full max-w-md px-8 relative h-[500px]" style={{ perspective: '1000px' }}>
-            <div 
-              className="w-full h-full relative" 
-              style={{ 
-                transformStyle: 'preserve-3d', 
+          <div className="relative w-full max-w-md px-8" style={{ perspective: '1000px', height: '500px' }}>
+            <div
+              className="relative h-full w-full"
+              style={{
+                transformStyle: 'preserve-3d',
                 transition: 'transform 0.7s ease-in-out',
-                transform: isLogin ? 'rotateY(0deg)' : 'rotateY(180deg)'
+                transform: isLogin ? 'rotateY(0deg)' : 'rotateY(180deg)',
               }}
             >
-              
-              {/* Login Form (Front) */}
-              <div className="absolute inset-0 w-full h-full flex flex-col justify-center" style={{ backfaceVisibility: 'hidden' }}>
+              <div className="absolute inset-0 flex h-full w-full flex-col justify-center" style={{ backfaceVisibility: 'hidden' }}>
                 <div className="mb-8">
-                  <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome back</h3>
-                  <p className="text-slate-500 mt-2">Enter your details to access your account.</p>
+                  <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Welcome back</h3>
+                  <p className="mt-2 text-slate-500">Enter your details to access your account.</p>
                 </div>
-                
-                <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                <form className="space-y-5" onSubmit={submitForm}>
                   <div className="space-y-1.5">
                     <label className="text-sm font-bold text-slate-700">Email Address</label>
-                    <div className="relative">
-                      
-                      <input type="email" placeholder="you@example.com" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all" />
-                    </div>
+                    <input required type="email" name="email" value={form.email} onChange={updateField} placeholder="you@example.com" className={inputClass} />
                   </div>
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                       <label className="text-sm font-bold text-slate-700">Password</label>
                       <a href="#" className="text-xs font-semibold text-brand-600 hover:text-brand-700">Forgot password?</a>
                     </div>
-                    <div className="relative">
-                      
-                      <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all" />
-                    </div>
+                    <input required minLength={6} type="password" name="password" value={form.password} onChange={updateField} placeholder="••••••••" className={inputClass} />
                   </div>
-                  <button className="w-full bg-brand-600 text-white font-bold rounded-xl py-3.5 shadow-md shadow-brand-500/20 hover:bg-brand-700 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
-                    Log In <span>&rarr;</span>
+                  {errorMessage}
+                  <button type="submit" disabled={isSubmitting} className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 py-3.5 font-bold text-white shadow-md shadow-brand-500/20 transition-all hover:bg-brand-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60">
+                    {isSubmitting ? 'Logging in...' : 'Log In'} {!isSubmitting && <span>&rarr;</span>}
                   </button>
                 </form>
               </div>
 
-              {/* Sign Up Form (Back) */}
-              <div className="absolute inset-0 w-full h-full flex flex-col justify-center" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+              <div className="absolute inset-0 flex h-full w-full flex-col justify-center" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                 <div className="mb-8">
-                  <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">Create account</h3>
-                  <p className="text-slate-500 mt-2">Join us to make your city better.</p>
+                  <h3 className="text-3xl font-extrabold tracking-tight text-slate-900">Create account</h3>
+                  <p className="mt-2 text-slate-500">Join us to make your city better.</p>
                 </div>
-                
-                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <form className="space-y-4" onSubmit={submitForm}>
                   <div className="space-y-1.5">
                     <label className="text-sm font-bold text-slate-700">Full Name</label>
-                    <div className="relative">
-                      
-                      <input type="text" placeholder="John Doe" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all" />
-                    </div>
+                    <input required name="name" value={form.name} onChange={updateField} placeholder="John Doe" className={inputClass} />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-bold text-slate-700">Email Address</label>
-                    <div className="relative">
-                      
-                      <input type="email" placeholder="you@example.com" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all" />
-                    </div>
+                    <input required type="email" name="email" value={form.email} onChange={updateField} placeholder="you@example.com" className={inputClass} />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-bold text-slate-700">Password</label>
-                    <div className="relative">
-                      
-                      <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all" />
-                    </div>
+                    <input required minLength={6} type="password" name="password" value={form.password} onChange={updateField} placeholder="••••••••" className={inputClass} />
                   </div>
-                  <button className="w-full bg-slate-900 text-white font-bold rounded-xl py-3.5 shadow-md shadow-slate-900/20 hover:bg-slate-800 hover:shadow-lg transition-all mt-2 cursor-pointer">
-                    Create Account
+                  {errorMessage}
+                  <button type="submit" disabled={isSubmitting} className="mt-2 w-full cursor-pointer rounded-xl bg-slate-900 py-3.5 font-bold text-white shadow-md shadow-slate-900/20 transition-all hover:bg-slate-800 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60">
+                    {isSubmitting ? 'Creating account...' : 'Create Account'}
                   </button>
                 </form>
               </div>
-              
             </div>
           </div>
         </div>
       </div>
 
-      {/* MOBILE VIEW */}
-      <div className="md:hidden w-full min-h-screen flex items-center justify-center p-6" style={{ perspective: '1000px' }}>
-        <div 
-          className="w-full max-w-sm h-[500px] relative" 
-          style={{ 
-            transformStyle: 'preserve-3d', 
+      <div className="auth-mobile-view flex min-h-screen w-full items-center justify-center p-6" style={{ perspective: '1000px' }}>
+        <div
+          className="relative w-full max-w-sm"
+          style={{
+            transformStyle: 'preserve-3d',
             transition: 'transform 0.7s ease-in-out',
-            transform: isLogin ? 'rotateY(0deg)' : 'rotateY(180deg)'
+            transform: isLogin ? 'rotateY(0deg)' : 'rotateY(180deg)',
+            height: '560px',
           }}
         >
-          
-          {/* Mobile Login (Front) */}
-          <div className="absolute inset-0 w-full h-full bg-white rounded-3xl p-8 shadow-xl border border-slate-100 flex flex-col justify-center" style={{ backfaceVisibility: 'hidden' }}>
+          <div className="absolute inset-0 flex h-full w-full flex-col justify-center rounded-3xl border border-slate-100 bg-white p-8 shadow-xl" style={{ backfaceVisibility: 'hidden' }}>
             <div className="mb-8">
-              <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">Welcome back</h3>
-              <p className="text-sm text-slate-500 mt-2">Enter your details to access your account.</p>
+              <h3 className="text-2xl font-extrabold tracking-tight text-slate-900">Welcome back</h3>
+              <p className="mt-2 text-sm text-slate-500">Enter your details to access your account.</p>
             </div>
-            
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-4" onSubmit={submitForm}>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Email</label>
-                <div className="relative">
-                  
-                  <input type="email" placeholder="you@example.com" className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 outline-none transition-all" />
-                </div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Email</label>
+                <input required type="email" name="email" value={form.email} onChange={updateField} placeholder="you@example.com" className={mobileInputClass} />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
-                <div className="relative">
-                  
-                  <input type="password" placeholder="••••••••" className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 outline-none transition-all" />
-                </div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Password</label>
+                <input required minLength={6} type="password" name="password" value={form.password} onChange={updateField} placeholder="••••••••" className={mobileInputClass} />
               </div>
-              <button className="w-full bg-brand-600 text-white font-bold rounded-xl py-3 shadow-md hover:bg-brand-700 transition-all mt-2 cursor-pointer">
-                Log In
-              </button>
+              {errorMessage}
+              <button type="submit" disabled={isSubmitting} className="mt-2 w-full cursor-pointer rounded-xl bg-brand-600 py-3 font-bold text-white shadow-md transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">{isSubmitting ? 'Logging in...' : 'Log In'}</button>
             </form>
-
             <div className="mt-6 text-center">
-              <p className="text-sm text-slate-500 font-medium">
-                Don't have an account?{' '}
-                <button onClick={() => setIsLogin(false)} className="text-brand-600 font-bold hover:underline cursor-pointer">
-                  Sign up
-                </button>
-              </p>
+              <p className="text-sm font-medium text-slate-500">Don't have an account?{' '}<button type="button" onClick={switchMode} className="cursor-pointer font-bold text-brand-600 hover:underline">Sign up</button></p>
             </div>
           </div>
 
-          {/* Mobile Sign Up (Back) */}
-          <div className="absolute inset-0 w-full h-full bg-white rounded-3xl p-8 shadow-xl border border-slate-100 flex flex-col justify-center" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+          <div className="absolute inset-0 flex h-full w-full flex-col justify-center rounded-3xl border border-slate-100 bg-white p-8 shadow-xl" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
             <div className="mb-8">
-              <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">Create account</h3>
-              <p className="text-sm text-slate-500 mt-2">Join us to make your city better.</p>
+              <h3 className="text-2xl font-extrabold tracking-tight text-slate-900">Create account</h3>
+              <p className="mt-2 text-sm text-slate-500">Join us to make your city better.</p>
             </div>
-            
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-4" onSubmit={submitForm}>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Name</label>
-                <div className="relative">
-                  
-                  <input type="text" placeholder="John Doe" className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 outline-none transition-all" />
-                </div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Name</label>
+                <input required name="name" value={form.name} onChange={updateField} placeholder="John Doe" className={mobileInputClass} />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Email</label>
-                <div className="relative">
-                  
-                  <input type="email" placeholder="you@example.com" className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 outline-none transition-all" />
-                </div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Email</label>
+                <input required type="email" name="email" value={form.email} onChange={updateField} placeholder="you@example.com" className={mobileInputClass} />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
-                <div className="relative">
-                  
-                  <input type="password" placeholder="••••••••" className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-500 outline-none transition-all" />
-                </div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Password</label>
+                <input required minLength={6} type="password" name="password" value={form.password} onChange={updateField} placeholder="••••••••" className={mobileInputClass} />
               </div>
-              <button className="w-full bg-slate-900 text-white font-bold rounded-xl py-3 shadow-md mt-2 cursor-pointer">
-                Create Account
-              </button>
+              {errorMessage}
+              <button type="submit" disabled={isSubmitting} className="mt-2 w-full cursor-pointer rounded-xl bg-slate-900 py-3 font-bold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-60">{isSubmitting ? 'Creating account...' : 'Create Account'}</button>
             </form>
-
             <div className="mt-6 text-center">
-              <p className="text-sm text-slate-500 font-medium">
-                Already have an account?{' '}
-                <button onClick={() => setIsLogin(true)} className="text-brand-600 font-bold hover:underline cursor-pointer">
-                  Log in
-                </button>
-              </p>
+              <p className="text-sm font-medium text-slate-500">Already have an account?{' '}<button type="button" onClick={switchMode} className="cursor-pointer font-bold text-brand-600 hover:underline">Log in</button></p>
             </div>
           </div>
-
         </div>
       </div>
-
     </div>
   );
 }
-
