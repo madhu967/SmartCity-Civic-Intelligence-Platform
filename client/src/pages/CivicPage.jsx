@@ -58,7 +58,8 @@ export default function CivicPage({ pagePath }) {
 
   const logout = () => {
     localStorage.removeItem('smart_city_token');
-    window.history.pushState({}, '', '/login');
+    window.dispatchEvent(new Event('auth-logout'));
+    window.history.pushState({}, '', '/');
     window.dispatchEvent(new PopStateEvent('popstate'));
   };
 

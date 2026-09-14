@@ -2,12 +2,12 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-const createToken = (userId) => {
+const createToken = (userId, role = 'citizen') => {
     if (!process.env.JWT_SECRET) {
         throw new Error('JWT_SECRET is not configured');
     }
 
-    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    return jwt.sign({ userId, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
 const publicUser = (user) => ({
@@ -20,7 +20,21 @@ const publicUser = (user) => ({
     isActive: user.isActive,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+    department: user.department,
+    jobSkill: user.jobSkill,
+    serviceArea: user.serviceArea,
+    yearsExperience: user.yearsExperience,
+    availability: user.availability,
+    location: user.location,
 });
+
+const adminUser = {
+    id: 'admin',
+    name: 'SmartCity Administrator',
+    email: process.env.ADMIN_EMAIL,
+    role: 'admin',
+    isActive: true,
+};
 
 export const register = async (request, response) => {
     try {
@@ -62,6 +76,11 @@ export const login = async (request, response) => {
             return response.status(400).json({ message: 'Email and password are required' });
         }
 
+        if (email.trim().toLowerCase() === process.env.ADMIN_EMAIL?.trim().toLowerCase() && password === process.env.ADMIN_PASSWORD) {
+            const token = createToken('admin', 'admin');
+            return response.json({ token, user: adminUser });
+        }
+
         const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+password');
         const passwordMatches = user && (await bcrypt.compare(password, user.password));
 
@@ -69,7 +88,7 @@ export const login = async (request, response) => {
             return response.status(401).json({ message: 'Invalid email or password' });
         }
 
-        const token = createToken(user._id.toString());
+        const token = createToken(user._id.toString(), user.role);
         return response.json({ token, user: publicUser(user) });
     } catch (error) {
         return response.status(500).json({ message: 'Unable to log in user' });
@@ -81,6 +100,10 @@ export const logout = (_request, response) => response.json({
 });
 
 export const getCurrentUser = async (request, response) => {
+    if (request.user.role === 'admin' && request.user.userId === 'admin') {
+        return response.json({ user: adminUser });
+    }
+
     const user = await User.findById(request.user.userId);
 
     if (!user || !user.isActive) {

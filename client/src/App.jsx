@@ -14,6 +14,9 @@ import AboutPage from "./pages/AboutPage";
 import UserDashboard from "./pages/UserDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import CivicPage from "./pages/CivicPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import WorkerDashboard from "./pages/WorkerDashboard";
+import WorkerCreatePage from "./pages/WorkerCreatePage";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(
@@ -22,22 +25,28 @@ export default function App() {
   const [hasSavedSession, setHasSavedSession] = useState(
     Boolean(localStorage.getItem("smart_city_token")),
   );
+  const savedUser = JSON.parse(localStorage.getItem("smart_city_user") || "null");
 
   useEffect(() => {
     const handleLocationChange = () => {
       setCurrentPath(window.location.pathname + window.location.hash);
     };
 
+    const handleAuthLogout = () => setHasSavedSession(false);
+
     window.addEventListener("popstate", handleLocationChange);
     window.addEventListener("hashchange", handleLocationChange);
+    window.addEventListener("auth-logout", handleAuthLogout);
     return () => {
       window.removeEventListener("popstate", handleLocationChange);
       window.removeEventListener("hashchange", handleLocationChange);
+      window.removeEventListener("auth-logout", handleAuthLogout);
     };
   }, []);
 
   const logout = () => {
     localStorage.removeItem("smart_city_token");
+    localStorage.removeItem("smart_city_user");
     setHasSavedSession(false);
     window.history.pushState({}, "", "/");
     window.dispatchEvent(new PopStateEvent("popstate"));
@@ -49,7 +58,7 @@ export default function App() {
       currentPath === "/#login" ||
       window.location.hash === "#login")
   ) {
-    return <UserDashboard />;
+    return savedUser?.role === "admin" ? <AdminDashboard /> : savedUser?.role === "worker" ? <WorkerDashboard /> : <UserDashboard />;
   }
 
   if (
@@ -61,7 +70,16 @@ export default function App() {
   }
 
   if (currentPath === "/dashboard") {
-    return <UserDashboard />;
+    return savedUser?.role === "admin" ? <AdminDashboard /> : savedUser?.role === "worker" ? <WorkerDashboard /> : <UserDashboard />;
+  }
+
+  if (currentPath === "/admin" || currentPath === "/admin/users" || currentPath === "/admin/workers" || currentPath === "/admin/workers/new") {
+    if (currentPath === "/admin/workers/new") return <WorkerCreatePage />;
+    return <AdminDashboard pagePath={currentPath} />;
+  }
+
+  if (currentPath === "/worker" || currentPath === "/worker/availability" || currentPath === "/worker/location") {
+    return <WorkerDashboard pagePath={currentPath} />;
   }
 
   if (currentPath === "/profile") {
@@ -78,7 +96,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
-      <Navbar isAuthenticated={hasSavedSession} onLogout={logout} />
+      <Navbar isAuthenticated={hasSavedSession} user={savedUser} onLogout={logout} />
       <div id="platform">
         <Hero />
       </div>

@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ['citizen'],
+            enum: ['citizen', 'worker', 'admin'],
             default: 'citizen',
             immutable: true,
         },
@@ -41,6 +41,34 @@ const userSchema = new mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true,
+        },
+        department: {
+            type: String,
+            enum: ['Roads and Infrastructure', 'Sanitation', 'Water Services', 'Public Safety', 'Parks and Recreation', 'Electrical Services'],
+        },
+        jobSkill: {
+            type: String,
+            enum: ['Road maintenance', 'Waste management', 'Plumbing', 'Emergency response', 'Landscaping', 'Electrical repair'],
+        },
+        serviceArea: {
+            type: String,
+            trim: true,
+            maxlength: 100,
+        },
+        yearsExperience: {
+            type: Number,
+            min: 0,
+            max: 60,
+        },
+        availability: {
+            type: String,
+            enum: ['Available', 'On duty', 'Unavailable'],
+            default: 'Available',
+        },
+        location: {
+            type: String,
+            trim: true,
+            maxlength: 120,
         },
     },
     { timestamps: true }

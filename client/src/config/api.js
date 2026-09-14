@@ -3,17 +3,19 @@ const API_PREFIX = '/api';
 
 export const apiRequest = async (path, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
+    ...options,
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
     },
-    ...options,
   });
 
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong');
+    const error = new Error(data.message || 'Something went wrong');
+    error.details = data.details;
+    throw error;
   }
 
   return data;
@@ -24,7 +26,7 @@ export const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-export const redirectToDashboard = () => {
-  window.history.pushState({}, '', '/dashboard');
+export const redirectToDashboard = (path = '/dashboard') => {
+  window.history.pushState({}, '', path);
   window.dispatchEvent(new PopStateEvent('popstate'));
 };

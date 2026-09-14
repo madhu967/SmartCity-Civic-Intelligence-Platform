@@ -35,7 +35,8 @@ export default function AuthPage() {
       });
 
       localStorage.setItem('smart_city_token', data.token);
-      redirectToDashboard();
+      localStorage.setItem('smart_city_user', JSON.stringify(data.user));
+      redirectToDashboard(data.user.role === 'admin' ? '/admin' : data.user.role === 'worker' ? '/worker' : '/dashboard');
     } catch (requestError) {
       setError(requestError.message);
     } finally {
