@@ -78,12 +78,12 @@ export default function App() {
     return <ReportIssuePage />;
   }
 
-  if (currentPath === "/admin" || currentPath === "/admin/users" || currentPath === "/admin/workers" || currentPath === "/admin/workers/new") {
+  if (currentPath === "/admin" || currentPath === "/admin/users" || currentPath === "/admin/workers" || currentPath === "/admin/workers/new" || currentPath === "/admin/issues") {
     if (currentPath === "/admin/workers/new") return <WorkerCreatePage />;
     return <AdminDashboard pagePath={currentPath} />;
   }
 
-  if (currentPath === "/worker" || currentPath === "/worker/availability" || currentPath === "/worker/location") {
+  if (currentPath === "/worker" || currentPath === "/worker/availability" || currentPath === "/worker/location" || currentPath === "/worker/issues") {
     return <WorkerDashboard pagePath={currentPath} />;
   }
 

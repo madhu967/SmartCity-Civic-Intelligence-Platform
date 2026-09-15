@@ -32,6 +32,11 @@ export default function UserDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    const loadReports = async () => {
+      const issueData = await apiRequest('/issues', { headers: getAuthHeaders() });
+      setReportCount(issueData.issues.length);
+    };
+
     const loadUser = async () => {
       try {
         const [userData, issueData] = await Promise.all([
@@ -47,6 +52,13 @@ export default function UserDashboard() {
     };
 
     loadUser();
+    const refreshOnFocus = () => loadReports().catch((requestError) => setError(requestError.message));
+    const refreshTimer = window.setInterval(refreshOnFocus, 10000);
+    window.addEventListener('focus', refreshOnFocus);
+    return () => {
+      window.clearInterval(refreshTimer);
+      window.removeEventListener('focus', refreshOnFocus);
+    };
   }, []);
 
   const logout = () => {
@@ -116,7 +128,7 @@ export default function UserDashboard() {
 
           <div className="dashboard-stat-grid">
             <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>My reports</span><ClipboardList size={18} /></div><strong>{reportCount}</strong><small><a href="/reports">View submitted reports</a></small></div>
-            <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Resolved</span><ShieldCheck size={18} /></div><strong>0</strong><small>Your impact is building</small></div>
+            <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Resolved</span><ShieldCheck size={18} /></div><strong>See reports</strong><small>Track city progress in My reports</small></div>
             <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Nearby signals</span><Activity size={18} /></div><strong>12</strong><small>Active in your area</small></div>
             <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Account status</span><UserRound size={18} /></div><strong className="dashboard-status-active">Active</strong><small>Citizen account verified</small></div>
           </div>

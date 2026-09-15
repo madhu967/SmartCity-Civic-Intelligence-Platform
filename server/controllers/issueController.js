@@ -1,6 +1,6 @@
 import Issue from '../models/Issue.js';
 
-const uploadIssueImage = async (image) => {
+export const uploadIssueImage = async (image) => {
     if (!image) return null;
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_UPLOAD_PRESET) {
         throw new Error('Cloudinary unsigned upload preset is not configured');
@@ -45,13 +45,23 @@ const publicIssue = (issue) => ({
     description: issue.description,
     imageUrl: issue.imageUrl,
     status: issue.status,
+    department: issue.department,
+    assignedWorker: issue.assignedWorker ? {
+        id: issue.assignedWorker._id || issue.assignedWorker,
+        name: issue.assignedWorker.name,
+        department: issue.assignedWorker.department,
+    } : null,
+    workerProofImage: issue.workerProofImage,
+    proofReviewStatus: issue.proofReviewStatus,
+    workerCompletionStatus: issue.workerCompletionStatus,
     createdAt: issue.createdAt,
     updatedAt: issue.updatedAt,
 });
 
 export const getMyIssues = async (request, response) => {
     try {
-        const issues = await Issue.find({ reporter: request.user.userId }).sort({ createdAt: -1 });
+        response.set('Cache-Control', 'no-store');
+        const issues = await Issue.find({ reporter: request.user.userId }).populate('assignedWorker', 'name department').sort({ createdAt: -1 });
         return response.json({ issues: issues.map(publicIssue) });
     } catch (error) {
         return response.status(500).json({ message: 'Unable to load your reports' });

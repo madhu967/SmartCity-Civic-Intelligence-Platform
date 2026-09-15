@@ -52,6 +52,11 @@ export default function CivicPage({ pagePath }) {
   const PageIcon = content.icon;
 
   useEffect(() => {
+    const loadReports = async () => {
+      const issueData = await apiRequest('/issues', { headers: getAuthHeaders() });
+      setReports(issueData.issues);
+    };
+
     Promise.all([
       apiRequest('/auth/me', { headers: getAuthHeaders() }),
       pagePath === '/reports' ? apiRequest('/issues', { headers: getAuthHeaders() }) : Promise.resolve({ issues: [] }),
@@ -64,6 +69,15 @@ export default function CivicPage({ pagePath }) {
         localStorage.removeItem('smart_city_token');
         setError(requestError.message);
       });
+
+    if (pagePath !== '/reports') return undefined;
+    const refreshOnFocus = () => loadReports().catch((requestError) => setError(requestError.message));
+    const refreshTimer = window.setInterval(refreshOnFocus, 10000);
+    window.addEventListener('focus', refreshOnFocus);
+    return () => {
+      window.clearInterval(refreshTimer);
+      window.removeEventListener('focus', refreshOnFocus);
+    };
   }, []);
 
   const logout = () => {
@@ -90,7 +104,7 @@ export default function CivicPage({ pagePath }) {
         <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{content.title}</span></div>
         <div className="dashboard-container">
           <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">{content.eyebrow}</p><h1 className="dashboard-heading">{content.title}</h1><p className="dashboard-description">{content.description}</p></div><a href={pagePath === '/reports' ? '/report-issue' : '/dashboard'} className="dashboard-primary-button"><PageIcon size={17} /> {content.action}</a></div>
-          {pagePath === '/reports' && reports.length > 0 ? <section className="civic-page-panel civic-reports-panel"><div className="civic-reports-heading"><div className="civic-page-icon"><PageIcon size={22} /></div><div><p>Personal report history</p><h2>All submitted complaints</h2><span>Every issue you have reported is listed below.</span></div></div><div className="civic-reports-summary"><div><span>Total reports</span><strong>{reports.length}</strong></div><div><span>Resolved</span><strong>{reports.filter((report) => report.status === 'Resolved').length}</strong></div><div><span>In progress</span><strong>{reports.filter((report) => report.status !== 'Resolved').length}</strong></div></div><div className="civic-reports-list">{reports.map((report) => <article className="civic-report-item" key={report.id}><div className="civic-report-item-header"><div><span className="civic-report-category">Issue type</span><strong>{report.category}</strong></div><span className={`civic-report-status civic-report-status-${report.status.toLowerCase().replace(/\s+/g, '-')}`}>{report.status}</span></div><div className="civic-report-meta"><span><MapPin size={14} /> {report.location}</span><span><CalendarDays size={14} /> {formatReportDate(report.createdAt)}</span></div><p className="civic-report-description">{report.description}</p>{report.imageUrl && <a className="civic-report-image-link" href={report.imageUrl} target="_blank" rel="noreferrer"><img src={report.imageUrl} alt={`Evidence for ${report.category}`} /><span>View uploaded evidence</span></a>}<div className="civic-report-footer"><span>Report ID: {String(report.id).slice(-8).toUpperCase()}</span>{report.status === 'Resolved' && <span className="civic-report-resolved"><CheckCircle2 size={14} /> Resolved by city team</span>}</div></article>)}</div><a href="/report-issue" className="dashboard-primary-button">Report another issue <span>→</span></a></section> : <section className="civic-page-panel"><div className="civic-page-icon"><PageIcon size={22} /></div><h2>{content.emptyTitle}</h2><p>{content.emptyText}</p><a href={pagePath === '/reports' ? '/report-issue' : '/dashboard'} className="dashboard-primary-button">{content.action} <span>→</span></a></section>}
+          {pagePath === '/reports' && reports.length > 0 ? <section className="civic-page-panel civic-reports-panel"><div className="civic-reports-heading"><div className="civic-page-icon"><PageIcon size={22} /></div><div><p>Personal report history</p><h2>All submitted complaints</h2><span>Every issue you have reported is listed below.</span></div></div><div className="civic-reports-summary"><div><span>Total reports</span><strong>{reports.length}</strong></div><div><span>Resolved</span><strong>{reports.filter((report) => report.status === 'Resolved').length}</strong></div><div><span>In progress</span><strong>{reports.filter((report) => report.status !== 'Resolved').length}</strong></div></div><div className="civic-reports-list">{reports.map((report) => <article className="civic-report-item" key={report.id}><div className="civic-report-item-header"><div><span className="civic-report-category">Issue type</span><strong>{report.category}</strong></div><span className={`civic-report-status civic-report-status-${(report.status || 'Submitted').toLowerCase().replace(/\s+/g, '-')}`}>{report.status || 'Submitted'}</span></div><div className="civic-report-meta"><span><MapPin size={14} /> {report.location}</span><span><CalendarDays size={14} /> {formatReportDate(report.createdAt)}</span></div><p className="civic-report-description">{report.description}</p>{report.assignedWorker && <p className="civic-report-assignment">Assigned worker: <strong>{report.assignedWorker.name}</strong> · {report.assignedWorker.department}</p>}{report.imageUrl && <a className="civic-report-image-link" href={report.imageUrl} target="_blank" rel="noreferrer"><img src={report.imageUrl} alt={`Evidence for ${report.category}`} /><span>View uploaded evidence</span></a>}{report.workerProofImage && <a className="civic-report-image-link" href={report.workerProofImage} target="_blank" rel="noreferrer"><img src={report.workerProofImage} alt={`Completion proof for ${report.category}`} /><span>Worker proof: {report.proofReviewStatus || 'Pending review'}</span></a>}<div className="civic-report-footer"><span>Report ID: {String(report.id).slice(-8).toUpperCase()}</span>{report.status === 'Resolved' && <span className="civic-report-resolved"><CheckCircle2 size={14} /> Resolved by city team</span>}</div></article>)}</div><a href="/report-issue" className="dashboard-primary-button">Report another issue <span>→</span></a></section> : <section className="civic-page-panel"><div className="civic-page-icon"><PageIcon size={22} /></div><h2>{content.emptyTitle}</h2><p>{content.emptyText}</p><a href={pagePath === '/reports' ? '/report-issue' : '/dashboard'} className="dashboard-primary-button">{content.action} <span>→</span></a></section>}
           <div className="civic-static-grid"><div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Community status</span><Activity size={18} /></div><strong>Active</strong><small>Live civic intelligence enabled</small></div><div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Account role</span><UserRound size={18} /></div><strong className="capitalize">{user.role}</strong><small>{user.email}</small></div></div>
         </div>
       </section>

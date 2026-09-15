@@ -46,6 +46,39 @@ const issueSchema = new mongoose.Schema(
             enum: ['Submitted', 'In review', 'In progress', 'Resolved'],
             default: 'Submitted',
         },
+        reviewStatus: {
+            type: String,
+            enum: ['Pending verification', 'Verified', 'Rejected'],
+            default: 'Pending verification',
+        },
+        priority: {
+            type: String,
+            enum: ['Low', 'Medium', 'High', 'Critical'],
+            default: 'Medium',
+        },
+        department: {
+            type: String,
+            trim: true,
+            maxlength: 100,
+        },
+        assignedWorker: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        workerProofImage: {
+            type: String,
+            trim: true,
+        },
+        proofReviewStatus: {
+            type: String,
+            enum: ['Pending review', 'Approved', 'Rejected'],
+            default: 'Pending review',
+        },
+        workerCompletionStatus: {
+            type: String,
+            enum: ['Not started', 'In progress', 'Ready for admin review', 'Resolved'],
+            default: 'Not started',
+        },
     },
     { timestamps: true }
 );

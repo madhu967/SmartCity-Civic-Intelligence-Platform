@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck, Users, X } from 'lucide-react';
+import { BarChart3, Filter, LayoutDashboard, LogOut, MapPin, Menu, Search, Settings, ShieldCheck, UserCheck, Users, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
@@ -7,30 +7,37 @@ const adminPages = [
   { label: 'Admin overview', href: '/admin', icon: LayoutDashboard },
   { label: 'Manage users', href: '/admin/users', icon: Users },
   { label: 'Manage workers', href: '/admin/workers', icon: ShieldCheck },
+  { label: 'Issue dashboard', href: '/admin/issues', icon: Filter },
   { label: 'Create worker', href: '/admin/workers/new', icon: ShieldCheck },
   { label: 'Reports overview', href: '/admin#reports', icon: BarChart3 },
 ];
+
+const departmentOptions = ['Roads and Infrastructure', 'Sanitation', 'Water Services', 'Public Safety', 'Parks and Recreation', 'Electrical Services'];
 
 export default function AdminDashboard({ pagePath = '/admin' }) {
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [workers, setWorkers] = useState([]);
+  const [issues, setIssues] = useState([]);
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isUsersPage = pagePath === '/admin/users';
   const isWorkersPage = pagePath === '/admin/workers';
+  const isIssuesPage = pagePath === '/admin/issues';
 
   useEffect(() => {
     const loadAdmin = async () => {
       try {
-        const [profile, userList, workerList] = await Promise.all([
+        const [profile, userList, workerList, issueList] = await Promise.all([
           apiRequest('/auth/me', { headers: getAuthHeaders() }),
           apiRequest('/admin/users', { headers: getAuthHeaders() }),
           apiRequest('/admin/workers', { headers: getAuthHeaders() }),
+          apiRequest('/admin/issues', { headers: getAuthHeaders() }),
         ]);
         setUser(profile.user);
         setUsers(userList.users);
         setWorkers(workerList.workers);
+        setIssues(issueList.issues);
       } catch (requestError) {
         localStorage.removeItem('smart_city_token');
         localStorage.removeItem('smart_city_user');
@@ -62,6 +69,21 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
     }
   };
 
+  const updateIssue = async (issueId, changes) => {
+    try {
+      const data = await apiRequest(`/admin/issues/${issueId}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(changes),
+      });
+      setIssues((currentIssues) => currentIssues.map((issue) => issue.id === issueId ? data.issue : issue));
+      return data.issue;
+    } catch (requestError) {
+      setError(requestError.message);
+      throw requestError;
+    }
+  };
+
   if (error) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm text-slate-500">{error}. <a href="/login" className="ml-1 font-bold text-brand-600">Log in again</a></main>;
   if (!user) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-brand-600">Loading admin dashboard...</main>;
 
@@ -76,10 +98,10 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
       </aside>
       {sidebarOpen && <button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-sidebar-overlay" aria-label="Close sidebar" />}
       <section className="dashboard-main">
-        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : 'Admin overview'}</span></div>
+        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Issue dashboard' : 'Admin overview'}</span></div>
         <div className="dashboard-container">
-          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : 'Admin overview'}</h1><p className="dashboard-description">{isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
-          {isUsersPage ? <UsersTable users={users} onStatusChange={updateStatus} /> : isWorkersPage ? <WorkersTable workers={workers} /> : <AdminOverview users={users} />}
+          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Admin Issue Dashboard' : 'Admin overview'}</h1><p className="dashboard-description">{isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : isIssuesPage ? 'Review, prioritize, edit, and assign every citizen complaint.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && !isIssuesPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
+          {isUsersPage ? <UsersTable users={users} onStatusChange={updateStatus} /> : isWorkersPage ? <WorkersTable workers={workers} /> : isIssuesPage ? <AdminIssues issues={issues} workers={workers} onUpdate={updateIssue} /> : <AdminOverview users={users} />}
         </div>
       </section>
     </main>
@@ -106,4 +128,38 @@ function WorkersTable({ workers }) {
   }, {});
 
   return <section className="dashboard-panel admin-users-panel"><div className="dashboard-panel-heading"><div><h2>Field workers</h2><p>{workers.length} workers created by administrators</p></div><ShieldCheck size={21} /></div>{workers.length === 0 ? <div className="admin-empty-users">No workers have been created yet.</div> : <><div className="admin-worker-filter" aria-label="Filter workers by department"><span>Filter by specialty</span><div className="admin-worker-filter-options"><button type="button" onClick={() => setSelectedDepartment('All departments')} className={`admin-worker-filter-button ${selectedDepartment === 'All departments' ? 'admin-worker-filter-button-active' : ''}`}>All departments</button>{departments.map((department) => <button type="button" key={department} onClick={() => setSelectedDepartment(department)} className={`admin-worker-filter-button ${selectedDepartment === department ? 'admin-worker-filter-button-active' : ''}`}>{department}</button>)}</div></div><div className="admin-worker-departments">{Object.entries(workersByDepartment).sort(([firstDepartment], [secondDepartment]) => firstDepartment.localeCompare(secondDepartment)).map(([department, departmentWorkers]) => <section className="admin-worker-department" key={department}><div className="admin-worker-department-heading"><div><h3>{department}</h3><span>{departmentWorkers.length} {departmentWorkers.length === 1 ? 'worker' : 'workers'}</span></div><ShieldCheck size={17} /></div><div className="admin-users-list">{departmentWorkers.map((worker) => <div className="admin-user-row" key={worker.id}><div className="dashboard-avatar">{worker.name?.charAt(0).toUpperCase()}</div><div className="admin-user-info"><strong>{worker.name}</strong><span>{worker.email}</span><small className="admin-worker-meta">{worker.jobSkill} · {worker.serviceArea} · {worker.yearsExperience} years</small></div><div className={`admin-status ${worker.availability === 'Unavailable' ? 'admin-status-inactive' : 'admin-status-active'}`}>{worker.availability}</div></div>)}</div></section>)}</div></>}</section>;
+}
+
+function AdminIssues({ issues, workers, onUpdate }) {
+  const [search, setSearch] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('All priorities');
+  const [locationFilter, setLocationFilter] = useState('');
+  const departments = departmentOptions;
+  const filteredIssues = issues.filter((issue) => {
+    const searchText = `${issue.category} ${issue.description} ${issue.location} ${issue.reporter?.name || ''} ${issue.reporter?.email || ''}`.toLowerCase();
+    return searchText.includes(search.toLowerCase())
+      && (priorityFilter === 'All priorities' || issue.priority === priorityFilter)
+      && issue.location.toLowerCase().includes(locationFilter.toLowerCase());
+  });
+
+  return <section className="dashboard-panel admin-issues-panel"><div className="admin-issues-toolbar"><label className="admin-issue-search"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search complaints, people, or locations" /></label><label className="admin-issue-filter"><Filter size={15} /><select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}><option>All priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label><label className="admin-issue-location-filter"><MapPin size={15} /><input value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)} placeholder="Filter location" /></label></div><div className="admin-issues-summary"><strong>{filteredIssues.length}</strong><span>of {issues.length} complaints shown</span></div>{filteredIssues.length === 0 ? <div className="admin-empty-users">No issue reports match the current filters.</div> : <div className="admin-issues-list">{filteredIssues.map((issue) => <AdminIssueCard key={issue.id} issue={issue} workers={workers} departments={departments} onUpdate={onUpdate} />)}</div>}</section>;
+}
+
+function AdminIssueCard({ issue, workers, departments, onUpdate }) {
+  const [draft, setDraft] = useState({ priority: issue.priority || 'Medium', department: issue.department || '', location: issue.location, status: issue.status || 'Submitted', assignedWorker: issue.assignedWorker?.id || '' });
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const updateDraft = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
+  const submitChanges = async () => {
+    setMessage('');
+    setError('');
+    try {
+      await onUpdate(issue.id, draft);
+      setMessage('Issue changes saved.');
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  };
+  const reviewProof = (proofReviewStatus) => onUpdate(issue.id, { proofReviewStatus });
+  return <article className="admin-issue-card"><div className="admin-issue-card-top"><div><span className="admin-issue-category">{issue.category}</span><h2>{issue.description}</h2><p className="admin-issue-reporter">Reported by {issue.reporter?.name || 'Unknown citizen'} · {issue.reporter?.email || 'No email'}</p></div></div><div className="admin-issue-meta"><span><MapPin size={14} /> {issue.location}</span><span>{new Date(issue.createdAt).toLocaleString()}</span></div>{issue.imageUrl && <a href={issue.imageUrl} target="_blank" rel="noreferrer" className="admin-issue-image-link"><img src={issue.imageUrl} alt={`Evidence for ${issue.category}`} /> View citizen image</a>}{issue.workerProofImage && <div className="admin-proof-review"><img src={issue.workerProofImage} alt={`Worker proof for ${issue.category}`} /><div><strong>Worker completion proof</strong><span>{issue.proofReviewStatus || 'Pending review'}</span><div className="admin-issue-actions"><button type="button" onClick={() => reviewProof('Approved')} className="admin-issue-action admin-issue-verify">Approve proof</button><button type="button" onClick={() => reviewProof('Rejected')} className="admin-issue-action admin-issue-reject">Reject proof</button></div></div></div>}<div className="admin-issue-controls"><label><span>Priority</span><select value={draft.priority} onChange={(event) => updateDraft('priority', event.target.value)}><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label><label><span>Department</span><select value={draft.department} onChange={(event) => updateDraft('department', event.target.value)}><option value="">Select department</option>{departments.map((department) => <option key={department}>{department}</option>)}</select></label><label><span>Location</span><input value={draft.location} onChange={(event) => updateDraft('location', event.target.value)} /></label><label><span>Status</span><select value={draft.status} onChange={(event) => updateDraft('status', event.target.value)}><option>Submitted</option><option>In review</option><option>In progress</option><option>Resolved</option></select></label><label><span><UserCheck size={14} /> Assign worker</span><select value={draft.assignedWorker} onChange={(event) => updateDraft('assignedWorker', event.target.value)}><option value="">Unassigned</option>{workers.map((worker) => <option key={worker.id} value={worker.id}>{worker.name} · {worker.department || 'No department'}</option>)}</select></label></div><div className="admin-issue-submit-row"><button type="button" onClick={submitChanges} className="dashboard-primary-button">Submit issue changes</button>{message && <span className="admin-issue-save-message">{message}</span>}{error && <span className="admin-issue-error-message">{error}</span>}</div></article>;
 }
