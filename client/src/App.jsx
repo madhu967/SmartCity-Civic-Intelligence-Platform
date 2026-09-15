@@ -17,6 +17,7 @@ import CivicPage from "./pages/CivicPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import WorkerDashboard from "./pages/WorkerDashboard";
 import WorkerCreatePage from "./pages/WorkerCreatePage";
+import ReportIssuePage from "./pages/ReportIssuePage";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(
@@ -71,6 +72,10 @@ export default function App() {
 
   if (currentPath === "/dashboard") {
     return savedUser?.role === "admin" ? <AdminDashboard /> : savedUser?.role === "worker" ? <WorkerDashboard /> : <UserDashboard />;
+  }
+
+  if (currentPath === "/report-issue") {
+    return <ReportIssuePage />;
   }
 
   if (currentPath === "/admin" || currentPath === "/admin/users" || currentPath === "/admin/workers" || currentPath === "/admin/workers/new") {

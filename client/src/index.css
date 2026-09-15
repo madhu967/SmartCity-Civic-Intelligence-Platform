@@ -243,12 +243,43 @@ body {
 .worker-field { display: grid; gap: 7px; color: #475569; font-size: 11px; font-weight: 800; }
 .worker-field > span { display: flex; align-items: center; gap: 6px; }
 .worker-field input,
-.worker-field select { width: 100%; min-height: 42px; padding: 0 12px; border: 1px solid #dbe3ee; border-radius: 9px; outline: none; color: #334155; background: #f8fafc; font-family: inherit; font-size: 12px; }
+.worker-field select,
+.worker-field textarea { width: 100%; min-height: 42px; padding: 11px 12px; border: 1px solid #dbe3ee; border-radius: 9px; outline: none; color: #334155; background: #f8fafc; font-family: inherit; font-size: 12px; resize: vertical; }
 .worker-field input:focus,
-.worker-field select:focus { border-color: #60a5fa; background: #fff; box-shadow: 0 0 0 3px #eff6ff; }
+.worker-field select:focus,
+.worker-field textarea:focus { border-color: #60a5fa; background: #fff; box-shadow: 0 0 0 3px #eff6ff; }
 .worker-submit { justify-self: start; }
+.report-issue-form { max-width: 920px; }
+.report-description-field { grid-column: 1 / -1; }
+.report-image-field { grid-column: 1 / -1; }
+.report-image-field small { color: #94a3b8; font-size: 10px; font-weight: 600; }
 .worker-success { margin: 0; padding: 12px 14px; border: 1px solid #a7f3d0; border-radius: 10px; color: #047857; background: #ecfdf5; font-size: 12px; font-weight: 700; }
 .worker-error { margin: 0; padding: 12px 14px; border: 1px solid #fecaca; border-radius: 10px; color: #b91c1c; background: #fef2f2; font-size: 12px; font-weight: 700; }
+.worker-success a { margin-left: 4px; color: #047857; text-decoration: underline; }
+.civic-reports-panel { display: block; min-height: 0; padding: 26px; text-align: left; }
+.civic-reports-heading { display: flex; align-items: center; gap: 14px; }
+.civic-reports-heading p { margin: 0 0 4px; color: #2563eb; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.civic-reports-heading h2 { margin: 0; color: #091428; font-size: 20px; font-weight: 800; }
+.civic-reports-heading span { display: block; margin-top: 5px; color: #64748b; font-size: 12px; }
+.civic-reports-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 24px 0 18px; }
+.civic-reports-summary > div { padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
+.civic-reports-summary span { display: block; color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.civic-reports-summary strong { display: block; margin-top: 8px; color: #091428; font-size: 23px; }
+.civic-reports-list { display: grid; gap: 12px; margin: 0 0 22px; }
+.civic-report-item { padding: 18px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px rgba(15, 23, 42, .04); }
+.civic-report-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.civic-report-item-header strong { display: block; margin-top: 4px; color: #1e293b; font-size: 14px; }
+.civic-report-category { display: block; margin: 0 !important; color: #2563eb !important; font-size: 10px !important; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.civic-report-meta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; color: #64748b; font-size: 11px; }
+.civic-report-meta span, .civic-report-resolved { display: inline-flex; align-items: center; gap: 5px; }
+.civic-report-description { margin: 14px 0 0; color: #475569; font-size: 12px; line-height: 1.7; }
+.civic-report-image-link { display: inline-flex; align-items: center; gap: 9px; margin-top: 14px; color: #2563eb; font-size: 11px; font-weight: 800; text-decoration: none; }
+.civic-report-image-link img { width: 58px; height: 58px; border: 1px solid #dbeafe; border-radius: 8px; object-fit: cover; }
+.civic-report-status { flex: 0 0 auto; padding: 6px 9px; border-radius: 99px; color: #1d4e8f; background: #dbeafe; font-size: 10px; font-weight: 800; }
+.civic-report-status-resolved { color: #047857; background: #d1fae5; }
+.civic-report-status-in-review, .civic-report-status-in-progress { color: #b45309; background: #fef3c7; }
+.civic-report-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #f1f5f9; color: #94a3b8; font-size: 10px; }
+.civic-report-resolved { color: #059669; font-weight: 700; }
 .worker-stat-text { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px !important; }
 .worker-availability-panel { max-width: 920px; margin-top: 30px; }
 .worker-availability-form { display: grid; grid-template-columns: 1fr 1.5fr auto; align-items: end; gap: 14px; margin-top: 22px; }
@@ -317,6 +348,13 @@ body {
   .dashboard-heading-row { align-items: flex-start; flex-direction: column; }
   .dashboard-heading { font-size: 26px; }
   .dashboard-primary-button { width: 100%; justify-content: center; }
+  .civic-reports-panel { padding: 18px; }
+  .civic-reports-heading { align-items: flex-start; }
+  .civic-reports-heading h2 { font-size: 17px; }
+  .civic-reports-summary { grid-template-columns: 1fr; }
+  .civic-report-item-header { flex-direction: column; }
+  .civic-report-status { align-self: flex-start; }
+  .civic-report-footer { align-items: flex-start; flex-direction: column; }
   .dashboard-stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 25px; }
   .dashboard-stat-card { padding: 14px; }
   .dashboard-stat-card strong { font-size: 23px; }

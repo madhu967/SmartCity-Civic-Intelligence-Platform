@@ -8,6 +8,7 @@ import {
   MapPin,
   Menu,
   Plus,
+  FileWarning,
   Settings,
   ShieldCheck,
   UserRound,
@@ -18,6 +19,7 @@ import { apiRequest, getAuthHeaders } from '../config/api';
 
 const pages = [
   { label: 'Overview', icon: Home, href: '/dashboard' },
+  { label: 'Report an issue', icon: FileWarning, href: '/report-issue' },
   { label: 'My reports', icon: ClipboardList, href: '/reports' },
   { label: 'Nearby activity', icon: Activity, href: '/activity' },
   { label: 'Notifications', icon: Bell, href: '/notifications' },
@@ -25,14 +27,19 @@ const pages = [
 
 export default function UserDashboard() {
   const [user, setUser] = useState(null);
+  const [reportCount, setReportCount] = useState(0);
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const data = await apiRequest('/auth/me', { headers: getAuthHeaders() });
-        setUser(data.user);
+        const [userData, issueData] = await Promise.all([
+          apiRequest('/auth/me', { headers: getAuthHeaders() }),
+          apiRequest('/issues', { headers: getAuthHeaders() }),
+        ]);
+        setUser(userData.user);
+        setReportCount(issueData.issues.length);
       } catch (requestError) {
         localStorage.removeItem('smart_city_token');
         setError(requestError.message);
@@ -104,18 +111,18 @@ export default function UserDashboard() {
         <div className="dashboard-container">
           <div className="dashboard-heading-row">
             <div><p className="dashboard-eyebrow">Citizen dashboard</p><h1 className="dashboard-heading">Welcome, {user.name}.</h1><p className="dashboard-description">Your civic space for making a difference in your community.</p></div>
-            <button type="button" className="dashboard-primary-button"><Plus size={17} /> Report an issue</button>
+            <a href="/report-issue" className="dashboard-primary-button"><Plus size={17} /> Report an issue</a>
           </div>
 
           <div className="dashboard-stat-grid">
-            <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>My reports</span><ClipboardList size={18} /></div><strong>0</strong><small>No reports submitted yet</small></div>
+            <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>My reports</span><ClipboardList size={18} /></div><strong>{reportCount}</strong><small><a href="/reports">View submitted reports</a></small></div>
             <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Resolved</span><ShieldCheck size={18} /></div><strong>0</strong><small>Your impact is building</small></div>
             <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Nearby signals</span><Activity size={18} /></div><strong>12</strong><small>Active in your area</small></div>
             <div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Account status</span><UserRound size={18} /></div><strong className="dashboard-status-active">Active</strong><small>Citizen account verified</small></div>
           </div>
 
           <div className="dashboard-lower-grid">
-            <section className="dashboard-panel"><div className="dashboard-panel-heading"><div><h2>Your civic activity</h2><p>Reports and updates will appear here.</p></div><Activity size={21} /></div><div className="dashboard-empty-state"><span><Plus size={19} /></span><strong>Start making an impact</strong><p>Report a civic issue and help your city team understand what needs attention.</p><button type="button">Create your first report <span>→</span></button></div></section>
+            <section className="dashboard-panel"><div className="dashboard-panel-heading"><div><h2>Your civic activity</h2><p>Reports and updates will appear here.</p></div><Activity size={21} /></div><div className="dashboard-empty-state"><span><Plus size={19} /></span><strong>Start making an impact</strong><p>Report a civic issue and help your city team understand what needs attention.</p><a href="/report-issue">Create your first report <span>→</span></a></div></section>
             <section className="dashboard-panel"><div className="dashboard-panel-heading"><h2>Profile</h2><a href="/profile">View details</a></div><div className="dashboard-profile"><div className="dashboard-avatar">{initials}</div><div><strong>{user.name}</strong><span className="capitalize">{user.role} account</span></div></div><dl className="dashboard-profile-details"><div><dt>Email</dt><dd>{user.email}</dd></div><div><dt>Phone</dt><dd>{user.phone || 'Not added yet'}</dd></div><div className="dashboard-connected"><MapPin size={14} /> Connected to your community</div></dl></section>
           </div>
         </div>
