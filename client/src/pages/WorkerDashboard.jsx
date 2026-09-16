@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Activity, BriefcaseBusiness, Bot, CheckCircle2, ClipboardList, FileImage, LoaderCircle, LogOut, MapPin, Menu, ShieldCheck, UserRound, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
-import { getUserCurrentLocation } from '../utils/geolocation';
+import { getUserCurrentLocation, reverseGeocode } from '../utils/geolocation';
 
 export default function WorkerDashboard({ pagePath = '/worker' }) {
   const [user, setUser] = useState(null);
@@ -80,6 +80,63 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
       window.removeEventListener('focus', refreshOnFocus);
     };
   }, [isIssuesPage]);
+
+  // Continuously track worker's live location while active
+  useEffect(() => {
+    if (typeof window === 'undefined' || !navigator.geolocation) return undefined;
+    let lastSyncTimestamp = 0;
+
+    const watchId = navigator.geolocation.watchPosition(
+      async (position) => {
+        const now = Date.now();
+        // Sync at most once every 30 seconds to conserve battery & network
+        if (now - lastSyncTimestamp < 30000) return;
+        lastSyncTimestamp = now;
+
+        try {
+          const { latitude, longitude } = position.coords;
+          const address = await reverseGeocode(latitude, longitude);
+          const coordinateNote = `(${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+          const locString = address ? `${address} ${coordinateNote}` : coordinateNote;
+          const trimmedLoc = locString.slice(0, 190);
+
+          await apiRequest('/worker/location', {
+            method: 'PATCH',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+              location: trimmedLoc,
+              latitude,
+              longitude,
+            }),
+          });
+
+          setLocation(trimmedLoc);
+          setUser((curr) => curr ? ({
+            ...curr,
+            location: trimmedLoc,
+            latitude,
+            longitude,
+            locationUpdatedAt: new Date().toISOString(),
+          }) : curr);
+          setLocationStatus('Live GPS active');
+        } catch (watchErr) {
+          console.warn('Background live GPS watch update error:', watchErr);
+        }
+      },
+      (error) => {
+        console.warn('Geolocation watch error:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 15000,
+        timeout: 20000,
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
 
   const logout = () => {
     localStorage.removeItem('smart_city_token');

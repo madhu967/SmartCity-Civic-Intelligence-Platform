@@ -18,6 +18,9 @@ const publicUser = (user) => ({
     yearsExperience: user.yearsExperience,
     availability: user.availability,
     location: user.location,
+    latitude: user.latitude,
+    longitude: user.longitude,
+    locationUpdatedAt: user.locationUpdatedAt,
 });
 
 export const createWorker = async (request, response) => {
@@ -75,8 +78,30 @@ export const createWorker = async (request, response) => {
 
 export const listWorkers = async (_request, response) => {
     try {
-        const workers = await User.find({ role: 'worker' }).sort({ createdAt: -1 });
-        return response.json({ workers: workers.map(publicUser), total: workers.length });
+        const [workers, activeCounts] = await Promise.all([
+            User.find({ role: 'worker' }).sort({ createdAt: -1 }),
+            Issue.aggregate([
+                { $match: { assignedWorker: { $ne: null }, status: { $ne: 'Resolved' } } },
+                { $group: { _id: '$assignedWorker', count: { $sum: 1 } } },
+            ]),
+        ]);
+
+        const countMap = {};
+        activeCounts.forEach((item) => {
+            countMap[item._id.toString()] = item.count;
+        });
+
+        const workersWithWorkload = workers.map((worker) => {
+            const base = publicUser(worker);
+            const activeIssuesCount = countMap[worker._id.toString()] || 0;
+            return {
+                ...base,
+                activeIssuesCount,
+                workload: activeIssuesCount === 0 ? 'Low' : activeIssuesCount <= 2 ? 'Medium' : 'High',
+            };
+        });
+
+        return response.json({ workers: workersWithWorkload, total: workers.length });
     } catch (error) {
         return response.status(500).json({ message: 'Unable to load workers' });
     }
@@ -113,6 +138,8 @@ const publicIssue = (issue) => ({
     id: issue._id,
     category: issue.category,
     location: issue.location,
+    latitude: issue.latitude,
+    longitude: issue.longitude,
     description: issue.description,
     aiTitle: issue.aiTitle,
     aiDescription: issue.aiDescription,
@@ -127,6 +154,9 @@ const publicIssue = (issue) => ({
         id: issue.assignedWorker._id,
         name: issue.assignedWorker.name,
         department: issue.assignedWorker.department,
+        location: issue.assignedWorker.location,
+        latitude: issue.assignedWorker.latitude,
+        longitude: issue.assignedWorker.longitude,
     } : null,
     workerProofImage: issue.workerProofImage,
     proofReviewStatus: issue.proofReviewStatus,
@@ -143,7 +173,10 @@ const publicIssue = (issue) => ({
 export const listIssues = async (_request, response) => {
     try {
         response.set('Cache-Control', 'no-store');
-        const issues = await Issue.find().populate('reporter', 'name email').populate('assignedWorker', 'name department').sort({ createdAt: -1 });
+        const issues = await Issue.find()
+            .populate('reporter', 'name email')
+            .populate('assignedWorker', 'name department location latitude longitude')
+            .sort({ createdAt: -1 });
         return response.json({ issues: issues.map(publicIssue), total: issues.length });
     } catch (error) {
         return response.status(500).json({ message: 'Unable to load issue reports' });

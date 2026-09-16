@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, Bot, CheckCircle2, Filter, LayoutDashboard, LogOut, Mail, MapPin, Menu, Search, Settings, ShieldCheck, UserCheck, Users, X } from 'lucide-react';
+import { BarChart3, Bot, CheckCircle2, Compass, Filter, LayoutDashboard, LogOut, Mail, MapPin, Menu, Navigation, Radio, Search, Settings, ShieldCheck, UserCheck, Users, X, Zap } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
+import { calculateDistanceKm, formatDistance } from '../utils/geolocation';
 
 const adminPages = [
   { label: 'Admin overview', href: '/admin', icon: LayoutDashboard },
@@ -141,7 +142,89 @@ function WorkersTable({ workers }) {
     return groups;
   }, {});
 
-  return <section className="dashboard-panel admin-users-panel"><div className="dashboard-panel-heading"><div><h2>Field workers</h2><p>{workers.length} workers created by administrators</p></div><ShieldCheck size={21} /></div>{workers.length === 0 ? <div className="admin-empty-users">No workers have been created yet.</div> : <><div className="admin-worker-filter" aria-label="Filter workers by department"><span>Filter by specialty</span><div className="admin-worker-filter-options"><button type="button" onClick={() => setSelectedDepartment('All departments')} className={`admin-worker-filter-button ${selectedDepartment === 'All departments' ? 'admin-worker-filter-button-active' : ''}`}>All departments</button>{departments.map((department) => <button type="button" key={department} onClick={() => setSelectedDepartment(department)} className={`admin-worker-filter-button ${selectedDepartment === department ? 'admin-worker-filter-button-active' : ''}`}>{department}</button>)}</div></div><div className="admin-worker-departments">{Object.entries(workersByDepartment).sort(([firstDepartment], [secondDepartment]) => firstDepartment.localeCompare(secondDepartment)).map(([department, departmentWorkers]) => <section className="admin-worker-department" key={department}><div className="admin-worker-department-heading"><div><h3>{department}</h3><span>{departmentWorkers.length} {departmentWorkers.length === 1 ? 'worker' : 'workers'}</span></div><ShieldCheck size={17} /></div><div className="admin-users-list">{departmentWorkers.map((worker) => <div className="admin-user-row" key={worker.id}><div className="dashboard-avatar">{worker.profileImage ? <img src={worker.profileImage} alt={`${worker.name} profile`} /> : worker.name?.charAt(0).toUpperCase()}</div><div className="admin-user-info"><strong>{worker.name}</strong><span>{worker.email}</span><small className="admin-worker-meta">{worker.jobSkill} · {worker.serviceArea} · {worker.yearsExperience} years</small></div><div className={`admin-status ${worker.availability === 'Unavailable' ? 'admin-status-inactive' : 'admin-status-active'}`}>{worker.availability}</div></div>)}</div></section>)}</div></>}</section>;
+  return (
+    <section className="dashboard-panel admin-users-panel">
+      <div className="dashboard-panel-heading">
+        <div>
+          <h2>Field workers</h2>
+          <p>{workers.length} workers registered with real-time GPS operations</p>
+        </div>
+        <ShieldCheck size={21} />
+      </div>
+      {workers.length === 0 ? (
+        <div className="admin-empty-users">No workers have been created yet.</div>
+      ) : (
+        <>
+          <div className="admin-worker-filter" aria-label="Filter workers by department">
+            <span>Filter by specialty</span>
+            <div className="admin-worker-filter-options">
+              <button
+                type="button"
+                onClick={() => setSelectedDepartment('All departments')}
+                className={`admin-worker-filter-button ${selectedDepartment === 'All departments' ? 'admin-worker-filter-button-active' : ''}`}
+              >
+                All departments
+              </button>
+              {departments.map((department) => (
+                <button
+                  type="button"
+                  key={department}
+                  onClick={() => setSelectedDepartment(department)}
+                  className={`admin-worker-filter-button ${selectedDepartment === department ? 'admin-worker-filter-button-active' : ''}`}
+                >
+                  {department}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="admin-worker-departments">
+            {Object.entries(workersByDepartment).sort(([firstDepartment], [secondDepartment]) => firstDepartment.localeCompare(secondDepartment)).map(([department, departmentWorkers]) => (
+              <section className="admin-worker-department" key={department}>
+                <div className="admin-worker-department-heading">
+                  <div>
+                    <h3>{department}</h3>
+                    <span>{departmentWorkers.length} {departmentWorkers.length === 1 ? 'worker' : 'workers'}</span>
+                  </div>
+                  <ShieldCheck size={17} />
+                </div>
+                <div className="admin-users-list">
+                  {departmentWorkers.map((worker) => (
+                    <div className="admin-user-row admin-worker-row" key={worker.id}>
+                      <div className="dashboard-avatar">
+                        {worker.profileImage ? <img src={worker.profileImage} alt={`${worker.name} profile`} /> : worker.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="admin-user-info">
+                        <div className="flex items-center gap-2">
+                          <strong>{worker.name}</strong>
+                          <span className="text-xs text-slate-500">{worker.email}</span>
+                        </div>
+                        <small className="admin-worker-meta">
+                          {worker.jobSkill} · {worker.serviceArea} · {worker.yearsExperience} yrs exp
+                        </small>
+                        <div className="admin-worker-stats-row">
+                          <span className="admin-worker-loc-chip" title={worker.location || 'Location pending'}>
+                            <MapPin size={11} className="text-blue-600 inline mr-1" />
+                            {worker.location ? (worker.location.length > 50 ? `${worker.location.slice(0, 50)}...` : worker.location) : 'Location pending'}
+                          </span>
+                          <span className="admin-worker-workload-chip">
+                            <Zap size={11} className={worker.activeIssuesCount > 2 ? 'text-amber-500 inline mr-1' : 'text-emerald-500 inline mr-1'} />
+                            {worker.activeIssuesCount || 0} active {worker.activeIssuesCount === 1 ? 'task' : 'tasks'} · {worker.workload || 'Low'} workload
+                          </span>
+                        </div>
+                      </div>
+                      <div className={`admin-status ${worker.availability === 'Unavailable' ? 'admin-status-inactive' : 'admin-status-active'}`}>
+                        {worker.availability}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  );
 }
 
 function AdminIssues({ issues, workers, onUpdate }) {
@@ -156,14 +239,105 @@ function AdminIssues({ issues, workers, onUpdate }) {
       && issue.location.toLowerCase().includes(locationFilter.toLowerCase());
   });
 
-  return <section className="dashboard-panel admin-issues-panel"><div className="admin-issues-toolbar"><label className="admin-issue-search"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search complaints, people, or locations" /></label><label className="admin-issue-filter"><Filter size={15} /><select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}><option>All priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label><label className="admin-issue-location-filter"><MapPin size={15} /><input value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)} placeholder="Filter location" /></label></div><div className="admin-issues-summary"><strong>{filteredIssues.length}</strong><span>of {issues.length} complaints shown</span></div>{filteredIssues.length === 0 ? <div className="admin-empty-users">No issue reports match the current filters.</div> : <div className="admin-issues-list">{filteredIssues.map((issue) => <AdminIssueCard key={issue.id} issue={issue} workers={workers} departments={departments} onUpdate={onUpdate} />)}</div>}</section>;
+  return (
+    <section className="dashboard-panel admin-issues-panel">
+      <div className="admin-issues-toolbar">
+        <label className="admin-issue-search">
+          <Search size={16} />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search complaints, people, or locations" />
+        </label>
+        <label className="admin-issue-filter">
+          <Filter size={15} />
+          <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}>
+            <option>All priorities</option>
+            <option>Critical</option>
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+        </label>
+        <label className="admin-issue-location-filter">
+          <MapPin size={15} />
+          <input value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)} placeholder="Filter location" />
+        </label>
+      </div>
+      <div className="admin-issues-summary">
+        <strong>{filteredIssues.length}</strong>
+        <span>of {issues.length} complaints shown</span>
+      </div>
+      {filteredIssues.length === 0 ? (
+        <div className="admin-empty-users">No issue reports match the current filters.</div>
+      ) : (
+        <div className="admin-issues-list">
+          {filteredIssues.map((issue) => (
+            <AdminIssueCard key={issue.id} issue={issue} workers={workers} departments={departments} onUpdate={onUpdate} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
 
 function AdminIssueCard({ issue, workers, departments, onUpdate }) {
-  const [draft, setDraft] = useState({ priority: issue.priority || 'Medium', department: issue.department || '', location: issue.location, status: issue.status || 'Submitted', assignedWorker: issue.assignedWorker?.id || '' });
+  const [draft, setDraft] = useState({
+    priority: issue.priority || 'Medium',
+    department: issue.department || '',
+    location: issue.location,
+    status: issue.status || 'Submitted',
+    assignedWorker: issue.assignedWorker?.id || '',
+  });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  // Extract coordinates for issue
+  let issueLat = typeof issue.latitude === 'number' ? issue.latitude : null;
+  let issueLon = typeof issue.longitude === 'number' ? issue.longitude : null;
+  if ((issueLat === null || issueLon === null) && issue.location) {
+    const match = issue.location.match(/\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/);
+    if (match) {
+      issueLat = parseFloat(match[1]);
+      issueLon = parseFloat(match[2]);
+    }
+  }
+
+  // Calculate proximity and workload for all workers
+  const proximityWorkers = workers.map((worker) => {
+    let wLat = typeof worker.latitude === 'number' ? worker.latitude : null;
+    let wLon = typeof worker.longitude === 'number' ? worker.longitude : null;
+    if ((wLat === null || wLon === null) && worker.location) {
+      const match = worker.location.match(/\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/);
+      if (match) {
+        wLat = parseFloat(match[1]);
+        wLon = parseFloat(match[2]);
+      }
+    }
+
+    const dist = (issueLat !== null && issueLon !== null && wLat !== null && wLon !== null)
+      ? calculateDistanceKm(issueLat, issueLon, wLat, wLon)
+      : null;
+
+    return {
+      ...worker,
+      distanceKm: dist,
+      distanceText: dist !== null ? formatDistance(dist) : null,
+      isVeryClose: dist !== null && dist <= 2.5,
+      isClose: dist !== null && dist <= 8,
+      isDeptMatch: worker.department && (draft.department ? worker.department === draft.department : (issue.department ? worker.department === issue.department : true)),
+    };
+  }).sort((a, b) => {
+    if (a.distanceKm !== null && b.distanceKm !== null) {
+      return a.distanceKm - b.distanceKm;
+    }
+    if (a.distanceKm !== null) return -1;
+    if (b.distanceKm !== null) return 1;
+    return (a.activeIssuesCount || 0) - (b.activeIssuesCount || 0);
+  });
+
+  // Top closest workers (up to 3)
+  const nearbyRecommendations = proximityWorkers.filter((w) => w.distanceKm !== null).slice(0, 3);
+
   const updateDraft = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
+
   const submitChanges = async () => {
     setMessage('');
     setError('');
@@ -174,6 +348,184 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
       setError(requestError.message);
     }
   };
+
   const reviewProof = (proofReviewStatus) => onUpdate(issue.id, { proofReviewStatus });
-  return <article className="admin-issue-card"><div className="admin-issue-card-top"><div><span className="admin-issue-category">{issue.category}</span><h2>{issue.aiTitle || issue.description}</h2><p className="admin-issue-reporter">Reported by {issue.reporter?.name || 'Unknown citizen'} · {issue.reporter?.email || 'No email'}</p></div></div>{(issue.aiTitle || issue.aiDescription || issue.aiDetectedCategory || issue.aiSummary) && <div className="issue-ai-details"><div className="issue-ai-details-heading"><span><Bot size={15} /> Gemini analysis</span><strong>{issue.aiDetectedCategory || issue.category}</strong></div>{issue.aiTitle && <h3>{issue.aiTitle}</h3>}{issue.aiDescription && <p>{issue.aiDescription}</p>}{issue.aiSummary && <small>{issue.aiSummary}</small>}</div>}<p className="issue-citizen-description"><strong>Citizen description:</strong> {issue.description}</p><div className="admin-issue-meta"><span><MapPin size={14} /> {issue.location}</span><span>{new Date(issue.createdAt).toLocaleString()}</span></div>{issue.imageUrl && <a href={issue.imageUrl} target="_blank" rel="noreferrer" className="admin-issue-image-link"><img src={issue.imageUrl} alt={`Evidence for ${issue.category}`} /> View citizen image</a>}{issue.workerProofImage && <div className="admin-proof-review"><img src={issue.workerProofImage} alt={`Worker proof for ${issue.category}`} /><div><strong>Worker completion proof</strong><span>{issue.proofReviewStatus || 'Pending review'}</span><div className="admin-issue-actions"><button type="button" onClick={() => reviewProof('Approved')} className="admin-issue-action admin-issue-verify">Approve proof</button><button type="button" onClick={() => reviewProof('Rejected')} className="admin-issue-action admin-issue-reject">Reject proof</button></div></div></div>}<div className="admin-issue-controls"><label><span>Priority</span><select value={draft.priority} onChange={(event) => updateDraft('priority', event.target.value)}><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label><label><span>Department</span><select value={draft.department} onChange={(event) => updateDraft('department', event.target.value)}><option value="">Select department</option>{departments.map((department) => <option key={department}>{department}</option>)}</select></label><label><span>Location</span><input value={draft.location} onChange={(event) => updateDraft('location', event.target.value)} /></label><label><span>Status</span><select value={draft.status} onChange={(event) => updateDraft('status', event.target.value)}><option>Submitted</option><option>In review</option><option>In progress</option><option>Resolved</option></select></label><label><span><UserCheck size={14} /> Assign worker</span><select value={draft.assignedWorker} onChange={(event) => updateDraft('assignedWorker', event.target.value)}><option value="">Unassigned</option>{workers.map((worker) => <option key={worker.id} value={worker.id}>{worker.name} · {worker.department || 'No department'}</option>)}</select></label></div><div className="admin-issue-submit-row"><button type="button" onClick={submitChanges} className="dashboard-primary-button">Submit issue changes</button>{message && <span className="admin-issue-save-message">{message}</span>}{error && <span className="admin-issue-error-message">{error}</span>}</div></article>;
+
+  return (
+    <article className="admin-issue-card">
+      <div className="admin-issue-card-top">
+        <div>
+          <span className="admin-issue-category">{issue.category}</span>
+          <h2>{issue.aiTitle || issue.description}</h2>
+          <p className="admin-issue-reporter">
+            Reported by {issue.reporter?.name || 'Unknown citizen'} · {issue.reporter?.email || 'No email'}
+          </p>
+        </div>
+      </div>
+
+      {(issue.aiTitle || issue.aiDescription || issue.aiDetectedCategory || issue.aiSummary) && (
+        <div className="issue-ai-details">
+          <div className="issue-ai-details-heading">
+            <span><Bot size={15} /> Gemini analysis</span>
+            <strong>{issue.aiDetectedCategory || issue.category}</strong>
+          </div>
+          {issue.aiTitle && <h3>{issue.aiTitle}</h3>}
+          {issue.aiDescription && <p>{issue.aiDescription}</p>}
+          {issue.aiSummary && <small>{issue.aiSummary}</small>}
+        </div>
+      )}
+
+      <p className="issue-citizen-description">
+        <strong>Citizen description:</strong> {issue.description}
+      </p>
+
+      <div className="admin-issue-meta">
+        <span><MapPin size={14} /> {issue.location}</span>
+        <span>{new Date(issue.createdAt).toLocaleString()}</span>
+      </div>
+
+      {issue.imageUrl && (
+        <a href={issue.imageUrl} target="_blank" rel="noreferrer" className="admin-issue-image-link">
+          <img src={issue.imageUrl} alt={`Evidence for ${issue.category}`} /> View citizen image
+        </a>
+      )}
+
+      {issue.workerProofImage && (
+        <div className="admin-proof-review">
+          <img src={issue.workerProofImage} alt={`Worker proof for ${issue.category}`} />
+          <div>
+            <strong>Worker completion proof</strong>
+            <span>{issue.proofReviewStatus || 'Pending review'}</span>
+            <div className="admin-issue-actions">
+              <button type="button" onClick={() => reviewProof('Approved')} className="admin-issue-action admin-issue-verify">
+                Approve proof
+              </button>
+              <button type="button" onClick={() => reviewProof('Rejected')} className="admin-issue-action admin-issue-reject">
+                Reject proof
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Smart Proximity Dispatcher Panel */}
+      {nearbyRecommendations.length > 0 && (
+        <div className="admin-nearby-box">
+          <div className="admin-nearby-header">
+            <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
+              <Navigation size={14} className="text-blue-600" />
+              <span>Nearby Field Workers (Live GPS Proximity)</span>
+            </div>
+            <span className="text-[11px] text-slate-500">
+              Closest personnel to this issue's location
+            </span>
+          </div>
+
+          <div className="admin-nearby-grid">
+            {nearbyRecommendations.map((worker) => {
+              const isSelected = draft.assignedWorker === worker.id;
+              return (
+                <div
+                  key={worker.id}
+                  className={`admin-nearby-item ${isSelected ? 'admin-nearby-item-selected' : ''}`}
+                >
+                  <div className="admin-nearby-item-head">
+                    <div>
+                      <strong className="text-xs text-slate-900 block">{worker.name}</strong>
+                      <span className="text-[10px] text-slate-500 block">{worker.department} · {worker.jobSkill}</span>
+                    </div>
+                    <span className={`admin-dist-badge ${worker.isVeryClose ? 'dist-very-close' : 'dist-close'}`}>
+                      {worker.distanceText}
+                    </span>
+                  </div>
+
+                  <div className="admin-nearby-item-details">
+                    <span className="text-[11px] text-slate-600 flex items-center gap-1">
+                      <Zap size={11} className={worker.activeIssuesCount > 2 ? 'text-amber-500' : 'text-emerald-500'} />
+                      {worker.activeIssuesCount || 0} active {worker.activeIssuesCount === 1 ? 'task' : 'tasks'} ({worker.workload} workload)
+                    </span>
+                    <span className="text-[10px] text-slate-400 truncate block" title={worker.location}>
+                      {worker.location}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateDraft('assignedWorker', worker.id);
+                      if (worker.department && !draft.department) {
+                        updateDraft('department', worker.department);
+                      }
+                    }}
+                    className={`admin-quick-assign-btn ${isSelected ? 'selected' : ''}`}
+                  >
+                    {isSelected ? (
+                      <>
+                        <CheckCircle2 size={12} /> Assigned
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck size={12} /> Quick Assign ({worker.distanceText})
+                      </>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="admin-issue-controls">
+        <label>
+          <span>Priority</span>
+          <select value={draft.priority} onChange={(event) => updateDraft('priority', event.target.value)}>
+            <option>Critical</option>
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+        </label>
+        <label>
+          <span>Department</span>
+          <select value={draft.department} onChange={(event) => updateDraft('department', event.target.value)}>
+            <option value="">Select department</option>
+            {departments.map((department) => <option key={department}>{department}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>Location</span>
+          <input value={draft.location} onChange={(event) => updateDraft('location', event.target.value)} />
+        </label>
+        <label>
+          <span>Status</span>
+          <select value={draft.status} onChange={(event) => updateDraft('status', event.target.value)}>
+            <option>Submitted</option>
+            <option>In review</option>
+            <option>In progress</option>
+            <option>Resolved</option>
+          </select>
+        </label>
+        <label>
+          <span><UserCheck size={14} /> Assign worker</span>
+          <select value={draft.assignedWorker} onChange={(event) => updateDraft('assignedWorker', event.target.value)}>
+            <option value="">Unassigned</option>
+            {proximityWorkers.map((worker) => (
+              <option key={worker.id} value={worker.id}>
+                {worker.name} · {worker.department || 'No dept'} {worker.distanceText ? `(${worker.distanceText})` : ''} · {worker.activeIssuesCount || 0} active ({worker.workload} workload) · {worker.availability}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="admin-issue-submit-row">
+        <button type="button" onClick={submitChanges} className="dashboard-primary-button">
+          Submit issue changes
+        </button>
+        {message && <span className="admin-issue-save-message">{message}</span>}
+        {error && <span className="admin-issue-error-message">{error}</span>}
+      </div>
+    </article>
+  );
 }
