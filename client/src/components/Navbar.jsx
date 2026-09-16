@@ -55,11 +55,11 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
         <div className="navbar-desktop-actions items-center gap-5">
           {isAuthenticated ? (
             <div className="dashboard-navbar-account">
-              <a href="/profile" className="dashboard-navbar-profile" aria-label="Open profile details">
-                <span className="dashboard-navbar-avatar">{user?.name?.trim().charAt(0).toUpperCase() || <UserRound size={16} />}</span>
-                <span className="dashboard-navbar-profile-copy"><strong>{user?.name || 'Citizen'}</strong><small>{user?.role || 'citizen'}</small></span>
+              <a href="/profile" className="dashboard-navbar-profile" aria-label="Open profile details" title="Open profile details">
+                <span className="dashboard-navbar-avatar"><UserRound size={16} /></span>
+                <span className="dashboard-navbar-profile-copy"><strong>{user?.name || 'Citizen'}</strong><small>{user?.role || 'citizen'} profile</small></span>
               </a>
-              <button type="button" onClick={onLogout} className="dashboard-navbar-logout"><LogOut size={15} /> Log out</button>
+              <button type="button" onClick={onLogout} className="dashboard-navbar-logout"><LogOut size={15} /><span>Log out</span></button>
             </div>
           ) : (
             <a href="#login" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Log in</a>
@@ -89,7 +89,7 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
         {isAuthenticated ? (
           <>
             <a href="/profile" className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"><UserRound size={17} /> Profile details</a>
-            <button type="button" className="px-4 py-2.5 rounded-lg text-left text-sm text-slate-500 hover:bg-red-50 hover:text-red-600 font-medium" onClick={onLogout}>Log out</button>
+            <button type="button" className="dashboard-mobile-logout" onClick={onLogout}><LogOut size={17} /> Log out</button>
           </>
         ) : (
           <a href="#login" className="px-4 py-2.5 rounded-lg text-sm text-slate-500 hover:bg-slate-50 font-medium" onClick={() => setMenuOpen(false)}>Log in</a>
