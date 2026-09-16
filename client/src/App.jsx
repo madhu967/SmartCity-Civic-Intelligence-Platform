@@ -19,6 +19,7 @@ import WorkerDashboard from "./pages/WorkerDashboard";
 import WorkerCreatePage from "./pages/WorkerCreatePage";
 import ReportIssuePage from "./pages/ReportIssuePage";
 import AiIssuePage from "./pages/AiIssuePage";
+import ContactPage from "./pages/ContactPage";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(
@@ -83,7 +84,11 @@ export default function App() {
     return <AiIssuePage />;
   }
 
-  if (currentPath === "/admin" || currentPath === "/admin/users" || currentPath === "/admin/workers" || currentPath === "/admin/workers/new" || currentPath === "/admin/issues") {
+  if (currentPath === "/contact") {
+    return <ContactPage isAuthenticated={hasSavedSession} user={savedUser} onLogout={logout} />;
+  }
+
+  if (currentPath === "/admin" || currentPath === "/admin/users" || currentPath === "/admin/workers" || currentPath === "/admin/workers/new" || currentPath === "/admin/issues" || currentPath === "/admin/contacts") {
     if (currentPath === "/admin/workers/new") return <WorkerCreatePage />;
     return <AdminDashboard pagePath={currentPath} />;
   }
@@ -101,7 +106,7 @@ export default function App() {
   }
 
   if (currentPath === "/about" || currentPath === "/#about") {
-    return <AboutPage />;
+    return <AboutPage isAuthenticated={hasSavedSession} user={savedUser} onLogout={logout} />;
   }
 
   return (

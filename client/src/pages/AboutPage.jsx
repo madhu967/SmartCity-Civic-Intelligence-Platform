@@ -33,10 +33,10 @@ const milestones = [
   { year: "Today", title: "Cities in conversation", text: "Communities and crews now share one living operating picture, from first report to final resolution." },
 ];
 
-export default function AboutPage() {
+export default function AboutPage({ isAuthenticated = false, user = null, onLogout = () => {} }) {
   return (
     <div className="min-h-screen bg-[#f6f8f7] text-slate-900">
-      <Navbar />
+      <Navbar isAuthenticated={isAuthenticated} user={user} onLogout={onLogout} />
 
       <main>
         <section className="border-b border-slate-200 bg-[#f6f8f7] pb-16 pt-32 lg:pb-24 lg:pt-40">

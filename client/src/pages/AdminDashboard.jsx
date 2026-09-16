@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, Bot, Filter, LayoutDashboard, LogOut, MapPin, Menu, Search, Settings, ShieldCheck, UserCheck, Users, X } from 'lucide-react';
+import { BarChart3, Bot, CheckCircle2, Filter, LayoutDashboard, LogOut, Mail, MapPin, Menu, Search, Settings, ShieldCheck, UserCheck, Users, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
@@ -8,6 +8,7 @@ const adminPages = [
   { label: 'Manage users', href: '/admin/users', icon: Users },
   { label: 'Manage workers', href: '/admin/workers', icon: ShieldCheck },
   { label: 'Issue dashboard', href: '/admin/issues', icon: Filter },
+  { label: 'Contact inbox', href: '/admin/contacts', icon: Mail },
   { label: 'Create worker', href: '/admin/workers/new', icon: ShieldCheck },
   { label: 'Reports overview', href: '/admin#reports', icon: BarChart3 },
 ];
@@ -19,25 +20,29 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
   const [users, setUsers] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [issues, setIssues] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isUsersPage = pagePath === '/admin/users';
   const isWorkersPage = pagePath === '/admin/workers';
   const isIssuesPage = pagePath === '/admin/issues';
+  const isContactsPage = pagePath === '/admin/contacts';
 
   useEffect(() => {
     const loadAdmin = async () => {
       try {
-        const [profile, userList, workerList, issueList] = await Promise.all([
+        const [profile, userList, workerList, issueList, contactList] = await Promise.all([
           apiRequest('/auth/me', { headers: getAuthHeaders() }),
           apiRequest('/admin/users', { headers: getAuthHeaders() }),
           apiRequest('/admin/workers', { headers: getAuthHeaders() }),
           apiRequest('/admin/issues', { headers: getAuthHeaders() }),
+          apiRequest('/admin/contacts', { headers: getAuthHeaders() }),
         ]);
         setUser(profile.user);
         setUsers(userList.users);
         setWorkers(workerList.workers);
         setIssues(issueList.issues);
+        setContacts(contactList.contacts);
       } catch (requestError) {
         localStorage.removeItem('smart_city_token');
         localStorage.removeItem('smart_city_user');
@@ -98,14 +103,23 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
       </aside>
       {sidebarOpen && <button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-sidebar-overlay" aria-label="Close sidebar" />}
       <section className="dashboard-main">
-        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Issue dashboard' : 'Admin overview'}</span></div>
+        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Issue dashboard' : isContactsPage ? 'Contact inbox' : 'Admin overview'}</span></div>
         <div className="dashboard-container">
-          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Admin Issue Dashboard' : 'Admin overview'}</h1><p className="dashboard-description">{isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : isIssuesPage ? 'Review, prioritize, edit, and assign every citizen complaint.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && !isIssuesPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
-          {isUsersPage ? <UsersTable users={users} onStatusChange={updateStatus} /> : isWorkersPage ? <WorkersTable workers={workers} /> : isIssuesPage ? <AdminIssues issues={issues} workers={workers} onUpdate={updateIssue} /> : <AdminOverview users={users} />}
+          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Admin Issue Dashboard' : isContactsPage ? 'Contact inbox' : 'Admin overview'}</h1><p className="dashboard-description">{isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : isIssuesPage ? 'Review, prioritize, edit, and assign every citizen complaint.' : isContactsPage ? 'Review messages about the website, civic help, and community feedback.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && !isIssuesPage && !isContactsPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
+          {isUsersPage ? <UsersTable users={users} onStatusChange={updateStatus} /> : isWorkersPage ? <WorkersTable workers={workers} /> : isIssuesPage ? <AdminIssues issues={issues} workers={workers} onUpdate={updateIssue} /> : isContactsPage ? <ContactInbox contacts={contacts} onUpdate={(contact) => setContacts((current) => current.map((item) => item.id === contact.id ? contact : item))} /> : <AdminOverview users={users} />}
         </div>
       </section>
     </main>
   );
+}
+
+function ContactInbox({ contacts, onUpdate }) {
+  const updateStatus = async (contact, status) => {
+    const data = await apiRequest(`/admin/contacts/${contact.id}`, { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify({ status }) });
+    onUpdate(data.contact);
+  };
+
+  return <section className="dashboard-panel admin-contact-panel"><div className="dashboard-panel-heading"><div><h2>Messages from the Contact page</h2><p>{contacts.length} conversations in your inbox</p></div><Mail size={21} /></div>{contacts.length === 0 ? <div className="admin-empty-users">No contact messages yet.</div> : <div className="admin-contact-list">{contacts.map((contact) => <article className="admin-contact-card" key={contact.id}><div className="admin-contact-card-heading"><div><span className="admin-issue-category">{contact.topic}</span><h3>{contact.name}</h3><a href={`mailto:${contact.email}`}>{contact.email}</a>{contact.phone && <small>{contact.phone}</small>}</div><select value={contact.status} onChange={(event) => updateStatus(contact, event.target.value)} aria-label={`Update status for ${contact.name}`}><option>New</option><option>In review</option><option>Resolved</option></select></div><p className="admin-contact-message">{contact.message}</p><div className="admin-contact-footer"><span>{new Date(contact.createdAt).toLocaleString()}</span>{contact.status === 'Resolved' && <span className="admin-contact-resolved"><CheckCircle2 size={14} /> Resolved</span>}</div></article>)}</div>}</section>;
 }
 
 function AdminOverview({ users }) {

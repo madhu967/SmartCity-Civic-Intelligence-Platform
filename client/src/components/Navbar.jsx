@@ -5,15 +5,18 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const publicNavItems = [
-    { label: 'Platform', href: '/#platform' },
-    { label: 'Live Intelligence', href: '/#live-intelligence' },
-    { label: 'Command Center', href: '/#command-center' },
-    { label: 'Apps', href: '/#apps' },
-    { label: 'About', href: '/#about' },
+    { label: 'Home', href: '/' },
+    { label: 'About', href: '/about' },
+    { label: 'Contact', href: '/contact' },
   ];
   const navItems = isAuthenticated
     ? [{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }, ...publicNavItems]
     : publicNavItems;
+  const currentPath = window.location.pathname;
+  const isActive = (href) => {
+    if (href === '/dashboard') return currentPath === '/dashboard' || currentPath.startsWith('/admin') || currentPath.startsWith('/worker');
+    return href === '/' ? currentPath === '/' : currentPath === href;
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -41,8 +44,8 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
 
         {/* Desktop Links (Pill Menu) */}
         <div className="navbar-desktop-links items-center bg-zinc-50 border border-zinc-200 rounded-full px-1 py-1 gap-2 shadow-sm">
-          {navItems.map((item, index) => (
-            <a key={item.label} href={item.href} className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm transition-colors ${index === 0 ? 'bg-white border border-zinc-200 font-medium text-zinc-800 shadow-sm' : 'text-zinc-500 hover:text-zinc-700' }`} >
+          {navItems.map((item) => (
+            <a key={item.label} href={item.href} className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm transition-colors ${isActive(item.href) ? 'bg-white border border-zinc-200 font-medium text-zinc-800 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`} >
               {item.icon && <item.icon size={14} />}{item.label}
             </a>
           ))}
@@ -77,8 +80,8 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
 
       {/* Mobile Menu */}
       <div className={`navbar-mobile-menu absolute top-full left-0 w-full bg-white border-b border-zinc-200 flex-col p-5 gap-1 shadow-xl transition-all duration-300 origin-top ${menuOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0 pointer-events-none'}`}>
-        {navItems.map((item, index) => (
-          <a key={item.label} href={item.href} className={`px-4 py-2.5 rounded-lg text-sm ${index === 0 ? 'bg-zinc-50 font-medium text-zinc-800' : 'text-zinc-500 hover:bg-zinc-50' }`} onClick={() => setMenuOpen(false)}>
+        {navItems.map((item) => (
+          <a key={item.label} href={item.href} className={`px-4 py-2.5 rounded-lg text-sm ${isActive(item.href) ? 'bg-zinc-50 font-medium text-zinc-800' : 'text-zinc-500 hover:bg-zinc-50'}`} onClick={() => setMenuOpen(false)}>
             {item.label}
           </a>
         ))}

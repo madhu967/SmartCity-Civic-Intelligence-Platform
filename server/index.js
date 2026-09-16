@@ -6,6 +6,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import workerRoutes from './routes/workerRoutes.js';
 import issueRoutes from './routes/issueRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -31,6 +32,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/worker', workerRoutes);
 app.use('/api/issues', issueRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/contact', contactRoutes);
 
 app.get('/', (_request, response) => {
 	response.json({ message: 'Smart City server is running' });
