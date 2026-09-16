@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import WorkerDashboard from "./pages/WorkerDashboard";
 import WorkerCreatePage from "./pages/WorkerCreatePage";
 import ReportIssuePage from "./pages/ReportIssuePage";
+import AiIssuePage from "./pages/AiIssuePage";
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(
@@ -76,6 +77,10 @@ export default function App() {
 
   if (currentPath === "/report-issue") {
     return <ReportIssuePage />;
+  }
+
+  if (currentPath === "/ai-report") {
+    return <AiIssuePage />;
   }
 
   if (currentPath === "/admin" || currentPath === "/admin/users" || currentPath === "/admin/workers" || currentPath === "/admin/workers/new" || currentPath === "/admin/issues") {

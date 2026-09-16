@@ -11,6 +11,7 @@ import {
   FileWarning,
   Settings,
   ShieldCheck,
+  Sparkles,
   UserRound,
   X,
 } from 'lucide-react';
@@ -20,6 +21,7 @@ import { apiRequest, getAuthHeaders } from '../config/api';
 const pages = [
   { label: 'Overview', icon: Home, href: '/dashboard' },
   { label: 'Report an issue', icon: FileWarning, href: '/report-issue' },
+  { label: 'AI issue assistant', icon: Sparkles, href: '/ai-report' },
   { label: 'My reports', icon: ClipboardList, href: '/reports' },
   { label: 'Nearby activity', icon: Activity, href: '/activity' },
   { label: 'Notifications', icon: Bell, href: '/notifications' },

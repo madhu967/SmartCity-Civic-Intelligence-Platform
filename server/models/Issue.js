@@ -37,6 +37,26 @@ const issueSchema = new mongoose.Schema(
             minlength: 10,
             maxlength: 2000,
         },
+        aiTitle: {
+            type: String,
+            trim: true,
+            maxlength: 80,
+        },
+        aiDescription: {
+            type: String,
+            trim: true,
+            maxlength: 300,
+        },
+        aiDetectedCategory: {
+            type: String,
+            trim: true,
+            maxlength: 80,
+        },
+        aiSummary: {
+            type: String,
+            trim: true,
+            maxlength: 120,
+        },
         imageUrl: {
             type: String,
             trim: true,
