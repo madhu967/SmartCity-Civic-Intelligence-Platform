@@ -418,6 +418,37 @@ body {
 @keyframes civic-chat-bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
 @keyframes civic-chat-spin { to { transform: rotate(360deg); } }
 @media (max-width: 600px) { .civic-chatbot { right: 14px; bottom: 14px; } .civic-chat-window { right: -2px; bottom: 64px; height: min(610px, calc(100vh - 95px)); } .civic-chat-launcher-label { display: none; } .civic-chat-launcher { padding-right: 5px; } }
+.civic-chat-launcher { width: 64px; height: 64px; min-height: 64px; padding: 0; justify-content: center; border: 3px solid #fff; border-radius: 50%; background: #2563eb; box-shadow: 0 14px 34px rgba(37, 99, 235, .36), 0 0 0 5px rgba(245, 158, 11, .22); transition: transform .25s ease, background .25s ease, box-shadow .25s ease; }
+.civic-chat-launcher:hover { background: #1d4ed8; box-shadow: 0 18px 40px rgba(37, 99, 235, .44), 0 0 0 7px rgba(245, 158, 11, .3); transform: translateY(-4px) scale(1.04); }
+.civic-chat-launcher-icon { position: relative; z-index: 2; width: 48px; height: 48px; border: 1px solid rgba(255, 255, 255, .5); color: #fff; background: #0b2142; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .24), 0 5px 15px rgba(9, 20, 40, .25); animation: civic-chat-float 3.4s ease-in-out infinite; }
+.civic-chat-launcher-status { position: absolute; right: 6px; bottom: 6px; z-index: 3; width: 11px; height: 11px; border: 2px solid #2563eb; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 0 3px rgba(251, 191, 36, .28); }
+.civic-chat-launcher-pulse { top: 0; left: 0; width: 62px; height: 62px; border: 1px solid rgba(96, 165, 250, .75); animation: civic-chat-pulse 2.8s ease-out infinite; }
+.civic-chat-launcher-orbit { position: absolute; z-index: 1; border: 1px solid rgba(147, 197, 253, .22); border-radius: 50%; pointer-events: none; }
+.civic-chat-launcher-orbit-one { width: 74px; height: 31px; transform: rotate(32deg); animation: civic-chat-orbit 5s linear infinite; }
+.civic-chat-launcher-orbit-two { width: 31px; height: 74px; transform: rotate(32deg); opacity: .5; animation: civic-chat-orbit 5s linear infinite reverse; }
+.civic-chat-launcher-label { position: absolute; right: 50%; bottom: 73px; display: block; padding: 9px 12px; border: 1px solid #dbe3ee; border-radius: 10px; color: #0b2142; background: #fff; box-shadow: 0 8px 22px rgba(15, 23, 42, .15); font-size: 11px; font-weight: 800; line-height: 1; white-space: nowrap; transform: translateX(50%); }
+.civic-chat-launcher-label::after { position: absolute; right: 50%; bottom: -5px; width: 8px; height: 8px; border-right: 1px solid #dbe3ee; border-bottom: 1px solid #dbe3ee; background: #fff; content: ''; transform: translateX(50%) rotate(45deg); }
+.civic-chat-launcher-open { background: #123e78; }
+.civic-chat-launcher-open .civic-chat-launcher-icon { animation: none; }
+.civic-chat-launcher-open .civic-chat-launcher-status, .civic-chat-launcher-open .civic-chat-launcher-pulse, .civic-chat-launcher-open .civic-chat-launcher-orbit { display: none; }
+@keyframes civic-chat-float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(-3deg); } }
+@keyframes civic-chat-orbit { to { transform: rotate(392deg); } }
+@media (max-width: 600px) { .civic-chat-launcher { width: 58px; height: 58px; min-height: 58px; } .civic-chat-launcher-icon { width: 43px; height: 43px; } .civic-chat-launcher-status { right: 5px; bottom: 5px; } .civic-chat-launcher-pulse { width: 58px; height: 58px; } .civic-chat-launcher-label { bottom: 67px; font-size: 10px; } }
+.civic-robot { position: relative; display: block; width: 34px; height: 38px; animation: civic-robot-bob 2.8s ease-in-out infinite; }
+.civic-robot i, .civic-robot b { display: block; position: absolute; }
+.civic-robot-antenna { top: 0; left: 16px; width: 2px; height: 7px; background: #bfdbfe; }
+.civic-robot-antenna::before { position: absolute; top: -4px; left: -3px; width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 7px #fbbf24; content: ''; }
+.civic-robot-head { top: 6px; left: 4px; width: 26px; height: 19px; border: 2px solid #dbeafe; border-radius: 8px 8px 7px 7px; background: #fff; box-shadow: inset 0 -3px #bfdbfe, 0 3px 0 #0b2142; }
+.civic-robot-head::after { position: absolute; right: 5px; bottom: 3px; left: 5px; height: 2px; border-radius: 2px; background: #2563eb; content: ''; }
+.civic-robot-head b { top: 5px; width: 5px; height: 5px; border-radius: 50%; background: #2563eb; box-shadow: 0 0 4px #60a5fa; animation: civic-robot-blink 4s infinite; }
+.civic-robot-head b:first-child { left: 5px; }.civic-robot-head b:last-child { right: 5px; animation-delay: .1s; }
+.civic-robot-ear { top: 11px; width: 4px; height: 9px; border-radius: 3px; background: #60a5fa; }
+.civic-robot-ear-left { left: 0; }.civic-robot-ear-right { right: 0; }
+.civic-robot-body { bottom: 0; left: 7px; width: 20px; height: 14px; border: 2px solid #dbeafe; border-radius: 5px 5px 7px 7px; background: #2563eb; box-shadow: inset 0 -3px #1d4ed8; }
+.civic-robot-body b { top: 4px; width: 4px; height: 4px; border-radius: 50%; background: #fbbf24; }.civic-robot-body b:first-child { left: 5px; }.civic-robot-body b:last-child { right: 5px; }
+.civic-robot-arm { bottom: 3px; width: 4px; height: 12px; border-radius: 4px; background: #bfdbfe; }.civic-robot-arm-left { left: 3px; transform: rotate(18deg); }.civic-robot-arm-right { right: 3px; transform: rotate(-18deg); }
+@keyframes civic-robot-bob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-2px) rotate(2deg); } }
+@keyframes civic-robot-blink { 0%, 45%, 49%, 53%, 100% { transform: scaleY(1); } 47%, 51% { transform: scaleY(.12); } }
 .worker-success { margin: 0; padding: 12px 14px; border: 1px solid #a7f3d0; border-radius: 10px; color: #047857; background: #ecfdf5; font-size: 12px; font-weight: 700; }
 .worker-error { margin: 0; padding: 12px 14px; border: 1px solid #fecaca; border-radius: 10px; color: #b91c1c; background: #fef2f2; font-size: 12px; font-weight: 700; }
 .worker-success a { margin-left: 4px; color: #047857; text-decoration: underline; }
