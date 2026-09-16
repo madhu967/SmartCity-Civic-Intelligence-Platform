@@ -377,6 +377,47 @@ body {
 .ai-result-field input, .ai-result-field textarea { width: 100%; padding: 11px 12px; border: 1px solid #dbe3ee; border-radius: 9px; outline: none; color: #334155; background: #f8fafc; font: inherit; font-size: 12px; resize: vertical; }
 .ai-result-summary { display: flex; align-items: flex-start; gap: 7px; margin: 0; color: #475569; font-size: 11px; line-height: 1.5; }
 @media (max-width: 800px) { .ai-issue-panel { grid-template-columns: 1fr; } .ai-upload-zone, .ai-result-panel { min-height: 0; } }
+.civic-chatbot { position: fixed; right: 24px; bottom: 22px; z-index: 100; font-family: inherit; }
+.civic-chat-window { position: absolute; right: 0; bottom: 72px; display: flex; width: min(382px, calc(100vw - 32px)); height: min(590px, calc(100vh - 110px)); flex-direction: column; overflow: hidden; border: 1px solid #dbe3ee; border-radius: 18px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .2); animation: civic-chat-in .24s ease-out; }
+.civic-chat-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 16px; color: #fff; background: #091428; }
+.civic-chat-brand { display: flex; align-items: center; gap: 10px; }
+.civic-chat-brand-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: #fff; background: #2563eb; }
+.civic-chat-brand strong, .civic-chat-brand small { display: block; }
+.civic-chat-brand strong { font-size: 13px; }
+.civic-chat-brand small { margin-top: 2px; color: #93c5fd; font-size: 10px; }
+.civic-chat-close { display: grid; width: 30px; height: 30px; place-items: center; border: 0; border-radius: 8px; color: #bfdbfe; background: transparent; cursor: pointer; }
+.civic-chat-close:hover { color: #fff; background: rgba(255, 255, 255, .12); }
+.civic-chat-messages { display: grid; align-content: start; gap: 12px; flex: 1; overflow-y: auto; padding: 17px 14px; background: #f8fafc; }
+.civic-chat-message { display: grid; grid-template-columns: 23px minmax(0, 1fr); gap: 8px; align-items: start; max-width: 92%; }
+.civic-chat-message > span { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 7px; color: #1d4e8f; background: #dbeafe; font-size: 8px; font-weight: 800; }
+.civic-chat-message p { margin: 0; padding: 10px 11px; border-radius: 4px 12px 12px 12px; color: #334155; background: #fff; font-size: 12px; line-height: 1.55; white-space: pre-wrap; box-shadow: 0 2px 6px rgba(15, 23, 42, .04); }
+.civic-chat-message-user { grid-template-columns: minmax(0, 1fr); align-self: end; }
+.civic-chat-message-user > span { display: none; }
+.civic-chat-message-user p { border-radius: 12px 4px 12px 12px; color: #fff; background: #2563eb; }
+.civic-chat-typing { display: flex; align-items: center; gap: 3px; width: 46px; }
+.civic-chat-typing i { width: 5px; height: 5px; border-radius: 50%; background: #60a5fa; animation: civic-chat-bounce 1s infinite ease-in-out; }
+.civic-chat-typing i:nth-child(2) { animation-delay: .15s; }.civic-chat-typing i:nth-child(3) { animation-delay: .3s; }
+.civic-chat-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; background: #f8fafc; }
+.civic-chat-suggestions button { display: inline-flex; align-items: center; gap: 5px; padding: 7px 9px; border: 1px solid #bfdbfe; border-radius: 99px; color: #1d4e8f; background: #eff6ff; font-family: inherit; font-size: 10px; font-weight: 700; text-align: left; cursor: pointer; }
+.civic-chat-suggestions button:hover { color: #fff; background: #2563eb; }
+.civic-chat-error { margin: 0; padding: 0 14px 8px; color: #b91c1c; background: #f8fafc; font-size: 10px; }
+.civic-chat-composer { display: flex; gap: 8px; padding: 11px; border-top: 1px solid #e2e8f0; background: #fff; }
+.civic-chat-composer input { min-width: 0; flex: 1; padding: 10px 11px; border: 1px solid #dbe3ee; border-radius: 9px; outline: none; color: #334155; background: #f8fafc; font: inherit; font-size: 12px; }
+.civic-chat-composer input:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px #eff6ff; }
+.civic-chat-composer button { display: grid; width: 38px; flex: 0 0 38px; place-items: center; border: 0; border-radius: 9px; color: #fff; background: #2563eb; cursor: pointer; }
+.civic-chat-composer button:disabled { cursor: default; opacity: .45; }
+.civic-chat-launcher { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 50px; padding: 5px 14px 5px 6px; border: 0; border-radius: 99px; color: #fff; background: #091428; box-shadow: 0 12px 30px rgba(9, 20, 40, .26); font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.civic-chat-launcher:hover { background: #163a6b; transform: translateY(-2px); }
+.civic-chat-launcher-icon { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 50%; background: #2563eb; }
+.civic-chat-launcher-label { position: relative; z-index: 1; }
+.civic-chat-launcher-pulse { position: absolute; top: 3px; left: 3px; width: 46px; height: 46px; border: 1px solid #60a5fa; border-radius: 50%; animation: civic-chat-pulse 2.2s infinite; }
+.civic-chat-launcher-open .civic-chat-launcher-pulse { display: none; }
+.civic-chat-spin { animation: civic-chat-spin .8s linear infinite; }
+@keyframes civic-chat-in { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes civic-chat-pulse { 0%, 100% { opacity: .15; transform: scale(.9); } 50% { opacity: .8; transform: scale(1.14); } }
+@keyframes civic-chat-bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+@keyframes civic-chat-spin { to { transform: rotate(360deg); } }
+@media (max-width: 600px) { .civic-chatbot { right: 14px; bottom: 14px; } .civic-chat-window { right: -2px; bottom: 64px; height: min(610px, calc(100vh - 95px)); } .civic-chat-launcher-label { display: none; } .civic-chat-launcher { padding-right: 5px; } }
 .worker-success { margin: 0; padding: 12px 14px; border: 1px solid #a7f3d0; border-radius: 10px; color: #047857; background: #ecfdf5; font-size: 12px; font-weight: 700; }
 .worker-error { margin: 0; padding: 12px 14px; border: 1px solid #fecaca; border-radius: 10px; color: #b91c1c; background: #fef2f2; font-size: 12px; font-weight: 700; }
 .worker-success a { margin-left: 4px; color: #047857; text-decoration: underline; }
