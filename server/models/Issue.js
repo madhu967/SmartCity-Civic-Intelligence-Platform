@@ -30,6 +30,12 @@ const issueSchema = new mongoose.Schema(
             trim: true,
             maxlength: 200,
         },
+        latitude: {
+            type: Number,
+        },
+        longitude: {
+            type: Number,
+        },
         description: {
             type: String,
             required: true,

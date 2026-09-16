@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Activity, BriefcaseBusiness, Bot, FileImage, ClipboardList, LogOut, MapPin, Menu, ShieldCheck, UserRound, X } from 'lucide-react';
+import { Activity, BriefcaseBusiness, Bot, CheckCircle2, ClipboardList, FileImage, LoaderCircle, LogOut, MapPin, Menu, ShieldCheck, UserRound, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
+import { getUserCurrentLocation } from '../utils/geolocation';
 
 export default function WorkerDashboard({ pagePath = '/worker' }) {
   const [user, setUser] = useState(null);
@@ -11,9 +12,45 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState('');
   const isAvailabilityPage = pagePath === '/worker/availability';
   const isLocationPage = pagePath === '/worker/location';
   const isIssuesPage = pagePath === '/worker/issues';
+
+  const syncWorkerLocation = async (manual = false) => {
+    setIsLocating(true);
+    if (manual) setMessage('');
+    setLocationStatus('Detecting GPS location...');
+    try {
+      const loc = await getUserCurrentLocation();
+      if (loc) {
+        setLocation(loc.locationString);
+        await apiRequest('/worker/location', {
+          method: 'PATCH',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            location: loc.locationString,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+          }),
+        });
+        setUser((curr) => curr ? ({
+          ...curr,
+          location: loc.locationString,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          locationUpdatedAt: new Date().toISOString(),
+        }) : curr);
+        setLocationStatus('Location synced with GPS');
+      }
+    } catch (locErr) {
+      console.warn('Worker location sync error:', locErr);
+      setLocationStatus(locErr.message || 'Unable to sync GPS location');
+    } finally {
+      setIsLocating(false);
+    }
+  };
 
   useEffect(() => {
     const loadAssignedIssues = async () => {
@@ -29,6 +66,8 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
       setUser(data.user);
       setAvailability(data.user.availability || 'Available');
       setLocation(data.user.location || '');
+      // Automatically sync worker location upon loading dashboard
+      syncWorkerLocation(false);
       return loadAssignedIssues();
     }).catch((requestError) => setError(requestError.message));
 
@@ -97,19 +136,179 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
         <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button"><Menu size={20} /></button><span>{currentTitle}</span></div>
         <div className="dashboard-container">
           <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Field operations</p><h1 className="dashboard-heading">{currentTitle}</h1><p className="dashboard-description">{currentDescription}</p></div><div className="dashboard-admin-badge"><ShieldCheck size={17} /> Worker account</div></div>
-          {pagePath === '/worker' ? <WorkerOverview user={user} /> : isIssuesPage ? <WorkerIssues issues={assignedIssues} onUpdate={updateIssue} /> : <WorkerOperationalPanel availability={availability} location={location} setAvailability={setAvailability} setLocation={setLocation} onSubmit={updateAvailability} message={message} error={error} isLocationPage={isLocationPage} />}
+          {pagePath === '/worker' ? (
+            <WorkerOverview user={user} onSyncLocation={syncWorkerLocation} isLocating={isLocating} locationStatus={locationStatus} />
+          ) : isIssuesPage ? (
+            <WorkerIssues issues={assignedIssues} onUpdate={updateIssue} />
+          ) : (
+            <WorkerOperationalPanel
+              availability={availability}
+              location={location}
+              setAvailability={setAvailability}
+              setLocation={setLocation}
+              onSubmit={updateAvailability}
+              onSyncLocation={syncWorkerLocation}
+              isLocating={isLocating}
+              locationStatus={locationStatus}
+              message={message}
+              error={error}
+              isLocationPage={isLocationPage}
+              user={user}
+            />
+          )}
         </div>
       </section>
     </main>
   );
 }
 
-function WorkerOverview({ user }) {
-  return <><div className="dashboard-stat-grid"><div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Department</span><BriefcaseBusiness size={18} /></div><strong className="worker-stat-text">{user.department}</strong><small>{user.jobSkill}</small></div><div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Service area</span><MapPin size={18} /></div><strong className="worker-stat-text">{user.serviceArea}</strong><small>{user.location}</small></div><div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Experience</span><ShieldCheck size={18} /></div><strong>{user.yearsExperience}</strong><small>Years in service</small></div><div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Availability</span><Activity size={18} /></div><strong className="dashboard-status-active">{user.availability}</strong><small>Current field status</small></div></div><section className="dashboard-panel worker-static-panel"><h2>Today in the field</h2><p>Your assigned civic service profile is active. Use the sidebar to update your availability or current location.</p><div className="worker-static-items"><span><ShieldCheck size={16} /> Profile verified</span><span><MapPin size={16} /> {user.serviceArea}</span><span><Activity size={16} /> Ready for dispatch</span></div></section></>;
+function WorkerOverview({ user, onSyncLocation, isLocating, locationStatus }) {
+  return (
+    <>
+      <div className="dashboard-stat-grid">
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-top">
+            <span>Department</span>
+            <BriefcaseBusiness size={18} />
+          </div>
+          <strong className="worker-stat-text">{user.department}</strong>
+          <small>{user.jobSkill}</small>
+        </div>
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-top">
+            <span>Service area</span>
+            <MapPin size={18} />
+          </div>
+          <strong className="worker-stat-text">{user.serviceArea}</strong>
+          <small className="truncate block" title={user.location}>{user.location || 'Location pending'}</small>
+        </div>
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-top">
+            <span>Experience</span>
+            <ShieldCheck size={18} />
+          </div>
+          <strong>{user.yearsExperience}</strong>
+          <small>Years in service</small>
+        </div>
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-top">
+            <span>Availability</span>
+            <Activity size={18} />
+          </div>
+          <strong className="dashboard-status-active">{user.availability}</strong>
+          <small>Current field status</small>
+        </div>
+      </div>
+      <section className="dashboard-panel worker-static-panel">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2>Today in the field</h2>
+            <p>Your assigned civic service profile is active. Dispatch tracks your field location.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onSyncLocation(true)}
+            disabled={isLocating}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-semibold text-brand-600 hover:bg-brand-50 cursor-pointer disabled:opacity-50"
+            title="Update real-time GPS location"
+          >
+            {isLocating ? <LoaderCircle className="report-spinner" size={14} /> : <MapPin size={14} />}
+            <span>{isLocating ? 'Syncing...' : 'Sync GPS location'}</span>
+          </button>
+        </div>
+        {locationStatus && (
+          <p className="mt-2 text-xs font-semibold text-emerald-600 flex items-center gap-1">
+            <CheckCircle2 size={13} /> {locationStatus}
+          </p>
+        )}
+        <div className="worker-static-items">
+          <span><ShieldCheck size={16} /> Profile verified</span>
+          <span><MapPin size={16} /> {user.location || user.serviceArea}</span>
+          <span><Activity size={16} /> Ready for dispatch</span>
+        </div>
+      </section>
+    </>
+  );
 }
 
-function WorkerOperationalPanel({ availability, location, setAvailability, setLocation, onSubmit, message, error, isLocationPage }) {
-  return <section className="dashboard-panel worker-availability-panel"><div className="dashboard-panel-heading"><div><h2>{isLocationPage ? 'Service location details' : 'Availability status'}</h2><p>{isLocationPage ? 'Keep your current operations location visible to dispatch.' : 'Keep your dispatch team informed of your current status.'}</p></div><Activity size={21} /></div><div className="worker-static-callout"><MapPin size={18} /><div><strong>{isLocationPage ? 'Assigned service area' : 'Current assignment area'}</strong><span>Update the fields below when your field status changes.</span></div></div><form className="worker-availability-form" onSubmit={onSubmit}><label className="worker-field"><span>Availability</span><select value={availability} onChange={(event) => setAvailability(event.target.value)}><option>Available</option><option>On duty</option><option>Unavailable</option></select></label><label className="worker-field"><span>Current location</span><input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="North operations hub" /></label><button type="submit" className="dashboard-primary-button">Save update</button></form>{message && <p className="worker-success">{message}</p>}{error && <p className="worker-error">{error}</p>}</section>;
+function WorkerOperationalPanel({ availability, location, setAvailability, setLocation, onSubmit, onSyncLocation, isLocating, locationStatus, message, error, isLocationPage, user }) {
+  return (
+    <section className="dashboard-panel worker-availability-panel">
+      <div className="dashboard-panel-heading">
+        <div>
+          <h2>{isLocationPage ? 'Service location details' : 'Availability status'}</h2>
+          <p>{isLocationPage ? 'Keep your current operations location visible to dispatch.' : 'Keep your dispatch team informed of your current status.'}</p>
+        </div>
+        <Activity size={21} />
+      </div>
+      <div className="worker-static-callout">
+        <MapPin size={18} />
+        <div>
+          <strong>{isLocationPage ? 'Assigned service area' : 'Current assignment area'}</strong>
+          <span>Update the fields below when your field status changes.</span>
+        </div>
+      </div>
+      <form className="worker-availability-form" onSubmit={onSubmit}>
+        <label className="worker-field">
+          <span>Availability</span>
+          <select value={availability} onChange={(event) => setAvailability(event.target.value)}>
+            <option>Available</option>
+            <option>On duty</option>
+            <option>Unavailable</option>
+          </select>
+        </label>
+        <div className="worker-field">
+          <div className="flex items-center justify-between pb-1">
+            <span className="font-bold text-slate-700">Current location</span>
+            <button
+              type="button"
+              onClick={() => onSyncLocation(true)}
+              disabled={isLocating}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 cursor-pointer disabled:opacity-50"
+              title="Detect and sync your real-time GPS location"
+            >
+              {isLocating ? (
+                <>
+                  <LoaderCircle className="report-spinner" size={13} />
+                  <span>Syncing GPS...</span>
+                </>
+              ) : (
+                <>
+                  <MapPin size={13} />
+                  <span>Sync current GPS</span>
+                </>
+              )}
+            </button>
+          </div>
+          <input
+            value={location}
+            onChange={(event) => setLocation(event.target.value)}
+            placeholder="North operations hub"
+          />
+          {locationStatus && (
+            <small
+              className={`report-detection-note ${
+                locationStatus.includes('denied') || locationStatus.includes('Unable') || locationStatus.includes('timed out')
+                  ? 'text-amber-600'
+                  : 'text-emerald-600'
+              }`}
+            >
+              {isLocating ? <LoaderCircle className="report-spinner" size={13} /> : <CheckCircle2 size={13} />} {locationStatus}
+            </small>
+          )}
+          {user?.latitude && user?.longitude && (
+            <small className="text-slate-400 text-[11px] block mt-1">
+              GPS Coordinates: {user.latitude.toFixed(4)}, {user.longitude.toFixed(4)}
+              {user.locationUpdatedAt && ` · Synced ${new Date(user.locationUpdatedAt).toLocaleTimeString()}`}
+            </small>
+          )}
+        </div>
+        <button type="submit" className="dashboard-primary-button">Save update</button>
+      </form>
+      {message && <p className="worker-success">{message}</p>}
+      {error && <p className="worker-error">{error}</p>}
+    </section>
+  );
 }
 
 function WorkerIssues({ issues, onUpdate }) {

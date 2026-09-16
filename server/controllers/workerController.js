@@ -66,15 +66,21 @@ export const updateAssignedIssue = async (request, response) => {
 export const updateAvailability = async (request, response) => {
     try {
         const allowedAvailability = ['Available', 'On duty', 'Unavailable'];
-        const { availability, location } = request.body;
+        const { availability, location, latitude, longitude } = request.body;
 
         if (!allowedAvailability.includes(availability)) {
             return response.status(400).json({ message: 'Invalid availability status' });
         }
 
+        const updateFields = { availability };
+        if (location) updateFields.location = String(location).trim().slice(0, 200);
+        if (typeof latitude === 'number') updateFields.latitude = latitude;
+        if (typeof longitude === 'number') updateFields.longitude = longitude;
+        if (location || typeof latitude === 'number') updateFields.locationUpdatedAt = new Date();
+
         const worker = await User.findOneAndUpdate(
             { _id: request.user.userId, role: 'worker' },
-            { availability, ...(location ? { location } : {}) },
+            updateFields,
             { new: true, runValidators: true },
         );
 
@@ -87,9 +93,59 @@ export const updateAvailability = async (request, response) => {
                 id: worker._id,
                 availability: worker.availability,
                 location: worker.location,
+                latitude: worker.latitude,
+                longitude: worker.longitude,
+                locationUpdatedAt: worker.locationUpdatedAt,
             },
         });
     } catch (error) {
         return response.status(500).json({ message: 'Unable to update worker availability' });
+    }
+};
+
+export const updateLocation = async (request, response) => {
+    try {
+        const { location, latitude, longitude } = request.body;
+
+        if (!location && typeof latitude !== 'number' && typeof longitude !== 'number') {
+            return response.status(400).json({ message: 'Location or coordinates are required' });
+        }
+
+        const updateFields = {
+            locationUpdatedAt: new Date(),
+        };
+        if (typeof location === 'string' && location.trim()) {
+            updateFields.location = location.trim().slice(0, 200);
+        }
+        if (typeof latitude === 'number') {
+            updateFields.latitude = latitude;
+        }
+        if (typeof longitude === 'number') {
+            updateFields.longitude = longitude;
+        }
+
+        const worker = await User.findOneAndUpdate(
+            { _id: request.user.userId, role: 'worker' },
+            updateFields,
+            { new: true, runValidators: true },
+        );
+
+        if (!worker) {
+            return response.status(404).json({ message: 'Worker not found' });
+        }
+
+        return response.json({
+            worker: {
+                id: worker._id,
+                name: worker.name,
+                availability: worker.availability,
+                location: worker.location,
+                latitude: worker.latitude,
+                longitude: worker.longitude,
+                locationUpdatedAt: worker.locationUpdatedAt,
+            },
+        });
+    } catch (error) {
+        return response.status(500).json({ message: 'Unable to update worker location' });
     }
 };

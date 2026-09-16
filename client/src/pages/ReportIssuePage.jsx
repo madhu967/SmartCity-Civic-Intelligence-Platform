@@ -1,11 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Activity, ArrowLeft, Bell, Bot, CheckCircle2, ClipboardList, FileImage, FileWarning, Home, LoaderCircle, LogOut, Menu, Sparkles, UserRound, X } from 'lucide-react';
+import { Activity, ArrowLeft, Bell, Bot, CheckCircle2, ClipboardList, FileImage, FileWarning, Home, LoaderCircle, LogOut, MapPin, Menu, Sparkles, UserRound, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
+import { getUserCurrentLocation } from '../utils/geolocation';
 
 const issueCategories = ['Roads & Potholes', 'Garbage & Sanitation', 'Water Supply', 'Electricity', 'Streetlights', 'Drainage', 'Traffic'];
 const sidebarPages = [['Overview', Home, '/dashboard'], ['Report an issue', FileWarning, '/report-issue'], ['AI issue assistant', Sparkles, '/ai-report'], ['My reports', ClipboardList, '/reports'], ['Nearby activity', Activity, '/activity'], ['Notifications', Bell, '/notifications']];
-const initialForm = { category: issueCategories[0], location: '', description: '', image: '', aiTitle: '', aiDescription: '', aiDetectedCategory: '', aiSummary: '' };
+const initialForm = {
+  category: issueCategories[0],
+  location: '',
+  latitude: null,
+  longitude: null,
+  description: '',
+  image: '',
+  aiTitle: '',
+  aiDescription: '',
+  aiDetectedCategory: '',
+  aiSummary: '',
+};
 
 export default function ReportIssuePage() {
   const [user, setUser] = useState(null);
@@ -14,15 +26,39 @@ export default function ReportIssuePage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState('');
   const [imagePreview, setImagePreview] = useState('');
   const [detection, setDetection] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const detectLocation = async () => {
+    setIsLocating(true);
+    setLocationStatus('Detecting your current location...');
+    try {
+      const loc = await getUserCurrentLocation();
+      setForm((current) => ({
+        ...current,
+        location: loc.locationString,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      }));
+      setLocationStatus('Current location detected');
+    } catch (locErr) {
+      console.warn('Geolocation detection error:', locErr);
+      setLocationStatus(locErr.message || 'Location unavailable. You can enter it manually.');
+    } finally {
+      setIsLocating(false);
+    }
+  };
 
   useEffect(() => {
     apiRequest('/auth/me', { headers: getAuthHeaders() })
       .then((data) => {
         if (data.user.role !== 'citizen') throw new Error('Only citizen accounts can report issues');
         setUser(data.user);
+        // Automatically capture user's current location when reporting an issue
+        detectLocation();
       })
       .catch((requestError) => setError(requestError.message));
   }, []);
@@ -91,6 +127,7 @@ export default function ReportIssuePage() {
       setForm(initialForm);
       setImagePreview('');
       setDetection(null);
+      setLocationStatus('');
       setMessage('Your issue was reported successfully. The city team can now review it.');
     } catch (requestError) {
       setError(requestError.message);
@@ -124,7 +161,81 @@ export default function ReportIssuePage() {
               <div className="report-section-heading"><div><p className="report-kicker">Step 1 · Upload evidence</p><h2>Show us what is happening</h2></div><span className="report-ai-chip"><Bot size={15} /> AI assisted</span></div>
               <label className="report-first-image-field"><span><FileImage size={16} /> Issue image <small>Optional, maximum 5 MB</small></span><input type="file" accept="image/*" onChange={updateImage} /></label>
               {imagePreview && <div className="report-ai-result report-ai-result-expanded"><img src={imagePreview} alt="Selected issue evidence" /><div><div className="report-ai-result-label"><span>{isDetecting ? <><LoaderCircle className="report-spinner" size={14} /> AI is inspecting the image</> : <><CheckCircle2 size={14} /> AI result</>}</span>{!isDetecting && <strong>{detection?.category || 'Needs review'}</strong>}</div>{isDetecting ? <p>Identifying the main visible civic subject and preparing the report details.</p> : <div className="report-ai-copy"><strong>{detection?.title || 'Issue title pending'}</strong><p>{detection?.description || detection?.summary}</p></div>}</div></div>}
-              <div className="worker-form-grid report-followup-grid"><label className="worker-field"><span>Issue type</span><select required name="category" value={form.category} onChange={updateField}>{issueCategories.map((category) => <option key={category}>{category}</option>)}</select><small className="report-detection-note">{detection ? <><CheckCircle2 size={13} /> AI suggestion shown above. You can change it.</> : 'Upload an image to get an AI suggestion.'}</small></label><label className="worker-field"><span>Location</span><input required name="location" value={form.location} onChange={updateField} placeholder="Street, ward, or landmark" /></label><label className="worker-field report-description-field"><span>Description</span><textarea required name="description" value={form.description} onChange={updateField} placeholder="The AI description will appear here after image analysis. Add any useful details." rows="6" minLength="10" maxLength="2000" /></label></div>
+              <div className="worker-form-grid report-followup-grid">
+                <label className="worker-field">
+                  <span>Issue type</span>
+                  <select required name="category" value={form.category} onChange={updateField}>
+                    {issueCategories.map((category) => <option key={category}>{category}</option>)}
+                  </select>
+                  <small className="report-detection-note">
+                    {detection ? <><CheckCircle2 size={13} /> AI suggestion shown above. You can change it.</> : 'Upload an image to get an AI suggestion.'}
+                  </small>
+                </label>
+                <div className="worker-field">
+                  <div className="flex items-center justify-between pb-1">
+                    <span className="flex items-center gap-1.5 font-bold text-slate-700">
+                      <MapPin size={14} className="text-brand-600" /> Location
+                    </span>
+                    <button
+                      type="button"
+                      onClick={detectLocation}
+                      disabled={isLocating}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 cursor-pointer disabled:opacity-50"
+                      title="Fetch and use your current GPS location"
+                    >
+                      {isLocating ? (
+                        <>
+                          <LoaderCircle className="report-spinner" size={13} />
+                          <span>Detecting GPS...</span>
+                        </>
+                      ) : (
+                        <>
+                          <MapPin size={13} />
+                          <span>Use current location</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <input
+                    required
+                    name="location"
+                    value={form.location}
+                    onChange={updateField}
+                    placeholder="Street, ward, or landmark"
+                  />
+                  {locationStatus && (
+                    <small
+                      className={`report-detection-note ${
+                        locationStatus.includes('denied') ||
+                        locationStatus.includes('unavailable') ||
+                        locationStatus.includes('timed out')
+                          ? 'text-amber-600'
+                          : 'text-emerald-600'
+                      }`}
+                    >
+                      {isLocating ? (
+                        <LoaderCircle className="report-spinner" size={13} />
+                      ) : (
+                        <CheckCircle2 size={13} />
+                      )}{' '}
+                      {locationStatus}
+                    </small>
+                  )}
+                </div>
+                <label className="worker-field report-description-field">
+                  <span>Description</span>
+                  <textarea
+                    required
+                    name="description"
+                    value={form.description}
+                    onChange={updateField}
+                    placeholder="The AI description will appear here after image analysis. Add any useful details."
+                    rows="6"
+                    minLength="10"
+                    maxLength="2000"
+                  />
+                </label>
+              </div>
             </div>
             <div className="report-submit-panel"><div><strong>Ready to send?</strong><span>Review the AI suggestion, add the location, then send your report.</span></div><button type="submit" disabled={isSubmitting || isDetecting} className="dashboard-primary-button worker-submit">{isSubmitting ? 'Submitting report...' : 'Submit issue report'} <span>→</span></button></div>
           </form>

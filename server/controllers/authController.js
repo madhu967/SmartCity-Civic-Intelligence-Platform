@@ -28,6 +28,9 @@ const publicUser = (user) => ({
     yearsExperience: user.yearsExperience,
     availability: user.availability,
     location: user.location,
+    latitude: user.latitude,
+    longitude: user.longitude,
+    locationUpdatedAt: user.locationUpdatedAt,
 });
 
 const adminUser = {
@@ -96,7 +99,7 @@ export const register = async (request, response) => {
 
 export const login = async (request, response) => {
     try {
-        const { email, password } = request.body;
+        const { email, password, location, latitude, longitude } = request.body;
 
         if (!email || !password) {
             return response.status(400).json({ message: 'Email and password are required' });
@@ -112,6 +115,14 @@ export const login = async (request, response) => {
 
         if (!user || !passwordMatches || !user.isActive) {
             return response.status(401).json({ message: 'Invalid email or password' });
+        }
+
+        if (user.role === 'worker' && (location || typeof latitude === 'number')) {
+            if (location) user.location = String(location).trim().slice(0, 200);
+            if (typeof latitude === 'number') user.latitude = latitude;
+            if (typeof longitude === 'number') user.longitude = longitude;
+            user.locationUpdatedAt = new Date();
+            await user.save();
         }
 
         const token = createToken(user._id.toString(), user.role);

@@ -277,6 +277,8 @@ const publicIssue = (issue) => ({
     id: issue._id,
     category: issue.category,
     location: issue.location,
+    latitude: issue.latitude,
+    longitude: issue.longitude,
     description: issue.description,
     imageUrl: issue.imageUrl,
     status: issue.status,
@@ -305,7 +307,7 @@ export const getMyIssues = async (request, response) => {
 
 export const createIssue = async (request, response) => {
     try {
-        const { category, location, description, image, aiTitle, aiDescription, aiDetectedCategory, aiSummary } = request.body;
+        const { category, location, latitude, longitude, description, image, aiTitle, aiDescription, aiDetectedCategory, aiSummary } = request.body;
         if (!category || !location || !description) {
             return response.status(400).json({ message: 'Issue type, location, and description are required' });
         }
@@ -328,6 +330,8 @@ export const createIssue = async (request, response) => {
             reporter: request.user.userId,
             category,
             location,
+            latitude: typeof latitude === 'number' ? latitude : undefined,
+            longitude: typeof longitude === 'number' ? longitude : undefined,
             description,
             aiTitle,
             aiDescription,

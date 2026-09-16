@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { apiRequest, redirectToDashboard } from '../config/api';
+import { getUserCurrentLocation } from '../utils/geolocation';
 
 const initialForm = {
   name: '',
@@ -36,6 +37,33 @@ export default function AuthPage() {
 
       localStorage.setItem('smart_city_token', data.token);
       localStorage.setItem('smart_city_user', JSON.stringify(data.user));
+
+      if (data.user?.role === 'worker') {
+        try {
+          const loc = await getUserCurrentLocation();
+          if (loc) {
+            await apiRequest('/worker/location', {
+              method: 'PATCH',
+              headers: {
+                'Authorization': `Bearer ${data.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                location: loc.locationString,
+                latitude: loc.latitude,
+                longitude: loc.longitude,
+              }),
+            });
+            data.user.location = loc.locationString;
+            data.user.latitude = loc.latitude;
+            data.user.longitude = loc.longitude;
+            localStorage.setItem('smart_city_user', JSON.stringify(data.user));
+          }
+        } catch (locationError) {
+          console.warn('Worker location detection on login:', locationError);
+        }
+      }
+
       redirectToDashboard(data.user.role === 'admin' ? '/admin' : data.user.role === 'worker' ? '/worker' : '/dashboard');
     } catch (requestError) {
       setError(requestError.message);
