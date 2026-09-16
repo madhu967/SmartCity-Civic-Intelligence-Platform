@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import AdminProfile from '../models/AdminProfile.js';
+import { uploadIssueImage } from './issueController.js';
 
 const createToken = (userId, role = 'citizen') => {
     if (!process.env.JWT_SECRET) {
@@ -34,6 +36,30 @@ const adminUser = {
     email: process.env.ADMIN_EMAIL,
     role: 'admin',
     isActive: true,
+};
+
+const getAdminUser = async () => {
+    const profile = await AdminProfile.findOne({ key: 'primary-admin' });
+    return { ...adminUser, profileImage: profile?.profileImage || null };
+};
+
+export const updateProfileImage = async (request, response) => {
+    try {
+        const { profileImage } = request.body || {};
+        if (!profileImage || !profileImage.startsWith('data:image/') || profileImage.length > 7 * 1024 * 1024) {
+            return response.status(400).json({ message: 'Please upload an image smaller than 5 MB' });
+        }
+        const imageUrl = await uploadIssueImage(profileImage);
+        if (request.user.role === 'admin' && request.user.userId === 'admin') {
+            await AdminProfile.findOneAndUpdate({ key: 'primary-admin' }, { profileImage: imageUrl }, { upsert: true, new: true, setDefaultsOnInsert: true });
+            return response.json({ user: await getAdminUser() });
+        }
+        const user = await User.findByIdAndUpdate(request.user.userId, { profileImage: imageUrl }, { new: true, runValidators: true });
+        if (!user) return response.status(404).json({ message: 'User not found' });
+        return response.json({ user: publicUser(user) });
+    } catch (error) {
+        return response.status(502).json({ message: error.message || 'Unable to update profile image' });
+    }
 };
 
 export const register = async (request, response) => {
@@ -78,7 +104,7 @@ export const login = async (request, response) => {
 
         if (email.trim().toLowerCase() === process.env.ADMIN_EMAIL?.trim().toLowerCase() && password === process.env.ADMIN_PASSWORD) {
             const token = createToken('admin', 'admin');
-            return response.json({ token, user: adminUser });
+            return response.json({ token, user: await getAdminUser() });
         }
 
         const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+password');
@@ -101,7 +127,7 @@ export const logout = (_request, response) => response.json({
 
 export const getCurrentUser = async (request, response) => {
     if (request.user.role === 'admin' && request.user.userId === 'admin') {
-        return response.json({ user: adminUser });
+        return response.json({ user: await getAdminUser() });
     }
 
     const user = await User.findById(request.user.userId);

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Activity, ArrowLeft, BarChart3, Bell, BriefcaseBusiness, ClipboardList, Home, LayoutDashboard, LogOut, Mail, MapPin, Menu, Phone, Settings, ShieldCheck, UserRound, Users, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Activity, ArrowLeft, BarChart3, Bell, BriefcaseBusiness, Camera, ClipboardList, Home, LayoutDashboard, LoaderCircle, LogOut, Mail, MapPin, Menu, Phone, Settings, ShieldCheck, UserRound, Users, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
@@ -7,6 +7,13 @@ export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imageDraft, setImageDraft] = useState('');
+  const [imageZoom, setImageZoom] = useState(1);
+  const [imageOffsetX, setImageOffsetX] = useState(0);
+  const [imageOffsetY, setImageOffsetY] = useState(0);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
 
   useEffect(() => {
     apiRequest('/auth/me', { headers: getAuthHeaders() })
@@ -16,6 +23,73 @@ export default function ProfilePage() {
         setError(requestError.message);
       });
   }, []);
+
+  const chooseProfileImage = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+      setError('Choose an image smaller than 5 MB.');
+      return;
+    }
+    setError('');
+    setImageZoom(1);
+    setImageOffsetX(0);
+    setImageOffsetY(0);
+    const reader = new FileReader();
+    reader.onload = () => setImageDraft(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const saveProfileImage = () => {
+    if (!imageDraft) return;
+    setIsUploading(true);
+    const imageElement = new Image();
+    imageElement.onload = async () => {
+      const canvas = document.createElement('canvas');
+      const size = 700;
+      const context = canvas.getContext('2d');
+      canvas.width = size;
+      canvas.height = size;
+      context.fillStyle = '#e2e8f0';
+      context.fillRect(0, 0, size, size);
+      const scale = Math.min(size / imageElement.naturalWidth, size / imageElement.naturalHeight) * imageZoom;
+      const renderedWidth = imageElement.naturalWidth * scale;
+      const renderedHeight = imageElement.naturalHeight * scale;
+      const positionX = (size - renderedWidth) / 2 + imageOffsetX * 2;
+      const positionY = (size - renderedHeight) / 2 + imageOffsetY * 2;
+      context.drawImage(imageElement, positionX, positionY, renderedWidth, renderedHeight);
+      try {
+        const data = await apiRequest('/auth/profile-image', { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify({ profileImage: canvas.toDataURL('image/jpeg', 0.9) }) });
+        setUser(data.user);
+        localStorage.setItem('smart_city_user', JSON.stringify(data.user));
+        setImageDraft('');
+      } catch (requestError) {
+        setError(requestError.message);
+      } finally {
+        setIsUploading(false);
+      }
+    };
+    imageElement.src = imageDraft;
+  };
+
+  const startImageDrag = (event) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragStart.current = { x: event.clientX, y: event.clientY, offsetX: imageOffsetX, offsetY: imageOffsetY };
+    setIsDraggingImage(true);
+  };
+
+  const moveImage = (event) => {
+    if (!isDraggingImage) return;
+    setImageOffsetX(Math.max(-70, Math.min(70, dragStart.current.offsetX + event.clientX - dragStart.current.x)));
+    setImageOffsetY(Math.max(-70, Math.min(70, dragStart.current.offsetY + event.clientY - dragStart.current.y)));
+  };
+
+  const stopImageDrag = () => setIsDraggingImage(false);
+
+  const zoomImage = (event) => {
+    event.preventDefault();
+    setImageZoom((current) => Math.max(1, Math.min(2.5, current + (event.deltaY < 0 ? 0.08 : -0.08))));
+  };
 
   const logout = () => {
     localStorage.removeItem('smart_city_token');
@@ -58,7 +132,8 @@ export default function ProfilePage() {
         <a href={backPath} className="profile-back-link"><ArrowLeft size={15} /> Back to {isAdmin ? 'admin console' : isWorker ? 'worker dashboard' : 'dashboard'}</a>
         <div className="profile-heading"><p className="dashboard-eyebrow">{isAdmin ? 'Administration' : isWorker ? 'Field operations' : 'Account'}</p><h1>Profile details</h1><p>Manage and review the information connected to your {isAdmin ? 'administrator' : isWorker ? 'worker' : 'citizen'} account.</p></div>
         <div className="profile-card">
-          <div className="profile-card-banner"><div className="profile-large-avatar">{initials}</div><div><h2>{user.name}</h2><p>{user.role} account</p></div></div>
+          <div className="profile-card-banner"><div className="profile-avatar-upload"><div className="profile-large-avatar">{user.profileImage ? <img src={user.profileImage} alt={`${user.name} profile`} /> : initials}</div><label className="profile-avatar-edit" title="Choose profile picture"><Camera size={14} /><input type="file" accept="image/*" onChange={chooseProfileImage} disabled={isUploading} /></label></div><div><h2>{user.name}</h2><p>{user.role} account</p><small className="profile-image-hint">{isUploading ? 'Saving profile picture...' : imageDraft ? 'Adjust your picture below' : 'Add a profile picture'}</small></div></div>
+          {imageDraft && <div className="profile-image-editor"><div className={`profile-image-crop ${isDraggingImage ? 'profile-image-crop-dragging' : ''}`} onPointerDown={startImageDrag} onPointerMove={moveImage} onPointerUp={stopImageDrag} onPointerCancel={stopImageDrag} onWheel={zoomImage}><img src={imageDraft} alt="Profile crop preview" draggable="false" style={{ transform: `translate(${imageOffsetX}px, ${imageOffsetY}px) scale(${imageZoom})` }} /></div><div className="profile-image-controls"><p className="profile-image-instruction">Drag to reposition · Scroll or pinch to zoom</p><div className="profile-image-actions"><button type="button" onClick={() => setImageDraft('')} className="profile-image-cancel">Cancel</button><button type="button" onClick={saveProfileImage} disabled={isUploading} className="dashboard-primary-button">{isUploading ? <><LoaderCircle className="profile-upload-spinner" size={14} /> Saving...</> : 'Save picture'}</button></div></div></div>}
           <div className="profile-detail-grid">
             <div><span><Mail size={16} /> Email address</span><strong>{user.email}</strong></div>
             <div><span><Phone size={16} /> Phone number</span><strong>{user.phone || 'Not added yet'}</strong></div>

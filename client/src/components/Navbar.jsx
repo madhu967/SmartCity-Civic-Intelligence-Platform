@@ -56,7 +56,7 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
           {isAuthenticated ? (
             <div className="dashboard-navbar-account">
               <a href="/profile" className="dashboard-navbar-profile" aria-label="Open profile details" title="Open profile details">
-                <span className="dashboard-navbar-avatar"><UserRound size={16} /></span>
+                <span className="dashboard-navbar-avatar">{user?.profileImage ? <img src={user.profileImage} alt="" /> : <UserRound size={16} />}</span>
                 <span className="dashboard-navbar-profile-copy"><strong>{user?.name || 'Citizen'}</strong><small>{user?.role || 'citizen'} profile</small></span>
               </a>
               <button type="button" onClick={onLogout} className="dashboard-navbar-logout"><LogOut size={15} /><span>Log out</span></button>
