@@ -150,6 +150,18 @@ const publicIssue = (issue) => ({
     reviewStatus: issue.reviewStatus,
     priority: issue.priority,
     department: issue.department,
+    reportCount: issue.reportCount || 1,
+    duplicateReporters: (issue.duplicateReporters || []).map((entry) => ({
+        id: entry._id,
+        user: entry.user ? {
+            id: entry.user._id || entry.user,
+            name: entry.user.name || 'Citizen',
+            email: entry.user.email,
+        } : null,
+        reportedAt: entry.reportedAt,
+        description: entry.description,
+        imageUrl: entry.imageUrl,
+    })),
     assignedWorker: issue.assignedWorker ? {
         id: issue.assignedWorker._id,
         name: issue.assignedWorker.name,
@@ -175,6 +187,7 @@ export const listIssues = async (_request, response) => {
         response.set('Cache-Control', 'no-store');
         const issues = await Issue.find()
             .populate('reporter', 'name email')
+            .populate('duplicateReporters.user', 'name email')
             .populate('assignedWorker', 'name department location latitude longitude')
             .sort({ createdAt: -1 });
         return response.json({ issues: issues.map(publicIssue), total: issues.length });
@@ -216,7 +229,10 @@ export const updateIssue = async (request, response) => {
                 ...(assignedWorker !== undefined ? { assignedWorker: assignedWorker || null } : {}),
             },
             { new: true, runValidators: true },
-        ).populate('reporter', 'name email').populate('assignedWorker', 'name department');
+        )
+            .populate('reporter', 'name email')
+            .populate('duplicateReporters.user', 'name email')
+            .populate('assignedWorker', 'name department');
 
         if (!issue) return response.status(404).json({ message: 'Issue report not found' });
         return response.json({ issue: publicIssue(issue) });

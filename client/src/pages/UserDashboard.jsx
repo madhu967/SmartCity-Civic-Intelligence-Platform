@@ -23,6 +23,7 @@ import {
   UserCheck,
   UserRound,
   X,
+  Zap,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
@@ -565,6 +566,17 @@ function CitizenIssueCard({ issue, onViewImage }) {
           >
             {issue.priority || 'Medium'} Priority
           </span>
+          {(issue.reportCount || 1) > 1 && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+              <Zap size={10} className="text-amber-600 fill-amber-600" />
+              {issue.reportCount} Citizen Reports
+            </span>
+          )}
+          {issue.isCoReported && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+              Co-reported with Community
+            </span>
+          )}
           {issue.department && (
             <span className="dept-tag">
               <Briefcase size={10} /> {issue.department}

@@ -17,6 +17,7 @@ const workerIssue = (issue) => ({
     status: issue.status,
     priority: issue.priority || 'Medium',
     department: issue.department,
+    reportCount: issue.reportCount || 1,
     workerProofImage: issue.workerProofImage,
     proofReviewStatus: issue.proofReviewStatus,
     workerCompletionStatus: issue.workerCompletionStatus,

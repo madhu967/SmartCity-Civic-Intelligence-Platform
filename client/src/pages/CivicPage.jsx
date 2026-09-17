@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Activity,
+  AlertCircle,
   AlertTriangle,
   Bell,
   Briefcase,
@@ -8,23 +9,44 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
+  Compass,
+  ExternalLink,
   Eye,
   FileWarning,
+  Filter,
   Home,
   Layers,
+  Locate,
   LogOut,
   MapPin,
   Menu,
+  Navigation,
   Radio,
+  RefreshCw,
   Search,
   Settings,
   ShieldCheck,
+  Sparkles,
   UserCheck,
   UserRound,
   X,
+  Zap,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
+import { calculateDistanceKm, formatDistance, getUserCurrentLocation } from '../utils/geolocation';
+
+const civicCategories = [
+  'All',
+  'Roads & Potholes',
+  'Garbage & Sanitation',
+  'Water Supply',
+  'Electricity',
+  'Streetlights',
+  'Drainage',
+  'Traffic',
+  'Other',
+];
 
 const pageData = {
   '/reports': {
@@ -39,10 +61,10 @@ const pageData = {
   '/activity': {
     eyebrow: 'Live intelligence',
     title: 'Nearby activity',
-    description: 'Live community signals and municipal responses across the city.',
+    description: 'Civic issues reported within 5 km of your location, sorted by closest proximity.',
     icon: Activity,
-    emptyTitle: 'No community activity yet',
-    emptyText: 'City-wide civic complaints and restoration works will appear here.',
+    emptyTitle: 'No nearby community activity',
+    emptyText: 'No civic reports filed within 5 km of your current GPS position.',
     action: 'Report an issue',
   },
   '/notifications': {
@@ -75,26 +97,61 @@ export default function CivicPage({ pagePath }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Proximity Radar & Geolocation state for /activity
+  const [userLocation, setUserLocation] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [radiusKm, setRadiusKm] = useState(5); // Default 5 km radius
+  const [showAllCityWide, setShowAllCityWide] = useState(false);
+  const [activityCategoryFilter, setActivityCategoryFilter] = useState('All');
+
   const content = pageData[pagePath] || pageData['/reports'];
   const PageIcon = content.icon;
 
-  useEffect(() => {
-    const loadPageData = async () => {
-      try {
-        const [userData, myIssuesData, communityData] = await Promise.all([
-          apiRequest('/auth/me', { headers: getAuthHeaders() }),
-          apiRequest('/issues', { headers: getAuthHeaders() }),
-          apiRequest('/issues/community', { headers: getAuthHeaders() }).catch(() => ({ issues: [] })),
-        ]);
-        setUser(userData.user);
-        setReports(myIssuesData.issues || []);
-        setCommunityIssues(communityData.issues || []);
-      } catch (requestError) {
-        localStorage.removeItem('smart_city_token');
-        setError(requestError.message);
-      }
-    };
+  const detectLocation = async () => {
+    setIsLocating(true);
+    setLocationError('');
+    try {
+      const loc = await getUserCurrentLocation();
+      setUserLocation(loc);
+      return loc;
+    } catch (err) {
+      console.warn('Geolocation detection error:', err);
+      setLocationError(err.message || 'Unable to access your GPS position. Please check your browser location permissions.');
+      return null;
+    } finally {
+      setIsLocating(false);
+    }
+  };
 
+  useEffect(() => {
+    if (pagePath === '/activity') {
+      detectLocation();
+    }
+  }, [pagePath]);
+
+  const loadPageData = async () => {
+    try {
+      const commUrl = userLocation?.latitude && userLocation?.longitude
+        ? `/issues/community?lat=${userLocation.latitude}&lng=${userLocation.longitude}&radius=${showAllCityWide ? 'all' : radiusKm}`
+        : '/issues/community';
+
+      const [userData, myIssuesData, communityData] = await Promise.all([
+        apiRequest('/auth/me', { headers: getAuthHeaders() }),
+        apiRequest('/issues', { headers: getAuthHeaders() }),
+        apiRequest(commUrl, { headers: getAuthHeaders() }).catch(() => ({ issues: [] })),
+      ]);
+      setUser(userData.user);
+      setReports(myIssuesData.issues || []);
+      setCommunityIssues(communityData.issues || []);
+    } catch (requestError) {
+      localStorage.removeItem('smart_city_token');
+      setError(requestError.message);
+    }
+  };
+
+  useEffect(() => {
     loadPageData();
     const refreshTimer = window.setInterval(loadPageData, 12000);
     window.addEventListener('focus', loadPageData);
@@ -102,7 +159,7 @@ export default function CivicPage({ pagePath }) {
       window.clearInterval(refreshTimer);
       window.removeEventListener('focus', loadPageData);
     };
-  }, [pagePath]);
+  }, [pagePath, userLocation?.latitude, userLocation?.longitude, radiusKm, showAllCityWide]);
 
   const logout = () => {
     localStorage.removeItem('smart_city_token');
@@ -187,6 +244,79 @@ export default function CivicPage({ pagePath }) {
     );
   });
 
+  // Extract coordinates and compute distance to user for each community issue
+  const processedCommunityIssues = communityIssues.map((item) => {
+    let iLat = typeof item.latitude === 'number' ? item.latitude : null;
+    let iLon = typeof item.longitude === 'number' ? item.longitude : null;
+    if ((iLat === null || iLon === null) && item.location) {
+      const m = item.location.match(/\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/);
+      if (m) {
+        iLat = parseFloat(m[1]);
+        iLon = parseFloat(m[2]);
+      }
+    }
+
+    let distKm = null;
+    if (userLocation?.latitude != null && userLocation?.longitude != null && iLat != null && iLon != null) {
+      distKm = calculateDistanceKm(userLocation.latitude, userLocation.longitude, iLat, iLon);
+    } else if (typeof item.distanceKm === 'number') {
+      distKm = item.distanceKm;
+    }
+
+    return {
+      ...item,
+      extractedLat: iLat,
+      extractedLon: iLon,
+      distanceKm: distKm,
+      distanceText: distKm !== null ? formatDistance(distKm) : null,
+    };
+  });
+
+  // Filter and sort: most nearby issue first within 5 km radius
+  const nearbyIssues = processedCommunityIssues
+    .filter((item) => {
+      // 1. Proximity filter: if user location is known and not in showAllCityWide mode, enforce radius (default 5 km)
+      if (userLocation && !showAllCityWide) {
+        if (item.distanceKm === null || item.distanceKm > radiusKm) {
+          return false;
+        }
+      }
+
+      // 2. Category filter
+      if (activityCategoryFilter !== 'All' && item.category !== activityCategoryFilter) {
+        return false;
+      }
+
+      // 3. Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesCat = item.category?.toLowerCase().includes(q);
+        const matchesTitle = item.aiTitle?.toLowerCase().includes(q);
+        const matchesDesc = item.description?.toLowerCase().includes(q);
+        const matchesLoc = item.location?.toLowerCase().includes(q);
+        const matchesReporter = item.reporter?.name?.toLowerCase().includes(q);
+        if (!matchesCat && !matchesTitle && !matchesDesc && !matchesLoc && !matchesReporter) {
+          return false;
+        }
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      // Sort closest first! (most nearby issue on top)
+      if (a.distanceKm !== null && b.distanceKm !== null) {
+        return a.distanceKm - b.distanceKm;
+      }
+      if (a.distanceKm !== null) return -1;
+      if (b.distanceKm !== null) return 1;
+      // Secondary sort: newest first
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
+  const totalWithin5Km = processedCommunityIssues.filter(
+    (i) => i.distanceKm !== null && i.distanceKm <= 5
+  ).length;
+
   return (
     <main className="dashboard-page min-h-screen bg-slate-50 text-slate-900 font-sans">
       <Navbar isAuthenticated user={user} onLogout={logout} />
@@ -236,6 +366,9 @@ export default function CivicPage({ pagePath }) {
               <span>{label}</span>
               {label === 'Notifications' && notifications.length > 0 && (
                 <span className="dashboard-notification-count">{notifications.length}</span>
+              )}
+              {label === 'Nearby activity' && totalWithin5Km > 0 && (
+                <span className="dashboard-notification-count bg-emerald-600 text-white font-bold">{totalWithin5Km}</span>
               )}
             </a>
           ))}
@@ -360,6 +493,17 @@ export default function CivicPage({ pagePath }) {
                             >
                               {report.priority || 'Medium'}
                             </span>
+                            {(report.reportCount || 1) > 1 && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                                <Zap size={10} className="text-amber-600 fill-amber-600" />
+                                {report.reportCount} Citizen Reports
+                              </span>
+                            )}
+                            {report.isCoReported && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                                Co-reported with Community
+                              </span>
+                            )}
                           </div>
                           <strong className="text-sm font-bold text-slate-900 block mt-1">
                             {report.aiTitle || report.description}
@@ -437,73 +581,400 @@ export default function CivicPage({ pagePath }) {
             </div>
           )}
 
-          {/* VIEW 2: NEARBY COMMUNITY ACTIVITY */}
+          {/* VIEW 2: NEARBY COMMUNITY ACTIVITY (5 KM PROXIMITY RADAR) */}
           {pagePath === '/activity' && (
             <div className="mt-6 space-y-4">
-              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-slate-900 text-sm">City-Wide Signals Monitor</h3>
-                  <p className="text-xs text-slate-500">Live feed of civic reports submitted across municipal wards.</p>
+              {/* Proximity Command Bar */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                      </span>
+                      <h3 className="font-bold text-slate-900 text-base">Live Proximity Radar</h3>
+                      <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200">
+                        {showAllCityWide ? 'All City Incidents' : `Within ${radiusKm} km Radius`}
+                      </span>
+                    </div>
+
+                    {userLocation ? (
+                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
+                        <MapPin size={13} className="text-rose-500 shrink-0" />
+                        <span className="font-semibold text-slate-700">{userLocation.address || userLocation.locationString}</span>
+                        <span className="text-[11px] text-slate-400">· GPS Accuracy ±{Math.round(userLocation.accuracy || 10)}m</span>
+                      </p>
+                    ) : isLocating ? (
+                      <p className="text-xs text-blue-600 mt-1 flex items-center gap-1.5 animate-pulse font-medium">
+                        <RefreshCw size={13} className="animate-spin" />
+                        Detecting your satellite GPS coordinates...
+                      </p>
+                    ) : locationError ? (
+                      <p className="text-xs text-amber-700 mt-1 flex items-center gap-1.5 font-medium">
+                        <AlertCircle size={13} className="shrink-0 text-amber-600" />
+                        {locationError}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                        <Navigation size={13} className="text-blue-500 shrink-0" />
+                        Location detection ready. Click "Refresh GPS" to synchronize nearest issues.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={detectLocation}
+                      disabled={isLocating}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+                      title="Refresh current GPS position"
+                    >
+                      <RefreshCw size={13} className={isLocating ? 'animate-spin text-blue-600' : 'text-slate-500'} />
+                      <span>{isLocating ? 'Locating...' : 'Refresh GPS'}</span>
+                    </button>
+                  </div>
                 </div>
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  {communityIssues.length} Active Incidents
-                </span>
+
+                {/* Radius Filter & Issue Count */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1">
+                      <Compass size={13} /> Radius:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRadiusKm(5);
+                        setShowAllCityWide(false);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        !showAllCityWide && radiusKm === 5
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      5 km (Closest)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRadiusKm(10);
+                        setShowAllCityWide(false);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        !showAllCityWide && radiusKm === 10
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      10 km
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRadiusKm(25);
+                        setShowAllCityWide(false);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        !showAllCityWide && radiusKm === 25
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      25 km
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAllCityWide(true)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        showAllCityWide
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      City-Wide (All)
+                    </button>
+                  </div>
+
+                  <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                    ⚡ {nearbyIssues.length} {nearbyIssues.length === 1 ? 'Incident' : 'Incidents'} {!showAllCityWide && `Within ${radiusKm} km`}
+                  </span>
+                </div>
+
+                {/* Search and Category Filters */}
+                <div className="space-y-2.5 pt-3 border-t border-slate-100">
+                  <div className="relative">
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Filter nearby incidents by category, title, description, or reporter..."
+                      className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-500 transition"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+                    {civicCategories.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setActivityCategoryFilter(cat)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                          activityCategoryFilter === cat
+                            ? 'bg-slate-900 text-white shadow-xs'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {communityIssues.length === 0 ? (
-                <section className="civic-page-panel">
-                  <div className="civic-page-icon">
-                    <Activity size={22} />
+              {/* Incidents List or Empty States */}
+              {nearbyIssues.length === 0 ? (
+                <div className="p-8 sm:p-12 text-center rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
+                  <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                    <ShieldCheck size={28} />
                   </div>
-                  <h2>No public activity yet</h2>
-                  <p>When issues are reported across the city, they will appear here in real-time.</p>
-                </section>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-base">
+                      {userLocation && !showAllCityWide
+                        ? `No civic issues reported within ${radiusKm} km`
+                        : 'No matching civic incidents found'}
+                    </h3>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+                      {userLocation && !showAllCityWide
+                        ? `Great news! There are zero citizen-reported civic issues within a ${radiusKm} km radius of your current GPS location. Your neighborhood is looking clean and operational.`
+                        : 'No reports match your current filters. Try changing your search keywords or switching category filters.'}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 flex-wrap pt-2">
+                    {!showAllCityWide && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllCityWide(true)}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                      >
+                        <Navigation size={13} />
+                        View all city-wide incidents ({processedCommunityIssues.length})
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={detectLocation}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition cursor-pointer"
+                    >
+                      <RefreshCw size={13} />
+                      Refresh GPS location
+                    </button>
+                    <a
+                      href="/report-issue"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition"
+                    >
+                      <FileWarning size={13} />
+                      Report an issue in this area
+                    </a>
+                  </div>
+                </div>
               ) : (
-                <div className="grid gap-3">
-                  {communityIssues.map((item) => (
-                    <article key={item.id} className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="category-chip">
+                <div className="grid gap-4">
+                  {nearbyIssues.map((item, index) => (
+                    <article
+                      key={item.id}
+                      className={`p-4 sm:p-5 rounded-2xl border bg-white shadow-xs hover:shadow-md transition-shadow flex flex-col gap-3 ${
+                        index === 0 && item.distanceKm !== null && item.distanceKm <= 5
+                          ? 'border-emerald-400 ring-2 ring-emerald-400/20'
+                          : 'border-slate-200'
+                      }`}
+                    >
+                      {/* Card Header */}
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* Rank #1 Pill */}
+                          {index === 0 && item.distanceKm !== null && item.distanceKm <= 5 && (
+                            <span className="px-2.5 py-1 rounded-full bg-emerald-700 text-white font-black text-[10px] uppercase tracking-wider shadow-xs flex items-center gap-1">
+                              <Compass size={11} className="animate-spin" /> #1 Most Nearby
+                            </span>
+                          )}
+
+                          {/* Distance Badge */}
+                          {item.distanceKm !== null ? (
+                            item.distanceKm < 0.3 ? (
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white font-extrabold text-xs inline-flex items-center gap-1 shadow-xs animate-pulse">
+                                <Zap size={12} className="fill-white" />
+                                {Math.round(item.distanceKm * 1000)}m away · Closest
+                              </span>
+                            ) : item.distanceKm < 1.0 ? (
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs inline-flex items-center gap-1 border border-emerald-200">
+                                <MapPin size={12} className="text-emerald-600" />
+                                {Math.round(item.distanceKm * 1000)}m away
+                              </span>
+                            ) : item.distanceKm < 3.0 ? (
+                              <span className="px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 font-extrabold text-xs inline-flex items-center gap-1 border border-sky-200">
+                                <Navigation size={12} className="text-sky-600" />
+                                {item.distanceKm.toFixed(2)} km away
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-xs inline-flex items-center gap-1 border border-indigo-200">
+                                <Navigation size={12} className="text-indigo-600" />
+                                {item.distanceKm.toFixed(2)} km away
+                              </span>
+                            )
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-xs inline-flex items-center gap-1 border border-slate-200">
+                              <MapPin size={12} /> Distance pending GPS
+                            </span>
+                          )}
+
+                          {/* Category Chip */}
+                          <span className="category-chip text-xs font-semibold">
                             {item.category}
                           </span>
+
+                          {/* Priority Badge */}
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                               item.priority === 'Critical'
-                                ? 'bg-red-100 text-red-700'
+                                ? 'bg-red-100 text-red-700 border border-red-200'
                                 : item.priority === 'High'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-slate-100 text-slate-700'
+                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
                             }`}
                           >
                             {item.priority || 'Medium'} Priority
                           </span>
-                          <span className="text-xs text-slate-400 flex items-center gap-1">
-                            <Clock size={11} /> {new Date(item.createdAt).toLocaleDateString()}
+
+                          {/* Duplicate Reports Counter */}
+                          {item.reportCount > 1 ? (
+                            <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
+                              <Zap size={12} className="fill-amber-500 text-amber-600" />
+                              {item.reportCount} Citizens Reported
+                            </span>
+                          ) : (
+                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                              1 Report
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="shrink-0">
+                          <span
+                            className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
+                              item.status === 'Resolved'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                : item.status === 'In progress'
+                                ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                : 'bg-amber-100 text-amber-800 border border-amber-200'
+                            }`}
+                          >
+                            {item.status === 'Resolved' && <CheckCircle2 size={13} />}
+                            {item.status === 'In progress' && <Clock size={13} />}
+                            {item.status}
                           </span>
                         </div>
-                        <strong className="text-sm font-bold text-slate-900 block truncate">
+                      </div>
+
+                      {/* Title and Content */}
+                      <div>
+                        <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
                           {item.aiTitle || item.description}
-                        </strong>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                          <MapPin size={12} className="text-blue-500 shrink-0" />
-                          <span className="truncate">{item.location}</span>
+                        </h4>
+
+                        {item.aiSummary && (
+                          <div className="mt-2 p-2 rounded-lg bg-blue-50/70 border border-blue-100 text-xs text-blue-900 flex items-start gap-1.5">
+                            <Sparkles size={13} className="text-blue-600 shrink-0 mt-0.5" />
+                            <span>
+                              <strong>AI Insight:</strong> {item.aiSummary}
+                            </span>
+                          </div>
+                        )}
+
+                        <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                          {item.description}
                         </p>
                       </div>
 
-                      <div className="shrink-0 flex items-center gap-2">
-                        <span
-                          className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                            item.status === 'Resolved'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : item.status === 'In progress'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-amber-100 text-amber-800'
-                          }`}
-                        >
-                          {item.status}
+                      {/* Location & Map Directions */}
+                      <div className="flex items-center gap-2 flex-wrap text-xs text-slate-600">
+                        <span className="flex items-center gap-1 font-medium">
+                          <MapPin size={13} className="text-rose-500 shrink-0" />
+                          <span>{item.location}</span>
                         </span>
+                        {item.extractedLat && item.extractedLon && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${item.extractedLat},${item.extractedLon}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-[11px] font-bold inline-flex items-center gap-0.5 ml-1 shrink-0"
+                          >
+                            <ExternalLink size={11} /> Open in Maps
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Assigned Worker */}
+                      {item.assignedWorker && (
+                        <div className="p-2 rounded-lg bg-blue-50/70 border border-blue-100 text-xs text-blue-900 flex items-center gap-2">
+                          <UserCheck size={14} className="text-blue-600 shrink-0" />
+                          <span>
+                            Field Officer: <strong>{item.assignedWorker.name}</strong> · {item.assignedWorker.department || 'Civic Infrastructure'}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Image Evidence & Verification Proof */}
+                      {(item.imageUrl || item.workerProofImage) && (
+                        <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100">
+                          {item.imageUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedImage(item.imageUrl)}
+                              className="inline-flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer text-xs"
+                            >
+                              <img src={item.imageUrl} alt="Citizen evidence" className="w-10 h-10 rounded object-cover" />
+                              <span className="font-semibold text-slate-700">Citizen photo</span>
+                            </button>
+                          )}
+                          {item.workerProofImage && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedImage(item.workerProofImage)}
+                              className="inline-flex items-center gap-2 p-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 cursor-pointer text-xs"
+                            >
+                              <img src={item.workerProofImage} alt="Completion proof" className="w-10 h-10 rounded object-cover border border-emerald-300" />
+                              <div className="text-left">
+                                <span className="font-bold text-emerald-900 block">Restoration proof</span>
+                                <small className="text-emerald-700 text-[10px]">{item.proofReviewStatus || 'Under review'}</small>
+                              </div>
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Card Footer: Submitter info and timestamp */}
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100 flex-wrap gap-2">
+                        <span className="flex items-center gap-1.5 font-medium text-slate-600">
+                          <UserRound size={12} className="text-slate-400" />
+                          Reported by <strong>{item.reporter?.name || 'Citizen'}</strong>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={11} /> {formatReportDate(item.createdAt)}
+                        </span>
+                        <span>Incident ID: #{String(item.id).slice(-8).toUpperCase()}</span>
                       </div>
                     </article>
                   ))}

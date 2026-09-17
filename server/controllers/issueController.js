@@ -273,7 +273,240 @@ export const uploadIssueImage = async (image) => {
     return uploadData.secure_url;
 };
 
-const publicIssue = (issue) => ({
+const calculateDistanceMeters = (lat1, lon1, lat2, lon2) => {
+    if (typeof lat1 !== 'number' || typeof lon1 !== 'number' || typeof lat2 !== 'number' || typeof lon2 !== 'number') {
+        return null;
+    }
+    const toRad = (value) => (value * Math.PI) / 180;
+    const R = 6371000; // Earth's radius in meters
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+};
+
+const parseCoordinates = (locString, lat, lon) => {
+    if (typeof lat === 'number' && typeof lon === 'number' && !isNaN(lat) && !isNaN(lon)) {
+        return { latitude: lat, longitude: lon };
+    }
+    if (typeof locString === 'string') {
+        const match = locString.match(/\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)/);
+        if (match) {
+            const pLat = parseFloat(match[1]);
+            const pLon = parseFloat(match[2]);
+            if (!isNaN(pLat) && !isNaN(pLon)) {
+                return { latitude: pLat, longitude: pLon };
+            }
+        }
+    }
+    return { latitude: null, longitude: null };
+};
+
+const civicStopwords = new Set([
+    'a', 'an', 'the', 'and', 'or', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
+    'by', 'from', 'is', 'are', 'was', 'were', 'it', 'this', 'that', 'there', 'here',
+    'please', 'near', 'very', 'big', 'small', 'huge', 'broken', 'issue', 'problem',
+    'need', 'repair', 'fixed', 'road', 'street', 'city', 'area'
+]);
+
+const tokenizeCivicText = (text) => {
+    return String(text || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter((w) => w.length > 2 && !civicStopwords.has(w));
+};
+
+const calculateTextSimilarity = (text1, text2) => {
+    const tokens1 = new Set(tokenizeCivicText(text1));
+    const tokens2 = new Set(tokenizeCivicText(text2));
+    if (tokens1.size === 0 || tokens2.size === 0) return 0;
+    let intersection = 0;
+    for (const t of tokens1) {
+        if (tokens2.has(t)) intersection += 1;
+    }
+    const union = new Set([...tokens1, ...tokens2]).size;
+    return union > 0 ? intersection / union : 0;
+};
+
+const checkGeminiDuplicate = async (newReport, candidate, distanceMeters) => {
+    if (!process.env.GEMINI_API_KEY) return null;
+    const model = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+    const prompt = `You are a Municipal Civic Duplicate Detection AI for a SmartCity platform.
+Compare these two citizen complaint reports and determine if they describe the EXACT SAME physical civic problem at the same location.
+
+NEW REPORT:
+- Category: ${newReport.category}
+- Title/Subject: ${newReport.aiTitle || 'None'}
+- Description: ${newReport.description}
+- AI Summary: ${newReport.aiSummary || 'None'}
+
+EXISTING ACTIVE REPORT (${Math.round(distanceMeters)} meters away):
+- Category: ${candidate.category}
+- Title/Subject: ${candidate.aiTitle || 'None'}
+- Description: ${candidate.description}
+- AI Summary: ${candidate.aiSummary || 'None'}
+
+Are these two reports describing the exact same physical issue (e.g. the same pothole, overflowing garbage bin, water leak, fallen line, blocked drain)?
+Return ONLY JSON with this format:
+{
+  "isDuplicate": true,
+  "confidence": 0.95,
+  "reason": "Both describe the exact same large pothole near the intersection."
+}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+    try {
+        const geminiResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: 'application/json',
+                        temperature: 0,
+                    },
+                }),
+            }
+        );
+        clearTimeout(timeoutId);
+        if (!geminiResponse.ok) return null;
+        const data = await geminiResponse.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) return null;
+        return parseDetection(text);
+    } catch {
+        clearTimeout(timeoutId);
+        return null;
+    }
+};
+
+const findDuplicateIssue = async ({ category, location, latitude, longitude, description, aiTitle, aiSummary }) => {
+    const coords = parseCoordinates(location, latitude, longitude);
+
+    // Retrieve active non-resolved issues
+    const activeCandidates = await Issue.find({
+        status: { $ne: 'Resolved' },
+    }).populate('reporter', 'name email').populate('assignedWorker', 'name department');
+
+    if (!activeCandidates || activeCandidates.length === 0) {
+        return null;
+    }
+
+    const matches = [];
+
+    for (const candidate of activeCandidates) {
+        const candidateCoords = parseCoordinates(candidate.location, candidate.latitude, candidate.longitude);
+        let distanceMeters = null;
+
+        if (coords.latitude !== null && coords.longitude !== null && candidateCoords.latitude !== null && candidateCoords.longitude !== null) {
+            distanceMeters = calculateDistanceMeters(
+                coords.latitude,
+                coords.longitude,
+                candidateCoords.latitude,
+                candidateCoords.longitude
+            );
+            // Search radius boundary: 200 meters
+            if (distanceMeters > 200) {
+                continue;
+            }
+        } else {
+            // Fallback: Check if location string is similar if coordinates unavailable
+            const locNormNew = String(location || '').toLowerCase().trim();
+            const locNormCand = String(candidate.location || '').toLowerCase().trim();
+            if (!locNormNew || !locNormCand || (locNormNew !== locNormCand && !locNormNew.includes(locNormCand) && !locNormCand.includes(locNormNew))) {
+                continue;
+            }
+            distanceMeters = 30; // Nominal distance for matching location string
+        }
+
+        // Category matching: identical or related
+        const isSameCategory = candidate.category === category;
+        const newFullText = `${category} ${aiTitle || ''} ${description} ${aiSummary || ''}`.toLowerCase();
+        const candFullText = `${candidate.category} ${candidate.aiTitle || ''} ${candidate.description} ${candidate.aiSummary || ''}`.toLowerCase();
+        const textSimilarity = calculateTextSimilarity(newFullText, candFullText);
+
+        // Run Gemini AI verification if within radius
+        let aiDecision = null;
+        if (distanceMeters <= 200) {
+            aiDecision = await checkGeminiDuplicate(
+                { category, aiTitle, description, aiSummary },
+                candidate,
+                distanceMeters
+            );
+        }
+
+        if (aiDecision && typeof aiDecision.isDuplicate === 'boolean') {
+            if (aiDecision.isDuplicate && (aiDecision.confidence === undefined || aiDecision.confidence >= 0.6)) {
+                matches.push({
+                    candidate,
+                    distanceMeters: Math.round(distanceMeters),
+                    confidence: aiDecision.confidence || 0.9,
+                    reason: aiDecision.reason || 'AI verified duplicate civic issue',
+                });
+                continue;
+            }
+            if (!aiDecision.isDuplicate && aiDecision.confidence >= 0.8) {
+                // AI strongly determined this is a distinct issue
+                continue;
+            }
+        }
+
+        // Fallback Algorithmic Scoring (if Gemini unavailable or ambiguous)
+        // If within 60 meters and same category with slight text overlap
+        if (isSameCategory && distanceMeters <= 60 && textSimilarity >= 0.15) {
+            matches.push({
+                candidate,
+                distanceMeters: Math.round(distanceMeters),
+                confidence: 0.85,
+                reason: 'Proximity (<60m) and category match with shared civic terminology',
+            });
+            continue;
+        }
+
+        // If within 150 meters and same category with moderate text overlap
+        if (isSameCategory && distanceMeters <= 150 && textSimilarity >= 0.3) {
+            matches.push({
+                candidate,
+                distanceMeters: Math.round(distanceMeters),
+                confidence: 0.8,
+                reason: 'Proximity (<150m) and semantic text similarity',
+            });
+            continue;
+        }
+
+        // If within 200 meters with high text overlap
+        if (distanceMeters <= 200 && textSimilarity >= 0.45) {
+            matches.push({
+                candidate,
+                distanceMeters: Math.round(distanceMeters),
+                confidence: 0.75,
+                reason: 'High semantic text similarity within 200m radius',
+            });
+            continue;
+        }
+    }
+
+    if (matches.length === 0) return null;
+
+    // Sort by highest confidence and shortest distance
+    matches.sort((a, b) => {
+        if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+        return a.distanceMeters - b.distanceMeters;
+    });
+
+    return matches[0];
+};
+
+const publicIssue = (issue, requestUserId = null) => ({
     id: issue._id,
     category: issue.category,
     location: issue.location,
@@ -289,6 +522,19 @@ const publicIssue = (issue) => ({
     reviewStatus: issue.reviewStatus,
     priority: issue.priority || 'Medium',
     department: issue.department,
+    reportCount: issue.reportCount || 1,
+    duplicateReportersCount: (issue.duplicateReporters?.length || 0) + 1,
+    isCoReported: Boolean(
+        requestUserId &&
+        issue.duplicateReporters?.some((r) => {
+            const rId = r.user?._id ? r.user._id.toString() : r.user?.toString();
+            return rId === requestUserId.toString();
+        })
+    ),
+    reporter: issue.reporter ? {
+        id: issue.reporter._id || issue.reporter,
+        name: issue.reporter.name || 'Citizen',
+    } : null,
     assignedWorker: issue.assignedWorker ? {
         id: issue.assignedWorker._id || issue.assignedWorker,
         name: issue.assignedWorker.name,
@@ -304,21 +550,68 @@ const publicIssue = (issue) => ({
 export const getMyIssues = async (request, response) => {
     try {
         response.set('Cache-Control', 'no-store');
-        const issues = await Issue.find({ reporter: request.user.userId }).populate('assignedWorker', 'name department').sort({ createdAt: -1 });
-        return response.json({ issues: issues.map(publicIssue) });
+        const userId = request.user.userId;
+        const issues = await Issue.find({
+            $or: [
+                { reporter: userId },
+                { 'duplicateReporters.user': userId },
+            ],
+        })
+            .populate('reporter', 'name email')
+            .populate('assignedWorker', 'name department')
+            .sort({ createdAt: -1 });
+
+        return response.json({ issues: issues.map((i) => publicIssue(i, userId)) });
     } catch (error) {
         return response.status(500).json({ message: 'Unable to load your reports' });
     }
 };
 
-export const getCommunityIssues = async (_request, response) => {
+export const getCommunityIssues = async (request, response) => {
     try {
         response.set('Cache-Control', 'no-store');
+        const { lat, lng, radius } = request.query || {};
         const issues = await Issue.find()
+            .populate('reporter', 'name email')
             .populate('assignedWorker', 'name department')
             .sort({ createdAt: -1 })
-            .limit(100);
-        return response.json({ issues: issues.map(publicIssue), total: issues.length });
+            .limit(120);
+
+        let mapped = issues.map((i) => publicIssue(i));
+
+        const userLat = parseFloat(lat);
+        const userLng = parseFloat(lng);
+        const radiusKm = parseFloat(radius) || 5;
+
+        if (!isNaN(userLat) && !isNaN(userLng)) {
+            mapped = mapped.map((issue) => {
+                const coords = parseCoordinates(issue.location, issue.latitude, issue.longitude);
+                let distanceKm = null;
+                if (coords.latitude !== null && coords.longitude !== null) {
+                    const distMeters = calculateDistanceMeters(userLat, userLng, coords.latitude, coords.longitude);
+                    if (distMeters !== null) {
+                        distanceKm = distMeters / 1000;
+                    }
+                }
+                return {
+                    ...issue,
+                    distanceKm,
+                };
+            });
+
+            if (radius !== 'all') {
+                mapped = mapped.filter((item) => item.distanceKm !== null && item.distanceKm <= radiusKm);
+            }
+
+            mapped.sort((a, b) => {
+                if (a.distanceKm === null && b.distanceKm === null) return 0;
+                if (a.distanceKm === null) return 1;
+                if (b.distanceKm === null) return -1;
+                return a.distanceKm - b.distanceKm;
+            });
+        }
+
+        return response.json({ issues: mapped, total: mapped.length });
     } catch (error) {
         return response.status(500).json({ message: 'Unable to load community reports' });
     }
@@ -372,6 +665,82 @@ export const createIssue = async (request, response) => {
                 return response.status(502).json({ message: error.message });
             }
         }
+
+        // =========================================================================
+        // AI DUPLICATE ISSUE DETECTION ENGINE
+        // =========================================================================
+        const duplicateMatch = await findDuplicateIssue({
+            category,
+            location,
+            latitude: typeof latitude === 'number' ? latitude : undefined,
+            longitude: typeof longitude === 'number' ? longitude : undefined,
+            description,
+            aiTitle,
+            aiSummary,
+        });
+
+        if (duplicateMatch) {
+            const { candidate, distanceMeters, reason } = duplicateMatch;
+            const currentUserId = request.user.userId;
+
+            // Increment report count
+            candidate.reportCount = (candidate.reportCount || 1) + 1;
+
+            // Record this reporting citizen in duplicateReporters if not already recorded
+            const isOriginalReporter = candidate.reporter?._id
+                ? candidate.reporter._id.toString() === currentUserId.toString()
+                : candidate.reporter?.toString() === currentUserId.toString();
+
+            const alreadyInDuplicates = candidate.duplicateReporters?.some((entry) => {
+                const eUserId = entry.user?._id ? entry.user._id.toString() : entry.user?.toString();
+                return eUserId === currentUserId.toString();
+            });
+
+            if (!isOriginalReporter && !alreadyInDuplicates) {
+                candidate.duplicateReporters.push({
+                    user: currentUserId,
+                    reportedAt: new Date(),
+                    description,
+                    imageUrl: imageUrl || undefined,
+                });
+            }
+
+            // Save updated existing issue
+            await candidate.save();
+
+            const populatedCandidate = await Issue.findById(candidate._id)
+                .populate('reporter', 'name email')
+                .populate('assignedWorker', 'name department');
+
+            return response.status(200).json({
+                isDuplicate: true,
+                message: 'This issue has already been reported.',
+                distanceMeters,
+                reason,
+                issue: publicIssue(populatedCandidate, currentUserId),
+                existingIssue: {
+                    id: populatedCandidate._id,
+                    title: populatedCandidate.aiTitle || populatedCandidate.description,
+                    category: populatedCandidate.category,
+                    location: populatedCandidate.location,
+                    status: populatedCandidate.status,
+                    priority: populatedCandidate.priority,
+                    reportCount: populatedCandidate.reportCount,
+                    createdAt: populatedCandidate.createdAt,
+                    reportedBy: populatedCandidate.reporter?.name || 'Fellow Citizen',
+                    distanceMeters,
+                    imageUrl: populatedCandidate.imageUrl,
+                    assignedWorker: populatedCandidate.assignedWorker ? {
+                        name: populatedCandidate.assignedWorker.name,
+                        department: populatedCandidate.assignedWorker.department,
+                    } : null,
+                },
+            });
+        }
+
+        // =========================================================================
+        // NO DUPLICATE FOUND: CREATE NEW CIVIC ISSUE
+        // =========================================================================
         const issue = await Issue.create({
             reporter: request.user.userId,
             category,
@@ -384,8 +753,18 @@ export const createIssue = async (request, response) => {
             aiDetectedCategory,
             aiSummary,
             imageUrl,
+            reportCount: 1,
+            duplicateReporters: [],
         });
-        return response.status(201).json({ issue: publicIssue(issue) });
+
+        const populatedNewIssue = await Issue.findById(issue._id)
+            .populate('reporter', 'name email')
+            .populate('assignedWorker', 'name department');
+
+        return response.status(201).json({
+            isDuplicate: false,
+            issue: publicIssue(populatedNewIssue, request.user.userId),
+        });
     } catch (error) {
         if (error.name === 'ValidationError' || error.name === 'CastError') {
             return response.status(400).json({ message: 'Please provide a valid issue type and description' });

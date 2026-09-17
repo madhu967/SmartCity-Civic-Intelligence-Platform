@@ -957,6 +957,7 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
   const [error, setError] = useState('');
   const [showDispatcher, setShowDispatcher] = useState(false);
   const [imageModal, setImageModal] = useState(null);
+  const [showReporters, setShowReporters] = useState(false);
 
   // Parse GPS coordinates for issue
   let issueLat = typeof issue.latitude === 'number' ? issue.latitude : null;
@@ -1085,6 +1086,25 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
           <span className="category-chip">
             <Layers size={12} /> {issue.category}
           </span>
+
+          {/* Citizen Report Count Badge */}
+          <span
+            className={`category-chip ${
+              (issue.reportCount || 1) > 1
+                ? 'border-amber-400 bg-amber-50 text-amber-900 font-bold'
+                : 'border-slate-200 bg-slate-50 text-slate-600'
+            }`}
+            title={`${issue.reportCount || 1} citizens filed this incident report`}
+          >
+            <Zap
+              size={12}
+              className={(issue.reportCount || 1) > 1 ? 'text-amber-500 fill-amber-500' : 'text-slate-400'}
+            />
+            <span>
+              {issue.reportCount || 1} {(issue.reportCount || 1) === 1 ? 'Citizen Report' : 'Citizen Reports'}
+            </span>
+          </span>
+
           <span className={`priority-chip ${priorityChipClass}`}>
             <span className="relative flex h-2 w-2">
               {draft.priority === 'Critical' && (
@@ -1124,7 +1144,7 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
         )}
 
         {/* Reporter Info & Geo-Coordinates */}
-        <div className="issue-meta-row">
+        <div className="issue-meta-row flex-wrap">
           <span className="meta-chip">
             <User size={13} className="text-slate-400" />
             <span>Reported by <strong>{issue.reporter?.name || 'Anonymous Citizen'}</strong></span>
@@ -1139,7 +1159,99 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
             <MapPin size={13} className="text-blue-600 shrink-0" />
             <span className="truncate max-w-sm">{issue.location || 'Location details pending'}</span>
           </span>
+
+          {/* Co-reporters toggle badge if multiple reports exist */}
+          {(issue.reportCount || 1) > 1 && (
+            <button
+              type="button"
+              onClick={() => setShowReporters(!showReporters)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-xs font-bold text-amber-800 transition cursor-pointer"
+              title="View all citizens who reported this duplicate incident"
+            >
+              <Users size={13} className="text-amber-600" />
+              <span>{issue.reportCount} Citizens Reported</span>
+              <ChevronDown size={13} className={`transform transition-transform ${showReporters ? 'rotate-180' : ''}`} />
+            </button>
+          )}
         </div>
+
+        {/* Expandable Co-Reporters Showcase Drawer */}
+        {(issue.reportCount || 1) > 1 && (
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/40 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users size={14} className="text-amber-600" />
+                <span className="text-xs font-bold text-amber-950">
+                  Citizen Reporting History ({issue.reportCount} Co-Reports Recorded)
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReporters(!showReporters)}
+                className="text-[11px] font-bold text-amber-700 hover:text-amber-900 underline cursor-pointer"
+              >
+                {showReporters ? 'Hide Co-Reporters' : 'Show All Co-Reporters'}
+              </button>
+            </div>
+
+            {showReporters && (
+              <div className="space-y-2 pt-2 border-t border-amber-200/60">
+                {/* 1. Original Reporter Entry */}
+                <div className="p-2.5 rounded-lg bg-white border border-slate-200 text-xs flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <strong className="text-slate-900">{issue.reporter?.name || 'Citizen'}</strong>
+                      <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">
+                        First / Original Reporter
+                      </span>
+                      {issue.reporter?.email && (
+                        <span className="text-slate-400 text-[11px]">({issue.reporter.email})</span>
+                      )}
+                    </div>
+                    <p className="text-slate-600 mt-1 text-[11px]">{issue.description}</p>
+                  </div>
+                  <span className="text-[10px] text-slate-400 shrink-0 font-medium">
+                    {new Date(issue.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+
+                {/* 2. Subsequent Co-Reporters Entries */}
+                {issue.duplicateReporters && issue.duplicateReporters.map((dup, index) => (
+                  <div key={dup.id || index} className="p-2.5 rounded-lg bg-white border border-amber-200 text-xs flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <strong className="text-slate-900">{dup.user?.name || `Citizen #${index + 2}`}</strong>
+                        <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">
+                          Duplicate Reporter #{index + 1}
+                        </span>
+                        {dup.user?.email && (
+                          <span className="text-slate-400 text-[11px]">({dup.user.email})</span>
+                        )}
+                      </div>
+                      {dup.description && (
+                        <p className="text-slate-600 mt-1 text-[11px] italic">
+                          "{dup.description}"
+                        </p>
+                      )}
+                      {dup.imageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setImageModal(dup.imageUrl)}
+                          className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline cursor-pointer"
+                        >
+                          <Eye size={11} /> View Co-Reporter Photo Evidence
+                        </button>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-400 shrink-0 font-medium">
+                      {dup.reportedAt ? new Date(dup.reportedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Gemini AI Civic Triage Analysis Banner */}

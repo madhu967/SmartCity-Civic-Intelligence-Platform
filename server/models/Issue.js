@@ -105,6 +105,33 @@ const issueSchema = new mongoose.Schema(
             enum: ['Not started', 'In progress', 'Ready for admin review', 'Resolved'],
             default: 'Not started',
         },
+        reportCount: {
+            type: Number,
+            default: 1,
+            min: 1,
+        },
+        duplicateReporters: [
+            {
+                user: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User',
+                    required: true,
+                },
+                reportedAt: {
+                    type: Date,
+                    default: Date.now,
+                },
+                description: {
+                    type: String,
+                    trim: true,
+                    maxlength: 2000,
+                },
+                imageUrl: {
+                    type: String,
+                    trim: true,
+                },
+            },
+        ],
     },
     { timestamps: true }
 );
