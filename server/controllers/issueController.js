@@ -280,8 +280,14 @@ const publicIssue = (issue) => ({
     latitude: issue.latitude,
     longitude: issue.longitude,
     description: issue.description,
+    aiTitle: issue.aiTitle,
+    aiDescription: issue.aiDescription,
+    aiDetectedCategory: issue.aiDetectedCategory,
+    aiSummary: issue.aiSummary,
     imageUrl: issue.imageUrl,
     status: issue.status,
+    reviewStatus: issue.reviewStatus,
+    priority: issue.priority || 'Medium',
     department: issue.department,
     assignedWorker: issue.assignedWorker ? {
         id: issue.assignedWorker._id || issue.assignedWorker,
@@ -302,6 +308,46 @@ export const getMyIssues = async (request, response) => {
         return response.json({ issues: issues.map(publicIssue) });
     } catch (error) {
         return response.status(500).json({ message: 'Unable to load your reports' });
+    }
+};
+
+export const getCommunityIssues = async (_request, response) => {
+    try {
+        response.set('Cache-Control', 'no-store');
+        const issues = await Issue.find()
+            .populate('assignedWorker', 'name department')
+            .sort({ createdAt: -1 })
+            .limit(100);
+        return response.json({ issues: issues.map(publicIssue), total: issues.length });
+    } catch (error) {
+        return response.status(500).json({ message: 'Unable to load community reports' });
+    }
+};
+
+export const getCivicStats = async (_request, response) => {
+    try {
+        response.set('Cache-Control', 'no-store');
+        const [total, resolved, inProgress, critical, categoryCounts] = await Promise.all([
+            Issue.countDocuments(),
+            Issue.countDocuments({ status: 'Resolved' }),
+            Issue.countDocuments({ status: 'In progress' }),
+            Issue.countDocuments({ priority: { $in: ['High', 'Critical'] }, status: { $ne: 'Resolved' } }),
+            Issue.aggregate([
+                { $group: { _id: '$category', count: { $sum: 1 } } },
+                { $sort: { count: -1 } }
+            ]),
+        ]);
+
+        return response.json({
+            total,
+            resolved,
+            inProgress,
+            critical,
+            resolutionRate: total > 0 ? Math.round((resolved / total) * 100) : 0,
+            categoryCounts,
+        });
+    } catch (error) {
+        return response.status(500).json({ message: 'Unable to load civic statistics' });
     }
 };
 

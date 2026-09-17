@@ -6,6 +6,8 @@ const workerIssue = (issue) => ({
     id: issue._id,
     category: issue.category,
     location: issue.location,
+    latitude: issue.latitude,
+    longitude: issue.longitude,
     description: issue.description,
     aiTitle: issue.aiTitle,
     aiDescription: issue.aiDescription,
@@ -13,18 +15,27 @@ const workerIssue = (issue) => ({
     aiSummary: issue.aiSummary,
     imageUrl: issue.imageUrl,
     status: issue.status,
-    priority: issue.priority,
+    priority: issue.priority || 'Medium',
     department: issue.department,
     workerProofImage: issue.workerProofImage,
     proofReviewStatus: issue.proofReviewStatus,
     workerCompletionStatus: issue.workerCompletionStatus,
+    reporter: issue.reporter ? {
+        id: issue.reporter._id || issue.reporter,
+        name: issue.reporter.name,
+        phone: issue.reporter.phone,
+        email: issue.reporter.email,
+    } : null,
     createdAt: issue.createdAt,
+    updatedAt: issue.updatedAt,
 });
 
 export const listAssignedIssues = async (request, response) => {
     try {
         response.set('Cache-Control', 'no-store');
-        const issues = await Issue.find({ assignedWorker: request.user.userId }).sort({ createdAt: -1 });
+        const issues = await Issue.find({ assignedWorker: request.user.userId })
+            .populate('reporter', 'name phone email')
+            .sort({ createdAt: -1 });
         return response.json({ issues: issues.map(workerIssue) });
     } catch (error) {
         return response.status(500).json({ message: 'Unable to load assigned issues' });

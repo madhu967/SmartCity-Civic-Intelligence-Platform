@@ -1,5 +1,38 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, Bot, CheckCircle2, Compass, Filter, LayoutDashboard, LogOut, Mail, MapPin, Menu, Navigation, Radio, Search, Settings, ShieldCheck, UserCheck, Users, X, Zap } from 'lucide-react';
+import { 
+  AlertTriangle,
+  ArrowUpRight,
+  BarChart3, 
+  Bot, 
+  Briefcase,
+  Check,
+  CheckCircle2, 
+  ChevronDown,
+  Clock,
+  Compass, 
+  ExternalLink,
+  Eye,
+  Filter, 
+  LayoutDashboard, 
+  Layers,
+  LogOut, 
+  Mail, 
+  MapPin, 
+  Menu, 
+  Navigation, 
+  Phone,
+  Radio, 
+  RefreshCw,
+  Search, 
+  Settings, 
+  ShieldCheck, 
+  Sparkles,
+  User,
+  UserCheck, 
+  Users, 
+  X, 
+  Zap 
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { calculateDistanceKm, formatDistance } from '../utils/geolocation';
@@ -107,7 +140,30 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
         <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Issue dashboard' : isContactsPage ? 'Contact inbox' : 'Admin overview'}</span></div>
         <div className="dashboard-container">
           <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Admin Issue Dashboard' : isContactsPage ? 'Contact inbox' : 'Admin overview'}</h1><p className="dashboard-description">{isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : isIssuesPage ? 'Review, prioritize, edit, and assign every citizen complaint.' : isContactsPage ? 'Review messages about the website, civic help, and community feedback.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && !isIssuesPage && !isContactsPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
-          {isUsersPage ? <UsersTable users={users} onStatusChange={updateStatus} /> : isWorkersPage ? <WorkersTable workers={workers} /> : isIssuesPage ? <AdminIssues issues={issues} workers={workers} onUpdate={updateIssue} /> : isContactsPage ? <ContactInbox contacts={contacts} onUpdate={(contact) => setContacts((current) => current.map((item) => item.id === contact.id ? contact : item))} /> : <AdminOverview users={users} />}
+          {isUsersPage ? (
+            <UsersTable users={users} onStatusChange={updateStatus} />
+          ) : isWorkersPage ? (
+            <WorkersTable workers={workers} />
+          ) : isIssuesPage ? (
+            <AdminIssues issues={issues} workers={workers} onUpdate={updateIssue} />
+          ) : isContactsPage ? (
+            <ContactInbox
+              contacts={contacts}
+              onUpdate={(contact) =>
+                setContacts((current) =>
+                  current.map((item) => (item.id === contact.id ? contact : item))
+                )
+              }
+            />
+          ) : (
+            <AdminOverview
+              users={users}
+              workers={workers}
+              issues={issues}
+              contacts={contacts}
+              onUpdateIssue={updateIssue}
+            />
+          )}
         </div>
       </section>
     </main>
@@ -123,8 +179,368 @@ function ContactInbox({ contacts, onUpdate }) {
   return <section className="dashboard-panel admin-contact-panel"><div className="dashboard-panel-heading"><div><h2>Messages from the Contact page</h2><p>{contacts.length} conversations in your inbox</p></div><Mail size={21} /></div>{contacts.length === 0 ? <div className="admin-empty-users">No contact messages yet.</div> : <div className="admin-contact-list">{contacts.map((contact) => <article className="admin-contact-card" key={contact.id}><div className="admin-contact-card-heading"><div><span className="admin-issue-category">{contact.topic}</span><h3>{contact.name}</h3><a href={`mailto:${contact.email}`}>{contact.email}</a>{contact.phone && <small>{contact.phone}</small>}</div><select value={contact.status} onChange={(event) => updateStatus(contact, event.target.value)} aria-label={`Update status for ${contact.name}`}><option>New</option><option>In review</option><option>Resolved</option></select></div><p className="admin-contact-message">{contact.message}</p><div className="admin-contact-footer"><span>{new Date(contact.createdAt).toLocaleString()}</span>{contact.status === 'Resolved' && <span className="admin-contact-resolved"><CheckCircle2 size={14} /> Resolved</span>}</div></article>)}</div>}</section>;
 }
 
-function AdminOverview({ users }) {
-  return <div className="dashboard-stat-grid admin-stat-grid"><div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Total citizens</span><Users size={18} /></div><strong>{users.length}</strong><small>Registered user accounts</small></div><div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Active accounts</span><ShieldCheck size={18} /></div><strong>{users.filter((user) => user.isActive).length}</strong><small>Currently enabled</small></div><div className="dashboard-stat-card"><div className="dashboard-stat-top"><span>Inactive accounts</span><Users size={18} /></div><strong>{users.filter((user) => !user.isActive).length}</strong><small>Access paused</small></div><section className="dashboard-panel admin-welcome-panel"><h2>Platform administration</h2><p>Use Manage users to review citizen profiles and control account access.</p><a href="/admin/users" className="dashboard-primary-button">Open user management <span>→</span></a></section></div>;
+function AdminOverview({ users = [], workers = [], issues = [], contacts = [], onUpdateIssue }) {
+  const totalIssues = issues.length;
+  const unassignedIssues = issues.filter((i) => !i.assignedWorker && i.status !== 'Resolved');
+  const criticalIssues = issues.filter((i) => (i.priority === 'Critical' || i.priority === 'High') && i.status !== 'Resolved');
+  const inProgressIssues = issues.filter((i) => i.status === 'In progress');
+  const resolvedIssues = issues.filter((i) => i.status === 'Resolved');
+  const resolutionRate = totalIssues > 0 ? Math.round((resolvedIssues.length / totalIssues) * 100) : 100;
+  const activeWorkers = workers.filter((w) => w.availability !== 'Unavailable');
+  const pendingContacts = contacts.filter((c) => c.status !== 'Resolved');
+
+  // Group issues by category for distribution
+  const categoryCounts = issues.reduce((acc, issue) => {
+    const cat = issue.category || 'Other';
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {});
+
+  const recentIssues = [...issues].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6);
+
+  return (
+    <div className="space-y-6">
+      {/* 7 Core Live Operational KPIs */}
+      <div className="admin-kpi-grid">
+        <a href="/admin/issues" className="admin-kpi-card hover:border-blue-300 transition">
+          <div className="kpi-icon-wrap kpi-icon-total">
+            <Radio size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{totalIssues}</span>
+            <span className="kpi-label">Total Reports</span>
+          </div>
+        </a>
+
+        <a href="/admin/issues" className="admin-kpi-card hover:border-amber-300 transition">
+          <div className="kpi-icon-wrap kpi-icon-unassigned">
+            <AlertTriangle size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number text-amber-600">{unassignedIssues.length}</span>
+            <span className="kpi-label">Needs Dispatch</span>
+          </div>
+        </a>
+
+        <a href="/admin/issues" className="admin-kpi-card hover:border-red-300 transition">
+          <div className="kpi-icon-wrap kpi-icon-critical">
+            <Zap size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number text-red-600">{criticalIssues.length}</span>
+            <span className="kpi-label">Urgent / Critical</span>
+          </div>
+        </a>
+
+        <a href="/admin/issues" className="admin-kpi-card hover:border-indigo-300 transition">
+          <div className="kpi-icon-wrap kpi-icon-inprogress">
+            <Navigation size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number text-indigo-600">{inProgressIssues.length}</span>
+            <span className="kpi-label">In Field Work</span>
+          </div>
+        </a>
+
+        <a href="/admin/issues" className="admin-kpi-card hover:border-emerald-300 transition">
+          <div className="kpi-icon-wrap kpi-icon-resolved">
+            <CheckCircle2 size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number text-emerald-600">{resolvedIssues.length}</span>
+            <span className="kpi-label">Resolved ({resolutionRate}%)</span>
+          </div>
+        </a>
+
+        <a href="/admin/workers" className="admin-kpi-card hover:border-blue-300 transition">
+          <div className="kpi-icon-wrap kpi-icon-total">
+            <ShieldCheck size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{activeWorkers.length} / {workers.length}</span>
+            <span className="kpi-label">Field Force Active</span>
+          </div>
+        </a>
+
+        <a href="/admin/contacts" className="admin-kpi-card hover:border-blue-300 transition">
+          <div className="kpi-icon-wrap kpi-icon-unassigned">
+            <Mail size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{pendingContacts.length}</span>
+            <span className="kpi-label">Citizen Inquiries</span>
+          </div>
+        </a>
+      </div>
+
+      {/* Immediate Dispatch Queue (High Priority & Unassigned Incidents) */}
+      {unassignedIssues.length > 0 && (
+        <section className="dashboard-panel border-amber-200 bg-amber-50/40">
+          <div className="flex items-center justify-between pb-3 border-b border-amber-200/60">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700">
+                <AlertTriangle size={18} />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-amber-900">
+                  Priority Dispatch Queue ({unassignedIssues.length} Unassigned)
+                </h2>
+                <p className="text-xs text-amber-700">
+                  These civic complaints require municipal personnel assignment.
+                </p>
+              </div>
+            </div>
+            <a href="/admin/issues" className="text-xs font-bold text-amber-900 hover:underline">
+              Open Full Dispatcher →
+            </a>
+          </div>
+
+          <div className="grid gap-3 mt-3">
+            {unassignedIssues.slice(0, 3).map((issue) => (
+              <div
+                key={issue.id}
+                className="p-3.5 rounded-xl border border-amber-200 bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="category-chip">{issue.category}</span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                        issue.priority === 'Critical'
+                          ? 'bg-red-100 text-red-700'
+                          : issue.priority === 'High'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      {issue.priority || 'Medium'}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      Reported by {issue.reporter?.name || 'Citizen'}
+                    </span>
+                  </div>
+                  <strong className="text-sm font-bold text-slate-900 block truncate">
+                    {issue.aiTitle || issue.description}
+                  </strong>
+                  <span className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                    <MapPin size={12} className="text-blue-500 shrink-0" />
+                    <span className="truncate">{issue.location}</span>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <select
+                    className="text-xs py-1.5 px-2.5 rounded-lg border border-slate-200 bg-slate-50 font-semibold text-slate-800"
+                    defaultValue=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        onUpdateIssue(issue.id, { assignedWorker: e.target.value, status: 'In progress' });
+                      }
+                    }}
+                  >
+                    <option value="">-- Quick Assign Worker --</option>
+                    {workers.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name} ({w.department || 'Infrastructure'}) · {w.availability}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Split Operations Grid: Recent Incidents + Workforce Live Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Recent Civic Issues (Span 2) */}
+        <div className="lg:col-span-2 space-y-6">
+          <section className="dashboard-panel">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Recent Incident Reports</h2>
+                <p className="text-xs text-slate-500">Live incoming stream of citizen reports</p>
+              </div>
+              <a href="/admin/issues" className="text-xs font-bold text-blue-600 hover:underline">
+                View all issues →
+              </a>
+            </div>
+
+            {recentIssues.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs">
+                No civic complaints recorded in the system yet.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 mt-2">
+                {recentIssues.map((issue) => (
+                  <div key={issue.id} className="py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="category-chip">{issue.category}</span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                            issue.priority === 'Critical'
+                              ? 'bg-red-100 text-red-700'
+                              : issue.priority === 'High'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-100 text-slate-700'
+                          }`}
+                        >
+                          {issue.priority || 'Medium'}
+                        </span>
+                        <span className="text-[11px] text-slate-400">
+                          {new Date(issue.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <strong className="text-sm font-bold text-slate-900 block truncate">
+                        {issue.aiTitle || issue.description}
+                      </strong>
+                      <span className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                        <MapPin size={12} className="text-blue-500 shrink-0" />
+                        <span className="truncate">{issue.location}</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {issue.assignedWorker ? (
+                        <span className="text-xs font-semibold text-slate-600 flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-md">
+                          <UserCheck size={12} className="text-emerald-600" />
+                          {issue.assignedWorker.name}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-md border border-amber-200">
+                          Unassigned
+                        </span>
+                      )}
+
+                      <span
+                        className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                          issue.status === 'Resolved'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : issue.status === 'In progress'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {issue.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Department Breakdown */}
+          <section className="dashboard-panel">
+            <div className="pb-3 border-b border-slate-100">
+              <h2 className="text-sm font-bold text-slate-900">Incident Distribution by Specialty</h2>
+              <p className="text-xs text-slate-500">Breakdown of complaints across municipal departments</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+              {Object.entries(categoryCounts).map(([cat, count]) => (
+                <div key={cat} className="p-3 rounded-xl border border-slate-200 bg-slate-50">
+                  <span className="text-xs font-bold text-slate-500 block truncate">{cat}</span>
+                  <div className="flex items-baseline justify-between mt-1">
+                    <strong className="text-lg font-extrabold text-slate-900">{count}</strong>
+                    <span className="text-[11px] text-slate-400">
+                      {totalIssues > 0 ? Math.round((count / totalIssues) * 100) : 0}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Right Column: Workforce Operations Matrix & Citizen Inquiries (Span 1) */}
+        <div className="space-y-6">
+          {/* Workforce Status */}
+          <section className="dashboard-panel">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900">Field Personnel Active</h2>
+                <p className="text-xs text-slate-500">{workers.length} registered officers</p>
+              </div>
+              <a href="/admin/workers" className="text-xs font-bold text-blue-600 hover:underline">
+                Manage →
+              </a>
+            </div>
+
+            {workers.length === 0 ? (
+              <div className="py-6 text-center text-slate-400 text-xs">
+                No field officers registered yet.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 mt-2">
+                {workers.slice(0, 5).map((worker) => (
+                  <div key={worker.id} className="py-2.5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs shrink-0">
+                        {worker.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <strong className="text-xs font-bold text-slate-900 block truncate">
+                          {worker.name}
+                        </strong>
+                        <span className="text-[11px] text-slate-500 block truncate">
+                          {worker.department || 'Infrastructure'} · {worker.serviceArea || 'General'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          worker.availability === 'Unavailable'
+                            ? 'bg-slate-300'
+                            : worker.activeIssuesCount > 2
+                            ? 'bg-amber-500 animate-pulse'
+                            : 'bg-emerald-500'
+                        }`}
+                      />
+                      <span className="text-[11px] font-bold text-slate-700">
+                        {worker.availability}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Citizen Accounts Summary */}
+          <section className="dashboard-panel">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900">Citizen Accounts</h2>
+                <p className="text-xs text-slate-500">{users.length} registered residents</p>
+              </div>
+              <a href="/admin/users" className="text-xs font-bold text-blue-600 hover:underline">
+                Manage →
+              </a>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <div className="p-3 rounded-xl border border-slate-200 bg-slate-50">
+                <span className="text-[11px] font-bold text-slate-500 uppercase">Active Accounts</span>
+                <strong className="text-lg font-bold text-emerald-600 block mt-1">
+                  {users.filter((u) => u.isActive).length}
+                </strong>
+              </div>
+              <div className="p-3 rounded-xl border border-slate-200 bg-slate-50">
+                <span className="text-[11px] font-bold text-slate-500 uppercase">Access Paused</span>
+                <strong className="text-lg font-bold text-slate-500 block mt-1">
+                  {users.filter((u) => !u.isActive).length}
+                </strong>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function UsersTable({ users, onStatusChange }) {
@@ -229,48 +645,297 @@ function WorkersTable({ workers }) {
 
 function AdminIssues({ issues, workers, onUpdate }) {
   const [search, setSearch] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('All priorities');
-  const [locationFilter, setLocationFilter] = useState('');
+  const [statusTab, setStatusTab] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('All');
+  const [departmentFilter, setDepartmentFilter] = useState('All');
+  const [assignmentFilter, setAssignmentFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('newest');
+
   const departments = departmentOptions;
-  const filteredIssues = issues.filter((issue) => {
-    const searchText = `${issue.category} ${issue.description} ${issue.location} ${issue.reporter?.name || ''} ${issue.reporter?.email || ''}`.toLowerCase();
-    return searchText.includes(search.toLowerCase())
-      && (priorityFilter === 'All priorities' || issue.priority === priorityFilter)
-      && issue.location.toLowerCase().includes(locationFilter.toLowerCase());
-  });
+
+  // Real-time KPI metrics
+  const totalCount = issues.length;
+  const unassignedCount = issues.filter((i) => !i.assignedWorker && i.status !== 'Resolved').length;
+  const criticalCount = issues.filter((i) => (i.priority === 'Critical' || i.priority === 'High') && i.status !== 'Resolved').length;
+  const inProgressCount = issues.filter((i) => i.status === 'In progress').length;
+  const resolvedCount = issues.filter((i) => i.status === 'Resolved').length;
+
+  const filteredIssues = issues
+    .filter((issue) => {
+      // Status tab filtering
+      if (statusTab === 'unassigned') {
+        if (issue.assignedWorker || issue.status === 'Resolved') return false;
+      } else if (statusTab !== 'all') {
+        if (issue.status !== statusTab) return false;
+      }
+
+      // Search query across fields
+      if (search.trim()) {
+        const query = search.toLowerCase();
+        const reporterName = issue.reporter?.name || '';
+        const reporterEmail = issue.reporter?.email || '';
+        const assignedName = issue.assignedWorker?.name || '';
+        const category = issue.category || '';
+        const description = issue.description || '';
+        const location = issue.location || '';
+        const aiTitle = issue.aiTitle || '';
+        const match =
+          category.toLowerCase().includes(query) ||
+          description.toLowerCase().includes(query) ||
+          location.toLowerCase().includes(query) ||
+          reporterName.toLowerCase().includes(query) ||
+          reporterEmail.toLowerCase().includes(query) ||
+          assignedName.toLowerCase().includes(query) ||
+          aiTitle.toLowerCase().includes(query);
+        if (!match) return false;
+      }
+
+      // Priority filter
+      if (priorityFilter !== 'All' && issue.priority !== priorityFilter) return false;
+
+      // Department filter
+      if (departmentFilter !== 'All' && issue.department !== departmentFilter) return false;
+
+      // Worker assignment filter
+      if (assignmentFilter === 'Assigned' && !issue.assignedWorker) return false;
+      if (assignmentFilter === 'Unassigned' && issue.assignedWorker) return false;
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+      if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+      if (sortBy === 'priority') {
+        const rank = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+        return (rank[b.priority] || 0) - (rank[a.priority] || 0);
+      }
+      return 0;
+    });
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusTab('all');
+    setPriorityFilter('All');
+    setDepartmentFilter('All');
+    setAssignmentFilter('All');
+    setSortBy('newest');
+  };
+
+  const hasActiveFilters = search || statusTab !== 'all' || priorityFilter !== 'All' || departmentFilter !== 'All' || assignmentFilter !== 'All' || sortBy !== 'newest';
 
   return (
     <section className="dashboard-panel admin-issues-panel">
-      <div className="admin-issues-toolbar">
-        <label className="admin-issue-search">
-          <Search size={16} />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search complaints, people, or locations" />
-        </label>
-        <label className="admin-issue-filter">
-          <Filter size={15} />
-          <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}>
-            <option>All priorities</option>
-            <option>Critical</option>
-            <option>High</option>
-            <option>Medium</option>
-            <option>Low</option>
-          </select>
-        </label>
-        <label className="admin-issue-location-filter">
-          <MapPin size={15} />
-          <input value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)} placeholder="Filter location" />
-        </label>
+      {/* Executive Operational KPI Metrics */}
+      <div className="admin-kpi-grid">
+        <div 
+          onClick={() => { setStatusTab('all'); setPriorityFilter('All'); }} 
+          className={`admin-kpi-card ${statusTab === 'all' && priorityFilter === 'All' ? 'kpi-active' : ''}`}
+          title="Click to view all issues"
+        >
+          <div className="kpi-icon-wrap kpi-icon-total">
+            <Radio size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{totalCount}</span>
+            <span className="kpi-label">Total Reports</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setStatusTab('unassigned')} 
+          className={`admin-kpi-card ${statusTab === 'unassigned' ? 'kpi-active' : ''}`}
+          title="Click to view unassigned complaints"
+        >
+          <div className="kpi-icon-wrap kpi-icon-unassigned">
+            <AlertTriangle size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{unassignedCount}</span>
+            <span className="kpi-label">Needs Dispatch</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => { setPriorityFilter('Critical'); setStatusTab('all'); }} 
+          className={`admin-kpi-card ${priorityFilter === 'Critical' ? 'kpi-active' : ''}`}
+          title="Click to filter critical urgency issues"
+        >
+          <div className="kpi-icon-wrap kpi-icon-critical">
+            <Zap size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{criticalCount}</span>
+            <span className="kpi-label">Urgent / Critical</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setStatusTab('In progress')} 
+          className={`admin-kpi-card ${statusTab === 'In progress' ? 'kpi-active' : ''}`}
+          title="Click to filter issues currently in progress"
+        >
+          <div className="kpi-icon-wrap kpi-icon-inprogress">
+            <Navigation size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{inProgressCount}</span>
+            <span className="kpi-label">In Field Work</span>
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setStatusTab('Resolved')} 
+          className={`admin-kpi-card ${statusTab === 'Resolved' ? 'kpi-active' : ''}`}
+          title="Click to filter resolved issues"
+        >
+          <div className="kpi-icon-wrap kpi-icon-resolved">
+            <CheckCircle2 size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{resolvedCount}</span>
+            <span className="kpi-label">Resolved</span>
+          </div>
+        </div>
       </div>
-      <div className="admin-issues-summary">
+
+      {/* Status Filter Tabs */}
+      <div className="admin-filter-bar">
+        <div className="admin-status-tabs" aria-label="Filter complaints by status">
+          <button
+            type="button"
+            onClick={() => setStatusTab('all')}
+            className={`status-tab-btn ${statusTab === 'all' ? 'tab-active' : ''}`}
+          >
+            All Reports <span className="tab-badge">{totalCount}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusTab('unassigned')}
+            className={`status-tab-btn ${statusTab === 'unassigned' ? 'tab-active' : ''}`}
+          >
+            Needs Dispatch <span className="tab-badge tab-badge-warning">{unassignedCount}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusTab('Submitted')}
+            className={`status-tab-btn ${statusTab === 'Submitted' ? 'tab-active' : ''}`}
+          >
+            Submitted <span className="tab-badge">{issues.filter(i => i.status === 'Submitted').length}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusTab('In review')}
+            className={`status-tab-btn ${statusTab === 'In review' ? 'tab-active' : ''}`}
+          >
+            In Review <span className="tab-badge">{issues.filter(i => i.status === 'In review').length}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusTab('In progress')}
+            className={`status-tab-btn ${statusTab === 'In progress' ? 'tab-active' : ''}`}
+          >
+            In Progress <span className="tab-badge">{inProgressCount}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusTab('Resolved')}
+            className={`status-tab-btn ${statusTab === 'Resolved' ? 'tab-active' : ''}`}
+          >
+            Resolved <span className="tab-badge tab-badge-success">{resolvedCount}</span>
+          </button>
+        </div>
+
+        {/* Search & Multi-Filter Toolbar */}
+        <div className="admin-search-toolbar">
+          <div className="search-input-wrap">
+            <Search size={16} className="text-slate-400" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by title, citizen, location, or keyword..."
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch('')} className="search-clear-btn" aria-label="Clear search">
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <div className="toolbar-dropdowns">
+            <div className="custom-select-wrap">
+              <Filter size={13} className="text-slate-400" />
+              <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} aria-label="Priority filter">
+                <option value="All">All Priorities</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+
+            <div className="custom-select-wrap">
+              <Briefcase size={13} className="text-slate-400" />
+              <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} aria-label="Department filter">
+                <option value="All">All Departments</option>
+                {departments.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="custom-select-wrap">
+              <UserCheck size={13} className="text-slate-400" />
+              <select value={assignmentFilter} onChange={(e) => setAssignmentFilter(e.target.value)} aria-label="Assignment filter">
+                <option value="All">All Staffing</option>
+                <option value="Assigned">Assigned Only</option>
+                <option value="Unassigned">Unassigned Only</option>
+              </select>
+            </div>
+
+            <div className="custom-select-wrap">
+              <Clock size={13} className="text-slate-400" />
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort order">
+                <option value="newest">Newest First</option>
+                <option value="priority">Highest Urgency</option>
+                <option value="oldest">Oldest First</option>
+              </select>
+            </div>
+
+            {hasActiveFilters && (
+              <button type="button" onClick={clearFilters} className="btn-reset-filters">
+                <X size={13} /> Reset Filters
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-results-count">
         <strong>{filteredIssues.length}</strong>
-        <span>of {issues.length} complaints shown</span>
+        <span>of {issues.length} civic issues matching active view</span>
       </div>
+
       {filteredIssues.length === 0 ? (
-        <div className="admin-empty-users">No issue reports match the current filters.</div>
+        <div className="admin-empty-users py-12 text-center">
+          <AlertTriangle size={32} className="mx-auto text-slate-300 mb-2" />
+          <p className="font-bold text-slate-700 text-sm">No complaints match the current search or filters.</p>
+          <p className="text-slate-400 text-xs mt-1">Try resetting the filters or modifying your search query.</p>
+          {hasActiveFilters && (
+            <button type="button" onClick={clearFilters} className="btn-reset-filters mt-4 mx-auto">
+              Reset all filters
+            </button>
+          )}
+        </div>
       ) : (
         <div className="admin-issues-list">
           {filteredIssues.map((issue) => (
-            <AdminIssueCard key={issue.id} issue={issue} workers={workers} departments={departments} onUpdate={onUpdate} />
+            <AdminIssueCard
+              key={issue.id}
+              issue={issue}
+              workers={workers}
+              departments={departments}
+              onUpdate={onUpdate}
+            />
           ))}
         </div>
       )}
@@ -282,14 +947,18 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
   const [draft, setDraft] = useState({
     priority: issue.priority || 'Medium',
     department: issue.department || '',
-    location: issue.location,
+    location: issue.location || '',
     status: issue.status || 'Submitted',
-    assignedWorker: issue.assignedWorker?.id || '',
+    assignedWorker: issue.assignedWorker?.id || (typeof issue.assignedWorker === 'string' ? issue.assignedWorker : ''),
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [showDispatcher, setShowDispatcher] = useState(false);
+  const [imageModal, setImageModal] = useState(null);
 
-  // Extract coordinates for issue
+  // Parse GPS coordinates for issue
   let issueLat = typeof issue.latitude === 'number' ? issue.latitude : null;
   let issueLon = typeof issue.longitude === 'number' ? issue.longitude : null;
   if ((issueLat === null || issueLon === null) && issue.location) {
@@ -300,7 +969,7 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
     }
   }
 
-  // Calculate proximity and workload for all workers
+  // Calculate live proximity and workload for every field worker
   const proximityWorkers = workers.map((worker) => {
     let wLat = typeof worker.latitude === 'number' ? worker.latitude : null;
     let wLon = typeof worker.longitude === 'number' ? worker.longitude : null;
@@ -333,199 +1002,496 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
     return (a.activeIssuesCount || 0) - (b.activeIssuesCount || 0);
   });
 
-  // Top closest workers (up to 3)
-  const nearbyRecommendations = proximityWorkers.filter((w) => w.distanceKm !== null).slice(0, 3);
+  // Top closest field workers for rapid dispatch recommendation
+  const nearbyRecommendations = proximityWorkers.slice(0, 3);
+
+  // Currently assigned worker record (enriched with live distance & stats)
+  const currentAssignedId = draft.assignedWorker || (typeof issue.assignedWorker === 'object' ? issue.assignedWorker?.id : issue.assignedWorker);
+  const currentAssignedWorker = proximityWorkers.find((w) => w.id === currentAssignedId) || 
+    (typeof issue.assignedWorker === 'object' && issue.assignedWorker?.name ? issue.assignedWorker : null);
 
   const updateDraft = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
 
   const submitChanges = async () => {
     setMessage('');
     setError('');
+    setIsSaving(true);
     try {
       await onUpdate(issue.id, draft);
-      setMessage('Issue changes saved.');
+      setSaveSuccess(true);
+      setMessage('Changes saved successfully.');
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const reviewProof = (proofReviewStatus) => onUpdate(issue.id, { proofReviewStatus });
+  const reviewProof = async (proofReviewStatus) => {
+    try {
+      await onUpdate(issue.id, { proofReviewStatus });
+      setMessage(`Proof ${proofReviewStatus.toLowerCase()} successfully.`);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Priority styling classes
+  const priorityClass = 
+    draft.priority === 'Critical' ? 'card-priority-critical' :
+    draft.priority === 'High' ? 'card-priority-high' :
+    draft.priority === 'Medium' ? 'card-priority-medium' :
+    'card-priority-low';
+
+  const priorityChipClass = 
+    draft.priority === 'Critical' ? 'priority-chip-critical' :
+    draft.priority === 'High' ? 'priority-chip-high' :
+    draft.priority === 'Medium' ? 'priority-chip-medium' :
+    'priority-chip-low';
+
+  // Status badge classes
+  const statusPillClass =
+    draft.status === 'Submitted' ? 'status-pill-submitted' :
+    draft.status === 'In review' ? 'status-pill-in-review' :
+    draft.status === 'In progress' ? 'status-pill-in-progress' :
+    'status-pill-resolved';
 
   return (
-    <article className="admin-issue-card">
+    <article className={`admin-issue-card ${priorityClass}`}>
+      {/* Lightbox / Image Preview Modal */}
+      {imageModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+          onClick={() => setImageModal(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-slate-900 border border-white/20 p-2" onClick={(e) => e.stopPropagation()}>
+            <button 
+              type="button" 
+              onClick={() => setImageModal(null)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/60 text-white hover:bg-black/90 cursor-pointer"
+              aria-label="Close enlarged preview"
+            >
+              <X size={18} />
+            </button>
+            <img src={imageModal} alt="Enlarged evidence" className="w-full h-auto max-h-[85vh] object-contain rounded-xl" />
+          </div>
+        </div>
+      )}
+
+      {/* Top Header Row: Category, Priority, Department & Status */}
       <div className="admin-issue-card-top">
-        <div>
-          <span className="admin-issue-category">{issue.category}</span>
-          <h2>{issue.aiTitle || issue.description}</h2>
-          <p className="admin-issue-reporter">
-            Reported by {issue.reporter?.name || 'Unknown citizen'} · {issue.reporter?.email || 'No email'}
-          </p>
+        <div className="admin-issue-tag-group">
+          <span className="category-chip">
+            <Layers size={12} /> {issue.category}
+          </span>
+          <span className={`priority-chip ${priorityChipClass}`}>
+            <span className="relative flex h-2 w-2">
+              {draft.priority === 'Critical' && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              )}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${draft.priority === 'Critical' ? 'bg-red-500' : draft.priority === 'High' ? 'bg-amber-500' : draft.priority === 'Medium' ? 'bg-blue-500' : 'bg-slate-400'}`} />
+            </span>
+            {draft.priority} Priority
+          </span>
+          {issue.department && (
+            <span className="dept-tag">
+              <Briefcase size={11} /> {issue.department}
+            </span>
+          )}
+        </div>
+
+        <div className="admin-issue-header-right">
+          <span className={`status-pill ${statusPillClass}`}>
+            {draft.status === 'Resolved' ? <CheckCircle2 size={13} /> : <Radio size={12} className="animate-pulse" />}
+            {draft.status}
+          </span>
+          <span className="issue-timestamp" title={new Date(issue.createdAt).toLocaleString()}>
+            <Clock size={12} /> {new Date(issue.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+          </span>
         </div>
       </div>
 
+      {/* Main Issue Content & Citizen Report */}
+      <div className="issue-main-content">
+        <h2 className="issue-title">{issue.aiTitle || issue.description}</h2>
+        
+        {issue.aiTitle && (
+          <p className="issue-citizen-desc">
+            <strong className="text-slate-800 font-bold block mb-1">Citizen's original report:</strong>
+            {issue.description}
+          </p>
+        )}
+
+        {/* Reporter Info & Geo-Coordinates */}
+        <div className="issue-meta-row">
+          <span className="meta-chip">
+            <User size={13} className="text-slate-400" />
+            <span>Reported by <strong>{issue.reporter?.name || 'Anonymous Citizen'}</strong></span>
+            {issue.reporter?.email && (
+              <a href={`mailto:${issue.reporter.email}`} className="text-blue-600 hover:underline">
+                ({issue.reporter.email})
+              </a>
+            )}
+          </span>
+
+          <span className="meta-chip" title={issue.location}>
+            <MapPin size={13} className="text-blue-600 shrink-0" />
+            <span className="truncate max-w-sm">{issue.location || 'Location details pending'}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Gemini AI Civic Triage Analysis Banner */}
       {(issue.aiTitle || issue.aiDescription || issue.aiDetectedCategory || issue.aiSummary) && (
-        <div className="issue-ai-details">
-          <div className="issue-ai-details-heading">
-            <span><Bot size={15} /> Gemini analysis</span>
+        <div className="issue-ai-box">
+          <div className="issue-ai-box-heading">
+            <span>
+              <Sparkles size={14} className="text-sky-600" /> Gemini Civic Intelligence Engine
+            </span>
             <strong>{issue.aiDetectedCategory || issue.category}</strong>
           </div>
           {issue.aiTitle && <h3>{issue.aiTitle}</h3>}
           {issue.aiDescription && <p>{issue.aiDescription}</p>}
-          {issue.aiSummary && <small>{issue.aiSummary}</small>}
+          {issue.aiSummary && <small>AI Recommendation: {issue.aiSummary}</small>}
         </div>
       )}
 
-      <p className="issue-citizen-description">
-        <strong>Citizen description:</strong> {issue.description}
-      </p>
+      {/* Evidence & Completion Proof Showcase */}
+      {(issue.imageUrl || issue.workerProofImage) && (
+        <div className="issue-media-gallery">
+          {issue.imageUrl && (
+            <div className="evidence-card">
+              <img 
+                src={issue.imageUrl} 
+                alt={`Evidence for ${issue.category}`} 
+                onClick={() => setImageModal(issue.imageUrl)}
+                title="Click to zoom in"
+              />
+              <div className="evidence-card-info">
+                <span className="evidence-card-title">Citizen Evidence Photo</span>
+                <button 
+                  type="button" 
+                  onClick={() => setImageModal(issue.imageUrl)} 
+                  className="text-blue-600 hover:text-blue-800 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <Eye size={12} /> View 4K
+                </button>
+              </div>
+            </div>
+          )}
 
-      <div className="admin-issue-meta">
-        <span><MapPin size={14} /> {issue.location}</span>
-        <span>{new Date(issue.createdAt).toLocaleString()}</span>
+          {issue.workerProofImage && (
+            <div className="admin-proof-review-card">
+              <div className="proof-review-header">
+                <strong>Field Work Completion Proof</strong>
+                <span className={`proof-review-status-pill ${issue.proofReviewStatus === 'Approved' ? 'proof-approved' : issue.proofReviewStatus === 'Rejected' ? 'proof-rejected' : 'proof-pending'}`}>
+                  {issue.proofReviewStatus || 'Pending Review'}
+                </span>
+              </div>
+              <div className="flex gap-3 items-start">
+                <img 
+                  src={issue.workerProofImage} 
+                  alt="Worker completion proof" 
+                  className="w-20 h-20 rounded-lg object-cover border border-amber-300 cursor-pointer"
+                  onClick={() => setImageModal(issue.workerProofImage)}
+                  title="Click to view worker proof"
+                />
+                <div className="flex-1">
+                  <p className="text-[11px] text-amber-900 leading-snug">
+                    Worker submitted photographic proof of completed restoration. Review before approving resolution.
+                  </p>
+                  <div className="proof-actions-row">
+                    <button
+                      type="button"
+                      onClick={() => reviewProof('Approved')}
+                      className="admin-issue-action admin-issue-verify"
+                    >
+                      <CheckCircle2 size={13} /> Approve Proof
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => reviewProof('Rejected')}
+                      className="admin-issue-action admin-issue-reject"
+                    >
+                      <X size={13} /> Reject Proof
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* HERO SECTION: FIELD OFFICER ASSIGNMENT & REAL-TIME PROXIMITY DISPATCH HUB */}
+      {/* ========================================================================= */}
+      <div className="admin-worker-section">
+        {currentAssignedWorker ? (
+          /* State A: Officer is Currently Assigned */
+          <div className="admin-worker-profile-card">
+            <div className="worker-profile-ribbon">
+              <ShieldCheck size={14} className="text-blue-600" />
+              <span>Assigned Field Officer · Operations Active</span>
+            </div>
+
+            <div className="worker-profile-main">
+              <div className="worker-profile-left">
+                <div className="worker-avatar-box">
+                  {currentAssignedWorker.profileImage ? (
+                    <img src={currentAssignedWorker.profileImage} alt={currentAssignedWorker.name} />
+                  ) : (
+                    <span>{currentAssignedWorker.name?.charAt(0).toUpperCase() || 'W'}</span>
+                  )}
+                  <span 
+                    className={`worker-status-dot ${currentAssignedWorker.availability === 'Unavailable' ? 'dot-unavailable' : currentAssignedWorker.activeIssuesCount > 0 ? 'dot-busy' : 'dot-available'}`} 
+                    title={`Status: ${currentAssignedWorker.availability || 'Active'}`}
+                  />
+                </div>
+
+                <div className="worker-identity">
+                  <div className="worker-name-title">
+                    <strong>{currentAssignedWorker.name}</strong>
+                    <ShieldCheck size={14} className="worker-badge-verified" title="Verified Municipal Worker" />
+                  </div>
+
+                  <span className="worker-dept-skill">
+                    {currentAssignedWorker.department || 'Civic Infrastructure'} · {currentAssignedWorker.jobSkill || 'Field Technician'} {currentAssignedWorker.yearsExperience ? `(${currentAssignedWorker.yearsExperience} yrs exp)` : ''}
+                  </span>
+
+                  {/* Distance, Workload & Active Tasks Chips */}
+                  <div className="worker-chips-row">
+                    {/* Live Distance Pill */}
+                    <span 
+                      className={`chip-distance ${currentAssignedWorker.isVeryClose ? 'chip-distance-close' : ''}`}
+                      title={currentAssignedWorker.location || 'Location tracking active'}
+                    >
+                      <Navigation size={12} className="text-blue-600" />
+                      <span>{currentAssignedWorker.distanceText || (currentAssignedWorker.location ? `${currentAssignedWorker.location.slice(0, 32)}...` : 'GPS Verified')}</span>
+                    </span>
+
+                    {/* Active Tasks & Workload Pill */}
+                    <span className={`chip-tasks ${currentAssignedWorker.activeIssuesCount > 2 ? 'chip-workload-high' : ''}`}>
+                      <Zap size={12} className={currentAssignedWorker.activeIssuesCount > 2 ? 'text-red-500' : 'text-amber-500'} />
+                      <span>{currentAssignedWorker.activeIssuesCount || 0} active {currentAssignedWorker.activeIssuesCount === 1 ? 'task' : 'tasks'} ({currentAssignedWorker.workload || 'Low'} workload)</span>
+                    </span>
+
+                    {/* Availability Tag */}
+                    <span className="chip-contact">
+                      <UserCheck size={12} className="text-slate-400" />
+                      <span>{currentAssignedWorker.availability || 'Available'}</span>
+                    </span>
+
+                    {/* Contact Phone if present */}
+                    {currentAssignedWorker.phone && (
+                      <a href={`tel:${currentAssignedWorker.phone}`} className="chip-contact hover:text-blue-600">
+                        <Phone size={11} className="text-slate-400" />
+                        <span>{currentAssignedWorker.phone}</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons for Assigned Officer */}
+              <div className="worker-profile-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowDispatcher(!showDispatcher)}
+                  className="btn-reassign-worker"
+                >
+                  <RefreshCw size={12} /> {showDispatcher ? 'Close Dispatcher' : 'Reassign Worker'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateDraft('assignedWorker', '');
+                    setShowDispatcher(true);
+                  }}
+                  className="btn-unassign-worker"
+                  title="Remove assignment"
+                >
+                  <X size={12} /> Unassign
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* State B: No Worker Assigned (Prompt to Dispatch) */
+          <div className="admin-unassigned-notice">
+            <div className="unassigned-notice-text">
+              <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                <AlertTriangle size={18} className="text-amber-600" />
+              </div>
+              <div>
+                <h4>No Field Personnel Assigned</h4>
+                <p>This incident requires municipal dispatch. Select a nearby officer below based on shortest distance and availability.</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowDispatcher(true)}
+              className="btn-dispatch-trigger"
+            >
+              <Navigation size={13} /> {showDispatcher ? 'Hide Dispatcher' : 'Open Proximity Dispatcher'}
+            </button>
+          </div>
+        )}
+
+        {/* Smart Proximity Dispatcher Drawer (Interactive Grid of Nearby Personnel) */}
+        {(showDispatcher || !currentAssignedWorker) && (
+          <div className="admin-dispatcher-hub">
+            <div className="dispatcher-hub-header">
+              <div className="dispatcher-hub-title">
+                <Compass size={16} className="text-blue-600" />
+                <span>Nearby Field Personnel (Live GPS Proximity)</span>
+              </div>
+              <span className="dispatcher-subtext">Ranked by closest distance to incident site</span>
+            </div>
+
+            {/* Quick-Dispatch Cards (Top 3 Closest Personnel) */}
+            <div className="dispatcher-grid">
+              {nearbyRecommendations.map((worker) => {
+                const isSelected = draft.assignedWorker === worker.id;
+                return (
+                  <div
+                    key={worker.id}
+                    className={`dispatcher-card ${isSelected ? 'dispatcher-card-selected' : ''}`}
+                  >
+                    <div className="dispatcher-card-top">
+                      <div>
+                        <strong className="dispatcher-worker-name block">{worker.name}</strong>
+                        <span className="dispatcher-worker-sub block">{worker.department} · {worker.jobSkill || 'Field Ops'}</span>
+                      </div>
+                      <span className={`dispatcher-dist-tag ${worker.isVeryClose ? 'dist-tag-very-close' : 'dist-tag-close'}`}>
+                        <Navigation size={10} /> {worker.distanceText || 'Distance active'}
+                      </span>
+                    </div>
+
+                    <div className="dispatcher-card-metrics">
+                      <span className="flex items-center gap-1">
+                        <Zap size={11} className={worker.activeIssuesCount > 2 ? 'text-amber-500' : 'text-emerald-500'} />
+                        {worker.activeIssuesCount || 0} active {worker.activeIssuesCount === 1 ? 'task' : 'tasks'}
+                      </span>
+                      <span>{worker.workload} workload</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateDraft('assignedWorker', worker.id);
+                        if (worker.department && !draft.department) {
+                          updateDraft('department', worker.department);
+                        }
+                      }}
+                      className={`btn-dispatch-select ${isSelected ? 'btn-is-assigned' : ''}`}
+                    >
+                      {isSelected ? (
+                        <>
+                          <CheckCircle2 size={13} /> Assigned to Incident
+                        </>
+                      ) : (
+                        <>
+                          <UserCheck size={13} /> Quick Dispatch ({worker.distanceText || 'Assign'})
+                        </>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Complete Staffing Directory Select */}
+            <div className="dispatcher-directory-row">
+              <label>Select any registered worker across all departments:</label>
+              <select
+                value={draft.assignedWorker}
+                onChange={(event) => updateDraft('assignedWorker', event.target.value)}
+              >
+                <option value="">-- Leave Unassigned --</option>
+                {proximityWorkers.map((worker) => (
+                  <option key={worker.id} value={worker.id}>
+                    {worker.name} · {worker.department || 'No dept'} {worker.distanceText ? `[📍 ${worker.distanceText}]` : ''} · {worker.activeIssuesCount || 0} tasks ({worker.workload} workload) · {worker.availability}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
-      {issue.imageUrl && (
-        <a href={issue.imageUrl} target="_blank" rel="noreferrer" className="admin-issue-image-link">
-          <img src={issue.imageUrl} alt={`Evidence for ${issue.category}`} /> View citizen image
-        </a>
-      )}
-
-      {issue.workerProofImage && (
-        <div className="admin-proof-review">
-          <img src={issue.workerProofImage} alt={`Worker proof for ${issue.category}`} />
-          <div>
-            <strong>Worker completion proof</strong>
-            <span>{issue.proofReviewStatus || 'Pending review'}</span>
-            <div className="admin-issue-actions">
-              <button type="button" onClick={() => reviewProof('Approved')} className="admin-issue-action admin-issue-verify">
-                Approve proof
-              </button>
-              <button type="button" onClick={() => reviewProof('Rejected')} className="admin-issue-action admin-issue-reject">
-                Reject proof
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Smart Proximity Dispatcher Panel */}
-      {nearbyRecommendations.length > 0 && (
-        <div className="admin-nearby-box">
-          <div className="admin-nearby-header">
-            <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
-              <Navigation size={14} className="text-blue-600" />
-              <span>Nearby Field Workers (Live GPS Proximity)</span>
-            </div>
-            <span className="text-[11px] text-slate-500">
-              Closest personnel to this issue's location
-            </span>
-          </div>
-
-          <div className="admin-nearby-grid">
-            {nearbyRecommendations.map((worker) => {
-              const isSelected = draft.assignedWorker === worker.id;
-              return (
-                <div
-                  key={worker.id}
-                  className={`admin-nearby-item ${isSelected ? 'admin-nearby-item-selected' : ''}`}
-                >
-                  <div className="admin-nearby-item-head">
-                    <div>
-                      <strong className="text-xs text-slate-900 block">{worker.name}</strong>
-                      <span className="text-[10px] text-slate-500 block">{worker.department} · {worker.jobSkill}</span>
-                    </div>
-                    <span className={`admin-dist-badge ${worker.isVeryClose ? 'dist-very-close' : 'dist-close'}`}>
-                      {worker.distanceText}
-                    </span>
-                  </div>
-
-                  <div className="admin-nearby-item-details">
-                    <span className="text-[11px] text-slate-600 flex items-center gap-1">
-                      <Zap size={11} className={worker.activeIssuesCount > 2 ? 'text-amber-500' : 'text-emerald-500'} />
-                      {worker.activeIssuesCount || 0} active {worker.activeIssuesCount === 1 ? 'task' : 'tasks'} ({worker.workload} workload)
-                    </span>
-                    <span className="text-[10px] text-slate-400 truncate block" title={worker.location}>
-                      {worker.location}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      updateDraft('assignedWorker', worker.id);
-                      if (worker.department && !draft.department) {
-                        updateDraft('department', worker.department);
-                      }
-                    }}
-                    className={`admin-quick-assign-btn ${isSelected ? 'selected' : ''}`}
-                  >
-                    {isSelected ? (
-                      <>
-                        <CheckCircle2 size={12} /> Assigned
-                      </>
-                    ) : (
-                      <>
-                        <UserCheck size={12} /> Quick Assign ({worker.distanceText})
-                      </>
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="admin-issue-controls">
-        <label>
-          <span>Priority</span>
+      {/* Inline Quick-Edit Controls & Save Action Bar */}
+      <div className="admin-issue-controls-row">
+        <div className="control-field">
+          <label><Filter size={11} /> Priority</label>
           <select value={draft.priority} onChange={(event) => updateDraft('priority', event.target.value)}>
             <option>Critical</option>
             <option>High</option>
             <option>Medium</option>
             <option>Low</option>
           </select>
-        </label>
-        <label>
-          <span>Department</span>
+        </div>
+
+        <div className="control-field">
+          <label><Briefcase size={11} /> Department</label>
           <select value={draft.department} onChange={(event) => updateDraft('department', event.target.value)}>
             <option value="">Select department</option>
-            {departments.map((department) => <option key={department}>{department}</option>)}
+            {departments.map((department) => (
+              <option key={department} value={department}>{department}</option>
+            ))}
           </select>
-        </label>
-        <label>
-          <span>Location</span>
-          <input value={draft.location} onChange={(event) => updateDraft('location', event.target.value)} />
-        </label>
-        <label>
-          <span>Status</span>
+        </div>
+
+        <div className="control-field">
+          <label><Radio size={11} /> Status Workflow</label>
           <select value={draft.status} onChange={(event) => updateDraft('status', event.target.value)}>
             <option>Submitted</option>
             <option>In review</option>
             <option>In progress</option>
             <option>Resolved</option>
           </select>
-        </label>
-        <label>
-          <span><UserCheck size={14} /> Assign worker</span>
-          <select value={draft.assignedWorker} onChange={(event) => updateDraft('assignedWorker', event.target.value)}>
-            <option value="">Unassigned</option>
-            {proximityWorkers.map((worker) => (
-              <option key={worker.id} value={worker.id}>
-                {worker.name} · {worker.department || 'No dept'} {worker.distanceText ? `(${worker.distanceText})` : ''} · {worker.activeIssuesCount || 0} active ({worker.workload} workload) · {worker.availability}
-              </option>
-            ))}
-          </select>
-        </label>
+        </div>
+
+        <div className="control-field">
+          <label><MapPin size={11} /> Location Address</label>
+          <input
+            value={draft.location}
+            onChange={(event) => updateDraft('location', event.target.value)}
+            placeholder="Address or GPS coordinates"
+          />
+        </div>
+
+        <div className="control-actions">
+          <button 
+            type="button" 
+            onClick={submitChanges} 
+            disabled={isSaving}
+            className={`btn-save-issue ${saveSuccess ? 'btn-saved-success' : ''}`}
+          >
+            {isSaving ? (
+              <>
+                <RefreshCw size={13} className="animate-spin" /> Saving...
+              </>
+            ) : saveSuccess ? (
+              <>
+                <Check size={14} /> Saved!
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="admin-issue-submit-row">
-        <button type="button" onClick={submitChanges} className="dashboard-primary-button">
-          Submit issue changes
-        </button>
-        {message && <span className="admin-issue-save-message">{message}</span>}
-        {error && <span className="admin-issue-error-message">{error}</span>}
-      </div>
+      {/* Save status notifications */}
+      {(message || error) && (
+        <div className="mt-3 flex items-center gap-2">
+          {message && <span className="admin-issue-save-message">{message}</span>}
+          {error && <span className="admin-issue-error-message">{error}</span>}
+        </div>
+      )}
     </article>
   );
 }

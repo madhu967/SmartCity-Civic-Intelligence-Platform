@@ -192,9 +192,39 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
       <section className="dashboard-main">
         <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button"><Menu size={20} /></button><span>{currentTitle}</span></div>
         <div className="dashboard-container">
-          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Field operations</p><h1 className="dashboard-heading">{currentTitle}</h1><p className="dashboard-description">{currentDescription}</p></div><div className="dashboard-admin-badge"><ShieldCheck size={17} /> Worker account</div></div>
+          <div className="dashboard-heading-row">
+            <div>
+              <p className="dashboard-eyebrow">Field operations</p>
+              <h1 className="dashboard-heading">{currentTitle}</h1>
+              <p className="dashboard-description">{currentDescription}</p>
+            </div>
+            <div className="dashboard-admin-badge">
+              <ShieldCheck size={17} /> Municipal Field Officer
+            </div>
+          </div>
           {pagePath === '/worker' ? (
-            <WorkerOverview user={user} onSyncLocation={syncWorkerLocation} isLocating={isLocating} locationStatus={locationStatus} />
+            <WorkerOverview
+              user={user}
+              issues={assignedIssues}
+              onUpdate={updateIssue}
+              onSyncLocation={syncWorkerLocation}
+              isLocating={isLocating}
+              locationStatus={locationStatus}
+              availability={availability}
+              onQuickAvailabilityChange={async (newStatus) => {
+                setAvailability(newStatus);
+                try {
+                  await apiRequest('/worker/availability', {
+                    method: 'PATCH',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ availability: newStatus, location }),
+                  });
+                  setUser((curr) => curr ? ({ ...curr, availability: newStatus }) : curr);
+                } catch (e) {
+                  setError(e.message);
+                }
+              }}
+            />
           ) : isIssuesPage ? (
             <WorkerIssues issues={assignedIssues} onUpdate={updateIssue} />
           ) : (
@@ -219,76 +249,200 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
   );
 }
 
-function WorkerOverview({ user, onSyncLocation, isLocating, locationStatus }) {
+function WorkerOverview({
+  user,
+  issues = [],
+  onUpdate,
+  onSyncLocation,
+  isLocating,
+  locationStatus,
+  availability,
+  onQuickAvailabilityChange,
+}) {
+  const totalAssigned = issues.length;
+  const urgentCount = issues.filter((i) => (i.priority === 'Critical' || i.priority === 'High') && i.status !== 'Resolved').length;
+  const inProgressCount = issues.filter((i) => i.status === 'In progress').length;
+  const reviewPendingCount = issues.filter((i) => i.status === 'In review' || i.workerCompletionStatus === 'Ready for admin review').length;
+  const resolvedCount = issues.filter((i) => i.status === 'Resolved').length;
+  const completionRate = totalAssigned > 0 ? Math.round((resolvedCount / totalAssigned) * 100) : 100;
+
+  const activeIssues = issues.filter((i) => i.status !== 'Resolved');
+
   return (
     <>
-      <div className="dashboard-stat-grid">
-        <div className="dashboard-stat-card">
-          <div className="dashboard-stat-top">
-            <span>Department</span>
-            <BriefcaseBusiness size={18} />
+      {/* Field Officer Control Bar (Duty Toggle & Real-Time GPS) */}
+      <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-white shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+            {user.name?.charAt(0).toUpperCase() || 'W'}
           </div>
-          <strong className="worker-stat-text">{user.department}</strong>
-          <small>{user.jobSkill}</small>
-        </div>
-        <div className="dashboard-stat-card">
-          <div className="dashboard-stat-top">
-            <span>Service area</span>
-            <MapPin size={18} />
-          </div>
-          <strong className="worker-stat-text">{user.serviceArea}</strong>
-          <small className="truncate block" title={user.location}>{user.location || 'Location pending'}</small>
-        </div>
-        <div className="dashboard-stat-card">
-          <div className="dashboard-stat-top">
-            <span>Experience</span>
-            <ShieldCheck size={18} />
-          </div>
-          <strong>{user.yearsExperience}</strong>
-          <small>Years in service</small>
-        </div>
-        <div className="dashboard-stat-card">
-          <div className="dashboard-stat-top">
-            <span>Availability</span>
-            <Activity size={18} />
-          </div>
-          <strong className="dashboard-status-active">{user.availability}</strong>
-          <small>Current field status</small>
-        </div>
-      </div>
-      <section className="dashboard-panel worker-static-panel">
-        <div className="flex items-center justify-between">
           <div>
-            <h2>Today in the field</h2>
-            <p>Your assigned civic service profile is active. Dispatch tracks your field location.</p>
+            <div className="flex items-center gap-2">
+              <strong className="text-slate-900 text-sm font-bold">{user.name}</strong>
+              <span className="text-xs text-slate-500">· {user.department}</span>
+            </div>
+            <span className="text-xs text-slate-500 block">
+              Skill: <strong>{user.jobSkill}</strong> · Ward: <strong>{user.serviceArea}</strong> ({user.yearsExperience || 0} yrs exp)
+            </span>
           </div>
+        </div>
+
+        {/* Live Duty Switcher & GPS Sync */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-slate-100 text-xs font-bold">
+            <span className="text-slate-400 text-[10px] uppercase px-1.5">Duty:</span>
+            <button
+              type="button"
+              onClick={() => onQuickAvailabilityChange('Available')}
+              className={`px-3 py-1 rounded-md cursor-pointer transition ${
+                availability === 'Available'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Available
+            </button>
+            <button
+              type="button"
+              onClick={() => onQuickAvailabilityChange('On duty')}
+              className={`px-3 py-1 rounded-md cursor-pointer transition ${
+                availability === 'On duty'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              On Duty
+            </button>
+            <button
+              type="button"
+              onClick={() => onQuickAvailabilityChange('Unavailable')}
+              className={`px-3 py-1 rounded-md cursor-pointer transition ${
+                availability === 'Unavailable'
+                  ? 'bg-slate-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Off Duty
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => onSyncLocation(true)}
             disabled={isLocating}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-semibold text-brand-600 hover:bg-brand-50 cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-bold text-blue-600 hover:bg-blue-50 cursor-pointer disabled:opacity-50 transition"
             title="Update real-time GPS location"
           >
             {isLocating ? <LoaderCircle className="report-spinner" size={14} /> : <MapPin size={14} />}
-            <span>{isLocating ? 'Syncing...' : 'Sync GPS location'}</span>
+            <span>{isLocating ? 'Syncing...' : 'Sync GPS'}</span>
           </button>
         </div>
-        {locationStatus && (
-          <p className="mt-2 text-xs font-semibold text-emerald-600 flex items-center gap-1">
-            <CheckCircle2 size={13} /> {locationStatus}
-          </p>
-        )}
-        <div className="worker-static-items">
-          <span><ShieldCheck size={16} /> Profile verified</span>
-          <span><MapPin size={16} /> {user.location || user.serviceArea}</span>
-          <span><Activity size={16} /> Ready for dispatch</span>
+      </div>
+
+      {locationStatus && (
+        <div className="mb-4 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 font-medium">
+          <CheckCircle2 size={14} className="text-emerald-600" />
+          <span>{locationStatus}</span>
+          {user?.latitude && user?.longitude && (
+            <span className="text-emerald-700 text-[11px] ml-auto">
+              Coordinates: {user.latitude.toFixed(4)}, {user.longitude.toFixed(4)}
+            </span>
+          )}
         </div>
+      )}
+
+      {/* 100% Dynamic Operational Metrics Grid */}
+      <div className="dashboard-stat-grid">
+        <div className="dashboard-stat-card border-l-4 border-l-blue-600">
+          <div className="dashboard-stat-top">
+            <span>Total Assigned</span>
+            <ClipboardList size={18} className="text-blue-600" />
+          </div>
+          <strong>{totalAssigned}</strong>
+          <small>Work orders in your queue</small>
+        </div>
+
+        <div className="dashboard-stat-card border-l-4 border-l-red-500">
+          <div className="dashboard-stat-top">
+            <span>Urgent / Critical</span>
+            <Activity size={18} className="text-red-500" />
+          </div>
+          <strong className="text-red-600">{urgentCount}</strong>
+          <small>{urgentCount > 0 ? 'High-priority response needed' : 'No urgent alerts'}</small>
+        </div>
+
+        <div className="dashboard-stat-card border-l-4 border-l-amber-500">
+          <div className="dashboard-stat-top">
+            <span>In Field Work</span>
+            <BriefcaseBusiness size={18} className="text-amber-600" />
+          </div>
+          <strong className="text-amber-600">{inProgressCount}</strong>
+          <small>{inProgressCount} tasks currently underway</small>
+        </div>
+
+        <div className="dashboard-stat-card border-l-4 border-l-emerald-600">
+          <div className="dashboard-stat-top">
+            <span>Resolved</span>
+            <CheckCircle2 size={18} className="text-emerald-600" />
+          </div>
+          <strong className="text-emerald-600">{resolvedCount}</strong>
+          <small className="flex items-center gap-1 font-semibold text-emerald-700">
+            <span>{completionRate}% success rate</span>
+          </small>
+        </div>
+      </div>
+
+      {/* Active Work Order Dispatch Queue */}
+      <section className="dashboard-panel mt-6">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Active Work Order Queue</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {activeIssues.length} active work {activeIssues.length === 1 ? 'order' : 'orders'} requiring field response or admin review
+            </p>
+          </div>
+          <a
+            href="/worker/issues"
+            className="text-xs font-bold text-blue-600 hover:underline inline-flex items-center gap-1"
+          >
+            Manage All ({issues.length}) →
+          </a>
+        </div>
+
+        {issues.length === 0 ? (
+          <div className="dashboard-empty-state py-12 text-center">
+            <ClipboardList size={28} className="text-slate-300 mx-auto mb-2" />
+            <strong className="text-slate-800 text-sm block">No work orders currently assigned</strong>
+            <p className="text-slate-500 text-xs mt-1">
+              When the municipal administrator dispatches a civic complaint in {user.department || 'your department'}, it will appear here immediately.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 mt-4">
+            {issues.map((issue) => (
+              <WorkerIssueCard key={issue.id} issue={issue} onUpdate={onUpdate} />
+            ))}
+          </div>
+        )}
       </section>
     </>
   );
 }
 
-function WorkerOperationalPanel({ availability, location, setAvailability, setLocation, onSubmit, onSyncLocation, isLocating, locationStatus, message, error, isLocationPage, user }) {
+function WorkerOperationalPanel({
+  availability,
+  location,
+  setAvailability,
+  setLocation,
+  onSubmit,
+  onSyncLocation,
+  isLocating,
+  locationStatus,
+  message,
+  error,
+  isLocationPage,
+  user,
+}) {
   return (
     <section className="dashboard-panel worker-availability-panel">
       <div className="dashboard-panel-heading">
@@ -369,14 +523,40 @@ function WorkerOperationalPanel({ availability, location, setAvailability, setLo
 }
 
 function WorkerIssues({ issues, onUpdate }) {
-  return <section className="dashboard-panel worker-issues-panel"><div className="dashboard-panel-heading"><div><h2>Issues assigned to you</h2><p>{issues.length} assigned {issues.length === 1 ? 'issue' : 'issues'}</p></div><ClipboardList size={21} /></div>{issues.length === 0 ? <div className="admin-empty-users">No issues have been assigned to you yet.</div> : <div className="worker-issues-list">{issues.map((issue) => <WorkerIssueCard key={issue.id} issue={issue} onUpdate={onUpdate} />)}</div>}</section>;
+  return (
+    <section className="dashboard-panel worker-issues-panel">
+      <div className="dashboard-panel-heading">
+        <div>
+          <h2>Issues assigned to you</h2>
+          <p>{issues.length} assigned {issues.length === 1 ? 'issue' : 'issues'}</p>
+        </div>
+        <ClipboardList size={21} />
+      </div>
+      {issues.length === 0 ? (
+        <div className="admin-empty-users py-12 text-center text-slate-400">
+          No issues have been assigned to your queue yet.
+        </div>
+      ) : (
+        <div className="worker-issues-list">
+          {issues.map((issue) => (
+            <WorkerIssueCard key={issue.id} issue={issue} onUpdate={onUpdate} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
 
 function WorkerIssueCard({ issue, onUpdate }) {
   const [proofImage, setProofImage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const currentStatus = issue.status || 'Submitted';
+
+  const isCritical = issue.priority === 'Critical';
+  const isHigh = issue.priority === 'High';
+
   const updateProof = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -388,17 +568,163 @@ function WorkerIssueCard({ issue, onUpdate }) {
     reader.onload = () => setProofImage(reader.result);
     reader.readAsDataURL(file);
   };
+
   const submitProof = async () => {
-    if (!proofImage) return setError('Upload a proof image first.');
+    if (!proofImage) return setError('Upload a completion proof photo first.');
     setError('');
     setMessage('');
+    setIsSubmitting(true);
     try {
       await onUpdate(issue.id, { proofImage, status: 'Ready for admin review' });
       setProofImage('');
-      setMessage('Proof submitted for admin review.');
+      setMessage('Proof photo submitted successfully! Pending municipal admin review.');
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  return <article className="worker-issue-card"><div className="worker-issue-card-header"><div><span>{issue.category}</span><h3>{issue.aiTitle || issue.description}</h3></div><strong className={`worker-issue-status worker-issue-status-${currentStatus.toLowerCase().replace(/\s+/g, '-')}`}>{currentStatus}</strong></div>{(issue.aiTitle || issue.aiDescription || issue.aiDetectedCategory || issue.aiSummary) && <div className="issue-ai-details worker-ai-details"><div className="issue-ai-details-heading"><span><Bot size={15} /> Gemini analysis</span><strong>{issue.aiDetectedCategory || issue.category}</strong></div>{issue.aiTitle && <h3>{issue.aiTitle}</h3>}{issue.aiDescription && <p>{issue.aiDescription}</p>}{issue.aiSummary && <small>{issue.aiSummary}</small>}</div>}<p className="worker-citizen-description"><strong>Citizen description:</strong> {issue.description}</p><p className="worker-issue-location"><MapPin size={14} /> {issue.location} · Priority: {issue.priority || 'Medium'}</p>{issue.imageUrl && <div className="worker-evidence-block"><span>Citizen evidence</span><a href={issue.imageUrl} target="_blank" rel="noreferrer"><img className="worker-issue-source-image" src={issue.imageUrl} alt={`Citizen evidence for ${issue.category}`} /><strong>Open full image</strong></a></div>}<div className="worker-issue-actions"><select value={issue.workerCompletionStatus || (currentStatus === 'Submitted' ? 'In progress' : currentStatus)} onChange={(event) => onUpdate(issue.id, { status: event.target.value })}><option>In progress</option><option>Ready for admin review</option></select><label className="worker-proof-input"><FileImage size={15} /> Choose proof image<input type="file" accept="image/*" onChange={updateProof} /></label><button type="button" className="dashboard-primary-button" onClick={submitProof}>Submit proof for admin</button></div>{proofImage && <div className="worker-proof-preview"><span>Selected proof preview</span><img src={proofImage} alt="Selected completion proof preview" /></div>}{issue.workerProofImage && <div className="worker-proof-preview worker-proof-uploaded"><span>Uploaded proof image</span><a href={issue.workerProofImage} target="_blank" rel="noreferrer"><img src={issue.workerProofImage} alt={`Uploaded completion proof for ${issue.category}`} /><strong>Open full proof image</strong></a></div>}{issue.proofReviewStatus && <p className="worker-proof-status">Proof review: {issue.proofReviewStatus}</p>}{message && <p className="worker-success">{message}</p>}{error && <p className="worker-error">{error}</p>}</article>;
+
+  // Google Maps navigation link
+  const mapsUrl = issue.latitude && issue.longitude
+    ? `https://www.google.com/maps/search/?api=1&query=${issue.latitude},${issue.longitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(issue.location || '')}`;
+
+  return (
+    <article className={`worker-issue-card ${isCritical ? 'border-l-4 border-l-red-500' : isHigh ? 'border-l-4 border-l-amber-500' : ''}`}>
+      <div className="worker-issue-card-header">
+        <div>
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className="category-chip">
+              {issue.category}
+            </span>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                isCritical
+                  ? 'bg-red-100 text-red-700'
+                  : isHigh
+                  ? 'bg-amber-100 text-amber-800'
+                  : 'bg-slate-100 text-slate-700'
+              }`}
+            >
+              {issue.priority || 'Medium'} Priority
+            </span>
+            {issue.department && (
+              <span className="dept-tag">
+                {issue.department}
+              </span>
+            )}
+          </div>
+          <h3 className="text-sm font-bold text-slate-900">{issue.aiTitle || issue.description}</h3>
+        </div>
+
+        <strong className={`worker-issue-status worker-issue-status-${currentStatus.toLowerCase().replace(/\s+/g, '-')}`}>
+          {currentStatus}
+        </strong>
+      </div>
+
+      {(issue.aiTitle || issue.aiDescription || issue.aiDetectedCategory || issue.aiSummary) && (
+        <div className="issue-ai-details worker-ai-details">
+          <div className="issue-ai-details-heading">
+            <span>
+              <Bot size={15} /> Gemini AI Civic Analysis
+            </span>
+            <strong>{issue.aiDetectedCategory || issue.category}</strong>
+          </div>
+          {issue.aiTitle && <h3>{issue.aiTitle}</h3>}
+          {issue.aiDescription && <p>{issue.aiDescription}</p>}
+          {issue.aiSummary && <small>Action Plan: {issue.aiSummary}</small>}
+        </div>
+      )}
+
+      <p className="worker-citizen-description">
+        <strong>Citizen description:</strong> {issue.description}
+      </p>
+
+      {/* Incident Location & Navigation */}
+      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+        <span className="flex items-center gap-1 font-medium">
+          <MapPin size={14} className="text-blue-600 shrink-0" />
+          <span>{issue.location}</span>
+        </span>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 underline shrink-0"
+        >
+          Navigate in Google Maps ↗
+        </a>
+      </div>
+
+      {/* Citizen Reported Evidence */}
+      {issue.imageUrl && (
+        <div className="worker-evidence-block">
+          <span>Citizen Evidence Photo</span>
+          <a href={issue.imageUrl} target="_blank" rel="noreferrer">
+            <img className="worker-issue-source-image" src={issue.imageUrl} alt={`Evidence for ${issue.category}`} />
+            <strong>Open full resolution image</strong>
+          </a>
+        </div>
+      )}
+
+      {/* Action Bar: Progress Selector & Proof Upload */}
+      <div className="worker-issue-actions">
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Update Status</span>
+          <select
+            value={issue.workerCompletionStatus || (currentStatus === 'Submitted' ? 'In progress' : currentStatus)}
+            onChange={(event) => onUpdate(issue.id, { status: event.target.value })}
+            className="text-xs"
+          >
+            <option>In progress</option>
+            <option>Ready for admin review</option>
+          </select>
+        </div>
+
+        <label className="worker-proof-input">
+          <FileImage size={15} /> Upload Restoration Proof
+          <input type="file" accept="image/*" onChange={updateProof} />
+        </label>
+
+        <button
+          type="button"
+          className="dashboard-primary-button"
+          onClick={submitProof}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Uploading proof...' : 'Submit Proof to Admin'}
+        </button>
+      </div>
+
+      {proofImage && (
+        <div className="worker-proof-preview">
+          <span>Selected Proof Preview (Ready to Submit)</span>
+          <img src={proofImage} alt="Proof preview" />
+        </div>
+      )}
+
+      {issue.workerProofImage && (
+        <div className="worker-proof-preview worker-proof-uploaded">
+          <span>Uploaded Restoration Proof (Verified by Field Officer)</span>
+          <a href={issue.workerProofImage} target="_blank" rel="noreferrer">
+            <img src={issue.workerProofImage} alt={`Completion proof for ${issue.category}`} />
+            <strong>Open full resolution proof</strong>
+          </a>
+        </div>
+      )}
+
+      {issue.proofReviewStatus && (
+        <p className="worker-proof-status flex items-center gap-1.5 mt-2">
+          <span>Admin Review Status:</span>
+          <strong className={issue.proofReviewStatus === 'Approved' ? 'text-emerald-700 font-bold' : 'text-amber-700 font-bold'}>
+            {issue.proofReviewStatus}
+          </strong>
+        </p>
+      )}
+
+      {message && <p className="worker-success mt-2">{message}</p>}
+      {error && <p className="worker-error mt-2">{error}</p>}
+    </article>
+  );
 }
