@@ -22,28 +22,102 @@ import AiIssuePage from "./pages/AiIssuePage";
 import ContactPage from "./pages/ContactPage";
 
 export default function App() {
-  const [currentPath, setCurrentPath] = useState(
-    window.location.pathname + window.location.hash,
-  );
-  const [hasSavedSession, setHasSavedSession] = useState(
+  const [currentPath, setCurrentPath] = useState(() => {
+    return window.location.pathname.replace(/\/+$/, "") || "/";
+  });
+  const [currentHash, setCurrentHash] = useState(() => window.location.hash);
+  const [hasSavedSession, setHasSavedSession] = useState(() =>
     Boolean(localStorage.getItem("smart_city_token")),
   );
-  const savedUser = JSON.parse(localStorage.getItem("smart_city_user") || "null");
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("smart_city_user") || "null");
+    } catch {
+      return null;
+    }
+  });
+
+  const syncState = () => {
+    const cleanPath = window.location.pathname.replace(/\/+$/, "") || "/";
+    setCurrentPath(cleanPath);
+    setCurrentHash(window.location.hash);
+    setHasSavedSession(Boolean(localStorage.getItem("smart_city_token")));
+    try {
+      setUser(JSON.parse(localStorage.getItem("smart_city_user") || "null"));
+    } catch {
+      setUser(null);
+    }
+  };
 
   useEffect(() => {
-    const handleLocationChange = () => {
-      setCurrentPath(window.location.pathname + window.location.hash);
+    window.addEventListener("popstate", syncState);
+    window.addEventListener("hashchange", syncState);
+    window.addEventListener("auth-logout", syncState);
+    window.addEventListener("storage", syncState);
+
+    // Global SPA navigation interceptor: ensures smooth client-side transitions between all pages
+    const handleGlobalClick = (event) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const anchor = event.target.closest("a");
+      if (!anchor) return;
+
+      const href = anchor.getAttribute("href");
+      if (
+        !href ||
+        href.startsWith("http://") ||
+        href.startsWith("https://") ||
+        href.startsWith("mailto:") ||
+        href.startsWith("tel:") ||
+        anchor.getAttribute("target") === "_blank" ||
+        anchor.hasAttribute("download")
+      ) {
+        return;
+      }
+
+      // Allow same-page hash jumps
+      if (href.startsWith("#")) {
+        return;
+      }
+
+      event.preventDefault();
+
+      try {
+        const url = new URL(anchor.href, window.location.origin);
+        const targetPath = url.pathname.replace(/\/+$/, "") || "/";
+        const targetHash = url.hash;
+
+        if (
+          targetPath !== window.location.pathname.replace(/\/+$/, "") ||
+          targetHash !== window.location.hash ||
+          url.search !== window.location.search
+        ) {
+          window.history.pushState({}, "", url.pathname + url.search + url.hash);
+          syncState();
+          window.scrollTo({ top: 0, behavior: "instant" });
+        }
+      } catch (err) {
+        console.warn("Navigation interceptor error:", err);
+      }
     };
 
-    const handleAuthLogout = () => setHasSavedSession(false);
+    document.addEventListener("click", handleGlobalClick);
 
-    window.addEventListener("popstate", handleLocationChange);
-    window.addEventListener("hashchange", handleLocationChange);
-    window.addEventListener("auth-logout", handleAuthLogout);
     return () => {
-      window.removeEventListener("popstate", handleLocationChange);
-      window.removeEventListener("hashchange", handleLocationChange);
-      window.removeEventListener("auth-logout", handleAuthLogout);
+      window.removeEventListener("popstate", syncState);
+      window.removeEventListener("hashchange", syncState);
+      window.removeEventListener("auth-logout", syncState);
+      window.removeEventListener("storage", syncState);
+      document.removeEventListener("click", handleGlobalClick);
     };
   }, []);
 
@@ -51,31 +125,42 @@ export default function App() {
     localStorage.removeItem("smart_city_token");
     localStorage.removeItem("smart_city_user");
     setHasSavedSession(false);
+    setUser(null);
     window.history.pushState({}, "", "/");
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    syncState();
   };
 
-  if (
-    hasSavedSession &&
-    (currentPath === "/login" ||
-      currentPath === "/#login" ||
-      window.location.hash === "#login")
-  ) {
-    return savedUser?.role === "admin" ? <AdminDashboard /> : savedUser?.role === "worker" ? <WorkerDashboard /> : <UserDashboard />;
-  }
-
-  if (
-    currentPath === "/login" ||
-    currentPath === "/#login" ||
-    window.location.hash === "#login"
-  ) {
+  // 1. Auth Page
+  if (currentPath === "/login" || currentHash === "#login") {
+    if (hasSavedSession) {
+      if (user?.role === "admin") return <AdminDashboard pagePath="/admin" />;
+      if (user?.role === "worker") return <WorkerDashboard pagePath="/worker" />;
+      return <UserDashboard />;
+    }
     return <AuthPage />;
   }
 
+  // 2. Generic Dashboard route (dispatches based on active role)
   if (currentPath === "/dashboard") {
-    return savedUser?.role === "admin" ? <AdminDashboard /> : savedUser?.role === "worker" ? <WorkerDashboard /> : <UserDashboard />;
+    if (user?.role === "admin") return <AdminDashboard pagePath="/admin" />;
+    if (user?.role === "worker") return <WorkerDashboard pagePath="/worker" />;
+    return <UserDashboard />;
   }
 
+  // 3. Admin Routes (starts with /admin)
+  if (currentPath.startsWith("/admin")) {
+    if (currentPath === "/admin/workers/new") {
+      return <WorkerCreatePage />;
+    }
+    return <AdminDashboard pagePath={currentPath} />;
+  }
+
+  // 4. Worker Routes (starts with /worker)
+  if (currentPath.startsWith("/worker")) {
+    return <WorkerDashboard pagePath={currentPath} />;
+  }
+
+  // 5. Citizen Report & AI Assistance Pages
   if (currentPath === "/report-issue") {
     return <ReportIssuePage />;
   }
@@ -84,34 +169,33 @@ export default function App() {
     return <AiIssuePage />;
   }
 
-  if (currentPath === "/contact") {
-    return <ContactPage isAuthenticated={hasSavedSession} user={savedUser} onLogout={logout} />;
+  // 6. Civic Intelligence & Reports Pages
+  if (
+    currentPath === "/reports" ||
+    currentPath === "/activity" ||
+    currentPath === "/notifications"
+  ) {
+    return <CivicPage pagePath={currentPath} />;
   }
 
-  if (currentPath === "/admin" || currentPath === "/admin/users" || currentPath === "/admin/workers" || currentPath === "/admin/workers/new" || currentPath === "/admin/issues" || currentPath === "/admin/contacts") {
-    if (currentPath === "/admin/workers/new") return <WorkerCreatePage />;
-    return <AdminDashboard pagePath={currentPath} />;
-  }
-
-  if (currentPath === "/worker" || currentPath === "/worker/availability" || currentPath === "/worker/location" || currentPath === "/worker/issues") {
-    return <WorkerDashboard pagePath={currentPath} />;
-  }
-
+  // 7. Profile Page
   if (currentPath === "/profile") {
     return <ProfilePage />;
   }
 
-  if (currentPath === "/reports" || currentPath === "/activity" || currentPath === "/notifications") {
-    return <CivicPage pagePath={currentPath} />;
+  // 8. Contact Page
+  if (currentPath === "/contact") {
+    return <ContactPage isAuthenticated={hasSavedSession} user={user} onLogout={logout} />;
   }
 
-  if (currentPath === "/about" || currentPath === "/#about") {
-    return <AboutPage isAuthenticated={hasSavedSession} user={savedUser} onLogout={logout} />;
+  // 9. About Page
+  if (currentPath === "/about" || currentHash === "#about") {
+    return <AboutPage isAuthenticated={hasSavedSession} user={user} onLogout={logout} />;
   }
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
-      <Navbar isAuthenticated={hasSavedSession} user={savedUser} onLogout={logout} />
+      <Navbar isAuthenticated={hasSavedSession} user={user} onLogout={logout} />
       <div id="platform">
         <Hero />
       </div>

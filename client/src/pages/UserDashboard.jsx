@@ -124,6 +124,9 @@ export default function UserDashboard() {
   const resolvedUserReports = myIssues.filter((i) => i.status === 'Resolved').length;
   const userResolutionRate = totalUserReports > 0 ? Math.round((resolvedUserReports / totalUserReports) * 100) : 100;
   const totalCommunitySignals = communityIssues.length;
+  const notificationCount = myIssues.filter(
+    (i) => i.assignedWorker || i.workerProofImage || i.status === 'Resolved'
+  ).length;
 
   const filteredMyIssues = myIssues.filter((issue) => {
     if (filterStatus === 'resolved') return issue.status === 'Resolved';
@@ -174,17 +177,20 @@ export default function UserDashboard() {
 
         <p className="dashboard-sidebar-label">Citizen Workspace</p>
         <nav className="dashboard-sidebar-nav">
-          {pages.map(({ label, icon: Icon, href }, index) => (
+          {pages.map(({ label, icon: Icon, href }) => (
             <a
               key={label}
               href={href}
               onClick={() => setSidebarOpen(false)}
-              className={`dashboard-sidebar-link ${index === 0 ? 'dashboard-sidebar-link-active' : ''}`}
+              className={`dashboard-sidebar-link ${href === '/dashboard' ? 'dashboard-sidebar-link-active' : ''}`}
             >
               <Icon size={18} />
               <span>{label}</span>
               {label === 'My reports' && totalUserReports > 0 && (
                 <span className="dashboard-notification-count">{totalUserReports}</span>
+              )}
+              {label === 'Notifications' && notificationCount > 0 && (
+                <span className="dashboard-notification-count">{notificationCount}</span>
               )}
             </a>
           ))}

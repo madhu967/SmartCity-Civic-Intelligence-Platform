@@ -14,9 +14,11 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
   const [error, setError] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState('');
-  const isAvailabilityPage = pagePath === '/worker/availability';
-  const isLocationPage = pagePath === '/worker/location';
-  const isIssuesPage = pagePath === '/worker/issues';
+  const cleanPath = (pagePath || '/worker').split('#')[0].replace(/\/+$/, '') || '/worker';
+  const isAvailabilityPage = cleanPath === '/worker/availability' || window.location.hash === '#availability';
+  const isLocationPage = cleanPath === '/worker/location' || window.location.hash === '#location';
+  const isIssuesPage = cleanPath === '/worker/issues' || window.location.hash === '#issues';
+  const isOverviewPage = (cleanPath === '/worker' || cleanPath === '/worker/') && !isAvailabilityPage && !isLocationPage && !isIssuesPage;
 
   const syncWorkerLocation = async (manual = false) => {
     setIsLocating(true);
@@ -181,10 +183,16 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
         <div className="dashboard-sidebar-brand"><div className="dashboard-sidebar-mark">S</div><div><p className="dashboard-sidebar-title">Worker space</p><p className="dashboard-sidebar-subtitle">SmartCity platform</p></div><button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-close-button"><X size={18} /></button></div>
         <p className="dashboard-sidebar-label">Workspace</p>
         <nav className="dashboard-sidebar-nav">
-          <a href="/worker" className={`dashboard-sidebar-link ${pagePath === '/worker' ? 'dashboard-sidebar-link-active' : ''}`}><BriefcaseBusiness size={18} /><span>My dashboard</span></a>
+          <a href="/worker" className={`dashboard-sidebar-link ${isOverviewPage ? 'dashboard-sidebar-link-active' : ''}`}><BriefcaseBusiness size={18} /><span>My dashboard</span></a>
           <a href="/worker/availability" className={`dashboard-sidebar-link ${isAvailabilityPage ? 'dashboard-sidebar-link-active' : ''}`}><Activity size={18} /><span>Availability</span></a>
           <a href="/worker/location" className={`dashboard-sidebar-link ${isLocationPage ? 'dashboard-sidebar-link-active' : ''}`}><MapPin size={18} /><span>Service location</span></a>
-          <a href="/worker/issues" className={`dashboard-sidebar-link ${isIssuesPage ? 'dashboard-sidebar-link-active' : ''}`}><ClipboardList size={18} /><span>Assigned issues</span></a>
+          <a href="/worker/issues" className={`dashboard-sidebar-link ${isIssuesPage ? 'dashboard-sidebar-link-active' : ''}`}>
+            <ClipboardList size={18} />
+            <span>Assigned issues</span>
+            {assignedIssues.filter((i) => i.status !== 'Resolved').length > 0 && (
+              <span className="dashboard-notification-count">{assignedIssues.filter((i) => i.status !== 'Resolved').length}</span>
+            )}
+          </a>
         </nav>
         <div className="dashboard-sidebar-footer"><a href="/profile" className="dashboard-sidebar-link"><UserRound size={18} /><span>Profile details</span></a><button type="button" onClick={logout} className="dashboard-sidebar-link dashboard-logout"><LogOut size={18} /><span>Log out</span></button></div>
       </aside>
@@ -202,7 +210,7 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
               <ShieldCheck size={17} /> Municipal Field Officer
             </div>
           </div>
-          {pagePath === '/worker' ? (
+          {isOverviewPage ? (
             <WorkerOverview
               user={user}
               issues={assignedIssues}

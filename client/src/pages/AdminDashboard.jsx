@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { 
+  Activity,
   AlertTriangle,
   ArrowUpRight,
   BarChart3, 
@@ -12,6 +13,7 @@ import {
   Compass, 
   ExternalLink,
   Eye,
+  FileText,
   Filter, 
   LayoutDashboard, 
   Layers,
@@ -27,6 +29,7 @@ import {
   Settings, 
   ShieldCheck, 
   Sparkles,
+  TrendingUp,
   User,
   UserCheck, 
   Users, 
@@ -43,8 +46,8 @@ const adminPages = [
   { label: 'Manage workers', href: '/admin/workers', icon: ShieldCheck },
   { label: 'Issue dashboard', href: '/admin/issues', icon: Filter },
   { label: 'Contact inbox', href: '/admin/contacts', icon: Mail },
-  { label: 'Create worker', href: '/admin/workers/new', icon: ShieldCheck },
-  { label: 'Reports overview', href: '/admin#reports', icon: BarChart3 },
+  { label: 'Create worker', href: '/admin/workers/new', icon: Briefcase },
+  { label: 'Reports overview', href: '/admin/reports', icon: BarChart3 },
 ];
 
 const departmentOptions = ['Roads and Infrastructure', 'Sanitation', 'Water Services', 'Public Safety', 'Parks and Recreation', 'Electrical Services'];
@@ -57,10 +60,12 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
   const [contacts, setContacts] = useState([]);
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isUsersPage = pagePath === '/admin/users';
-  const isWorkersPage = pagePath === '/admin/workers';
-  const isIssuesPage = pagePath === '/admin/issues';
-  const isContactsPage = pagePath === '/admin/contacts';
+  const cleanPath = (pagePath || '/admin').split('#')[0].replace(/\/+$/, '') || '/admin';
+  const isUsersPage = cleanPath === '/admin/users' || window.location.hash === '#users';
+  const isWorkersPage = cleanPath === '/admin/workers' || window.location.hash === '#workers';
+  const isIssuesPage = cleanPath === '/admin/issues' || window.location.hash === '#issues';
+  const isContactsPage = cleanPath === '/admin/contacts' || window.location.hash === '#contacts';
+  const isReportsPage = cleanPath === '/admin/reports' || window.location.hash === '#reports';
 
   useEffect(() => {
     const loadAdmin = async () => {
@@ -132,14 +137,14 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'dashboard-sidebar-open' : ''}`}>
         <div className="dashboard-sidebar-brand"><div className="dashboard-sidebar-mark">S</div><div><p className="dashboard-sidebar-title">Admin console</p><p className="dashboard-sidebar-subtitle">SmartCity platform</p></div><button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-close-button" aria-label="Close sidebar"><X size={18} /></button></div>
         <p className="dashboard-sidebar-label">Administration</p>
-        <nav className="dashboard-sidebar-nav">{adminPages.map(({ label, href, icon: Icon }) => <a key={label} href={href} onClick={() => setSidebarOpen(false)} className={`dashboard-sidebar-link ${href === pagePath ? 'dashboard-sidebar-link-active' : ''}`}><Icon size={18} /><span>{label}</span></a>)}</nav>
+        <nav className="dashboard-sidebar-nav">{adminPages.map(({ label, href, icon: Icon }) => <a key={label} href={href} onClick={() => setSidebarOpen(false)} className={`dashboard-sidebar-link ${href === cleanPath || (href === '/admin/reports' && isReportsPage) ? 'dashboard-sidebar-link-active' : ''}`}><Icon size={18} /><span>{label}</span></a>)}</nav>
         <div className="dashboard-sidebar-footer"><a href="/profile" className="dashboard-sidebar-link"><ShieldCheck size={18} /><span>Admin profile</span></a><button type="button" className="dashboard-sidebar-link"><Settings size={18} /><span>Settings</span></button><button type="button" onClick={logout} className="dashboard-sidebar-link dashboard-logout"><LogOut size={18} /><span>Log out</span></button></div>
       </aside>
       {sidebarOpen && <button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-sidebar-overlay" aria-label="Close sidebar" />}
       <section className="dashboard-main">
-        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Issue dashboard' : isContactsPage ? 'Contact inbox' : 'Admin overview'}</span></div>
+        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Issue dashboard' : isContactsPage ? 'Contact inbox' : isReportsPage ? 'Reports overview' : 'Admin overview'}</span></div>
         <div className="dashboard-container">
-          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Admin Issue Dashboard' : isContactsPage ? 'Contact inbox' : 'Admin overview'}</h1><p className="dashboard-description">{isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : isIssuesPage ? 'Review, prioritize, edit, and assign every citizen complaint.' : isContactsPage ? 'Review messages about the website, civic help, and community feedback.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && !isIssuesPage && !isContactsPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
+          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Admin Issue Dashboard' : isContactsPage ? 'Contact inbox' : isReportsPage ? 'Municipal Reports & Analytics' : 'Admin overview'}</h1><p className="dashboard-description">{isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : isIssuesPage ? 'Review, prioritize, edit, and assign every citizen complaint.' : isContactsPage ? 'Review messages about the website, civic help, and community feedback.' : isReportsPage ? 'Real-time municipal performance analytics, resolution velocity, departmental efficiency, and duplicate reduction.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && !isIssuesPage && !isContactsPage && !isReportsPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
           {isUsersPage ? (
             <UsersTable users={users} onStatusChange={updateStatus} />
           ) : isWorkersPage ? (
@@ -154,6 +159,13 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
                   current.map((item) => (item.id === contact.id ? contact : item))
                 )
               }
+            />
+          ) : isReportsPage ? (
+            <AdminReportsOverview
+              issues={issues}
+              workers={workers}
+              users={users}
+              contacts={contacts}
             />
           ) : (
             <AdminOverview
@@ -537,6 +549,368 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
               </div>
             </div>
           </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminReportsOverview({ issues = [], workers = [], users = [], contacts = [] }) {
+  const totalIssues = issues.length;
+  const resolvedIssues = issues.filter((i) => i.status === 'Resolved');
+  const inProgressIssues = issues.filter((i) => i.status === 'In progress');
+  const inReviewIssues = issues.filter((i) => i.status === 'In review');
+  const submittedIssues = issues.filter((i) => i.status === 'Submitted');
+  const unassignedIssues = issues.filter((i) => !i.assignedWorker && i.status !== 'Resolved');
+  const criticalIssues = issues.filter((i) => (i.priority === 'Critical' || i.priority === 'High') && i.status !== 'Resolved');
+  const resolutionRate = totalIssues > 0 ? Math.round((resolvedIssues.length / totalIssues) * 100) : 100;
+
+  // Workforce metrics
+  const activeWorkers = workers.filter((w) => w.availability !== 'Unavailable');
+  const onDutyWorkers = workers.filter((w) => w.availability === 'On duty');
+  const availableWorkers = workers.filter((w) => w.availability === 'Available');
+  const avgWorkload = activeWorkers.length > 0 
+    ? (inProgressIssues.length / activeWorkers.length).toFixed(1)
+    : '0';
+
+  // Citizens & Contacts
+  const activeCitizens = users.filter((u) => u.isActive).length;
+  const resolvedContacts = contacts.filter((c) => c.status === 'Resolved').length;
+  const contactResolutionRate = contacts.length > 0 
+    ? Math.round((resolvedContacts / contacts.length) * 100)
+    : 100;
+
+  // AI & Duplicate report efficiency
+  const totalDuplicatesPrevented = issues.reduce((acc, curr) => acc + Math.max(0, (curr.reportCount || 1) - 1), 0);
+  const multiReportedIssues = issues.filter((i) => (i.reportCount || 1) > 1);
+
+  // Category Intelligence Breakdown
+  const allCategories = [
+    'Roads & Potholes',
+    'Garbage & Sanitation',
+    'Water Supply',
+    'Electricity',
+    'Streetlights',
+    'Drainage',
+    'Traffic',
+    'Other',
+    ...new Set(issues.map((i) => i.category).filter(Boolean)),
+  ].filter((value, index, self) => self.indexOf(value) === index);
+
+  const categoryStats = allCategories
+    .map((cat) => {
+      const catIssues = issues.filter((i) => i.category === cat);
+      const catResolved = catIssues.filter((i) => i.status === 'Resolved');
+      const catInProgress = catIssues.filter((i) => i.status === 'In progress' || i.status === 'In review');
+      const rate = catIssues.length > 0 ? Math.round((catResolved.length / catIssues.length) * 100) : 100;
+      return {
+        category: cat,
+        total: catIssues.length,
+        resolved: catResolved.length,
+        inProgress: catInProgress.length,
+        rate,
+        percentOfTotal: totalIssues > 0 ? Math.round((catIssues.length / totalIssues) * 100) : 0,
+      };
+    })
+    .filter((s) => s.total > 0 || ['Roads & Potholes', 'Garbage & Sanitation', 'Water Supply', 'Electricity'].includes(s.category))
+    .sort((a, b) => b.total - a.total);
+
+  // Department Operational Stats
+  const departments = [
+    'Roads and Infrastructure',
+    'Sanitation',
+    'Water Services',
+    'Public Safety',
+    'Parks and Recreation',
+    'Electrical Services',
+    ...new Set(workers.map((w) => w.department).filter(Boolean)),
+  ].filter((value, index, self) => self.indexOf(value) === index);
+
+  const departmentStats = departments.map((dept) => {
+    const deptWorkers = workers.filter((w) => w.department === dept);
+    const deptIssues = issues.filter((i) => i.department === dept || i.assignedWorker?.department === dept);
+    const deptResolved = deptIssues.filter((i) => i.status === 'Resolved');
+    const deptActive = deptIssues.filter((i) => i.status !== 'Resolved');
+    const rate = deptIssues.length > 0 ? Math.round((deptResolved.length / deptIssues.length) * 100) : 100;
+    return {
+      department: dept,
+      workersTotal: deptWorkers.length,
+      workersActive: deptWorkers.filter((w) => w.availability !== 'Unavailable').length,
+      issuesTotal: deptIssues.length,
+      issuesResolved: deptResolved.length,
+      issuesActive: deptActive.length,
+      rate,
+    };
+  });
+
+  // Top Performing Workers (Leaderboard)
+  const workerLeaderboard = [...workers]
+    .map((w) => {
+      const assigned = issues.filter((i) => i.assignedWorker?.id === w.id || i.assignedWorker === w.id);
+      const resolved = assigned.filter((i) => i.status === 'Resolved');
+      const active = assigned.filter((i) => i.status !== 'Resolved');
+      const rate = assigned.length > 0 ? Math.round((resolved.length / assigned.length) * 100) : 100;
+      return {
+        ...w,
+        totalAssigned: assigned.length,
+        resolvedCount: resolved.length,
+        activeCount: active.length,
+        resolutionRate: rate,
+      };
+    })
+    .sort((a, b) => b.resolvedCount - a.resolvedCount || b.totalAssigned - a.totalAssigned);
+
+  return (
+    <div className="space-y-6">
+      {/* 6 Top Analytics Metric Cards */}
+      <div className="admin-kpi-grid">
+        <div className="admin-kpi-card border-l-4 border-l-blue-600">
+          <div className="kpi-icon-wrap kpi-icon-total">
+            <BarChart3 size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{totalIssues}</span>
+            <span className="kpi-label">Total Citizen Complaints</span>
+          </div>
+        </div>
+
+        <div className="admin-kpi-card border-l-4 border-l-emerald-600">
+          <div className="kpi-icon-wrap kpi-icon-resolved">
+            <CheckCircle2 size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number text-emerald-600">{resolutionRate}%</span>
+            <span className="kpi-label">City Resolution Rate ({resolvedIssues.length} closed)</span>
+          </div>
+        </div>
+
+        <div className="admin-kpi-card border-l-4 border-l-amber-500">
+          <div className="kpi-icon-wrap kpi-icon-inprogress">
+            <Navigation size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number text-amber-600">{inProgressIssues.length + inReviewIssues.length}</span>
+            <span className="kpi-label">Active Field Dispatches</span>
+          </div>
+        </div>
+
+        <div className="admin-kpi-card border-l-4 border-l-indigo-600">
+          <div className="kpi-icon-wrap kpi-icon-total">
+            <Sparkles size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number text-indigo-600">+{totalDuplicatesPrevented}</span>
+            <span className="kpi-label">AI Duplicate Reports Merged</span>
+          </div>
+        </div>
+
+        <div className="admin-kpi-card border-l-4 border-l-purple-600">
+          <div className="kpi-icon-wrap kpi-icon-total">
+            <ShieldCheck size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{activeWorkers.length} / {workers.length}</span>
+            <span className="kpi-label">Field Staff On Duty</span>
+          </div>
+        </div>
+
+        <div className="admin-kpi-card border-l-4 border-l-teal-600">
+          <div className="kpi-icon-wrap kpi-icon-unassigned">
+            <Users size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number">{activeCitizens}</span>
+            <span className="kpi-label">Active Resident Accounts</span>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Intelligence & Duplicate Suppression Banner */}
+      <section className="dashboard-panel bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-white border-blue-200">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">AI Duplicate Detection & Proximity Clustering</h2>
+              <p className="text-xs text-slate-600">
+                CivicTracker AI automatically intercepts recurring incident reports within 200m radius using geolocation and semantic matching.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-right">
+              <strong className="text-lg font-black text-blue-700 block">{totalDuplicatesPrevented} redundant reports</strong>
+              <span className="text-[11px] text-slate-500 font-semibold">suppressed & merged into root tickets</span>
+            </div>
+            <div className="text-right">
+              <strong className="text-lg font-black text-slate-900 block">{multiReportedIssues.length} hot-spot locations</strong>
+              <span className="text-[11px] text-slate-500 font-semibold">with multi-citizen endorsements</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Grid: Incident Category Breakdown & Department Performance */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Category Breakdown Panel */}
+        <section className="dashboard-panel">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Incident Distribution by Category</h2>
+              <p className="text-xs text-slate-500">Breakdown of reported issues and department resolution velocity</p>
+            </div>
+            <span className="text-xs font-bold text-slate-400">{categoryStats.length} Categories</span>
+          </div>
+
+          <div className="space-y-3.5 mt-4">
+            {categoryStats.map((item) => (
+              <div key={item.category} className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-800">{item.category}</span>
+                  <div className="flex items-center gap-3 font-medium">
+                    <span className="text-slate-500">{item.total} {item.total === 1 ? 'ticket' : 'tickets'} ({item.percentOfTotal}%)</span>
+                    <span className="text-emerald-700 font-bold">{item.resolved} resolved</span>
+                    <span className="text-blue-700 font-bold">{item.rate}%</span>
+                  </div>
+                </div>
+                <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden flex">
+                  <div
+                    className="bg-emerald-500 h-full transition-all duration-500"
+                    style={{ width: `${item.total > 0 ? (item.resolved / item.total) * 100 : 0}%` }}
+                    title={`Resolved: ${item.resolved}`}
+                  />
+                  <div
+                    className="bg-blue-500 h-full transition-all duration-500"
+                    style={{ width: `${item.total > 0 ? (item.inProgress / item.total) * 100 : 0}%` }}
+                    title={`In progress: ${item.inProgress}`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Department Efficiency Panel */}
+        <section className="dashboard-panel">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Department Operational Efficiency</h2>
+              <p className="text-xs text-slate-500">Personnel deployment and resolution rates per municipal branch</p>
+            </div>
+            <Briefcase size={18} className="text-slate-400" />
+          </div>
+
+          <div className="divide-y divide-slate-100 mt-2">
+            {departmentStats.map((dept) => (
+              <div key={dept.department} className="py-3 flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <strong className="text-xs font-bold text-slate-900 block truncate">{dept.department}</strong>
+                  <span className="text-[11px] text-slate-500">
+                    {dept.workersActive} of {dept.workersTotal} workers on field duty · {dept.issuesActive} open tasks
+                  </span>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-xs font-bold text-slate-900 block">{dept.issuesResolved} / {dept.issuesTotal} fixed</span>
+                  <span className={`text-[11px] font-bold ${dept.rate >= 80 ? 'text-emerald-600' : dept.rate >= 50 ? 'text-blue-600' : 'text-amber-600'}`}>
+                    {dept.rate}% resolution
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {/* Grid: Priority Analysis & Field Workforce Performance Leaderboard */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Priority Severity Breakdown */}
+        <div className="dashboard-panel space-y-4">
+          <div className="pb-3 border-b border-slate-100">
+            <h2 className="text-sm font-bold text-slate-900">Severity & Priority Matrix</h2>
+            <p className="text-xs text-slate-500">Incident urgency breakdown and resolution status</p>
+          </div>
+
+          <div className="space-y-3">
+            {priorityStats.map((p) => (
+              <div key={p.priority} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <span className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    p.priority === 'Critical' ? 'bg-red-100 text-red-700' :
+                    p.priority === 'High' ? 'bg-amber-100 text-amber-700' :
+                    p.priority === 'Medium' ? 'bg-blue-100 text-blue-700' :
+                    'bg-slate-200 text-slate-700'
+                  }`}>
+                    {p.priority}
+                  </span>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {p.resolved} of {p.total} resolved
+                  </p>
+                </div>
+                <div className="text-right">
+                  <strong className="text-lg font-black text-slate-900">{p.total}</strong>
+                  <span className="text-[11px] font-bold text-emerald-600 block">{p.rate}% fixed</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Field Workforce Leaderboard (Span 2) */}
+        <div className="lg:col-span-2 dashboard-panel">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Field Workforce Productivity Leaderboard</h2>
+              <p className="text-xs text-slate-500">Real-time resolution metrics across registered field officers</p>
+            </div>
+            <a href="/admin/workers" className="text-xs font-bold text-blue-600 hover:underline">
+              Manage Field Staff →
+            </a>
+          </div>
+
+          {workerLeaderboard.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              No field workers registered yet.
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100 mt-2">
+              {workerLeaderboard.slice(0, 6).map((worker, index) => (
+                <div key={worker.id} className="py-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-6 text-center text-xs font-extrabold text-slate-400">
+                      #{index + 1}
+                    </span>
+                    <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                      {worker.profileImage ? <img src={worker.profileImage} alt="" className="w-full h-full rounded-lg object-cover" /> : worker.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <strong className="text-xs font-bold text-slate-900 block truncate">{worker.name}</strong>
+                      <span className="text-[11px] text-slate-500 truncate block">
+                        {worker.department} · {worker.serviceArea || 'General Area'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 shrink-0 text-right">
+                    <div>
+                      <span className="text-xs font-bold text-emerald-700 block">{worker.resolvedCount} Resolved</span>
+                      <span className="text-[11px] text-slate-400">{worker.activeCount} in progress</span>
+                    </div>
+                    <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
+                      worker.availability === 'Unavailable'
+                        ? 'bg-slate-100 text-slate-500'
+                        : worker.availability === 'On duty'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-emerald-100 text-emerald-700'
+                    }`}>
+                      {worker.availability}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

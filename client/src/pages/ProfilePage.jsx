@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Activity, ArrowLeft, BarChart3, Bell, BriefcaseBusiness, Camera, ClipboardList, Home, LayoutDashboard, LoaderCircle, LogOut, Mail, MapPin, Menu, Phone, Settings, ShieldCheck, UserRound, Users, X } from 'lucide-react';
+import { Activity, ArrowLeft, BarChart3, Bell, BriefcaseBusiness, Camera, ClipboardList, FileWarning, Filter, Home, LayoutDashboard, LoaderCircle, LogOut, Mail, MapPin, Menu, Phone, Settings, ShieldCheck, Sparkles, UserRound, Users, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
@@ -111,10 +111,30 @@ export default function ProfilePage() {
   const isWorker = user.role === 'worker';
   const sidebarTitle = isAdmin ? 'Admin console' : isWorker ? 'Worker space' : 'Citizen space';
   const sidebarPages = isAdmin
-    ? [['Admin overview', LayoutDashboard, '/admin'], ['Manage users', Users, '/admin/users'], ['Manage workers', BriefcaseBusiness, '/admin/workers'], ['Create worker', ShieldCheck, '/admin/workers/new'], ['Reports overview', BarChart3, '/admin#reports']]
+    ? [
+        ['Admin overview', LayoutDashboard, '/admin'],
+        ['Manage users', Users, '/admin/users'],
+        ['Manage workers', ShieldCheck, '/admin/workers'],
+        ['Issue dashboard', Filter, '/admin/issues'],
+        ['Contact inbox', Mail, '/admin/contacts'],
+        ['Create worker', BriefcaseBusiness, '/admin/workers/new'],
+        ['Reports overview', BarChart3, '/admin/reports'],
+      ]
     : isWorker
-      ? [['My dashboard', BriefcaseBusiness, '/worker'], ['Availability', Activity, '/worker/availability'], ['Service location', MapPin, '/worker/location']]
-      : [['Overview', Home, '/dashboard'], ['My reports', ClipboardList, '/reports'], ['Nearby activity', Activity, '/activity'], ['Notifications', Bell, '/notifications']];
+      ? [
+          ['My dashboard', BriefcaseBusiness, '/worker'],
+          ['Availability', Activity, '/worker/availability'],
+          ['Service location', MapPin, '/worker/location'],
+          ['Assigned issues', ClipboardList, '/worker/issues'],
+        ]
+      : [
+          ['Overview', Home, '/dashboard'],
+          ['Report an issue', FileWarning, '/report-issue'],
+          ['AI issue assistant', Sparkles, '/ai-report'],
+          ['My reports', ClipboardList, '/reports'],
+          ['Nearby activity', Activity, '/activity'],
+          ['Notifications', Bell, '/notifications'],
+        ];
   const backPath = isAdmin ? '/admin' : isWorker ? '/worker' : '/dashboard';
 
   return (
@@ -123,7 +143,7 @@ export default function ProfilePage() {
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'dashboard-sidebar-open' : ''}`}>
         <div className="dashboard-sidebar-brand"><div className="dashboard-sidebar-mark">S</div><div><p className="dashboard-sidebar-title">{sidebarTitle}</p><p className="dashboard-sidebar-subtitle">SmartCity platform</p></div><button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-close-button" aria-label="Close sidebar"><X size={18} /></button></div>
         <p className="dashboard-sidebar-label">Workspace</p>
-        <nav className="dashboard-sidebar-nav">{sidebarPages.map(([label, Icon, href]) => <a key={label} href={href} className="dashboard-sidebar-link" onClick={() => setSidebarOpen(false)}><Icon size={18} /><span>{label}</span>{label === 'Notifications' && <span className="dashboard-notification-count">2</span>}</a>)}</nav>
+        <nav className="dashboard-sidebar-nav">{sidebarPages.map(([label, Icon, href]) => <a key={label} href={href} className="dashboard-sidebar-link" onClick={() => setSidebarOpen(false)}><Icon size={18} /><span>{label}</span></a>)}</nav>
         <div className="dashboard-sidebar-footer"><a href="/profile" className="dashboard-sidebar-link dashboard-sidebar-link-active"><UserRound size={18} /><span>{isAdmin ? 'Admin profile' : isWorker ? 'Worker profile' : 'Profile details'}</span></a><button type="button" className="dashboard-sidebar-link"><Settings size={18} /><span>Account settings</span></button><button type="button" onClick={logout} className="dashboard-sidebar-link dashboard-logout"><LogOut size={18} /><span>Log out</span></button></div>
       </aside>
       {sidebarOpen && <button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-sidebar-overlay" aria-label="Close sidebar" />}

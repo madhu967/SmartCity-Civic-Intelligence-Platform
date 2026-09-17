@@ -81,6 +81,7 @@ const pageData = {
 const sidebarPages = [
   ['Overview', Home, '/dashboard'],
   ['Report an issue', FileWarning, '/report-issue'],
+  ['AI issue assistant', Sparkles, '/ai-report'],
   ['My reports', ClipboardList, '/reports'],
   ['Nearby activity', Activity, '/activity'],
   ['Notifications', Bell, '/notifications'],

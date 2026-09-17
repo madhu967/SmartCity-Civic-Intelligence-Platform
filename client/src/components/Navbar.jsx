@@ -64,10 +64,17 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
           ) : (
             <a href="#login" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Log in</a>
           )}
-          {!isAuthenticated && <button className="flex items-center gap-2.5 bg-brand-600 text-white text-sm font-bold pl-5 pr-2 py-2 rounded-full cursor-pointer border-0 shadow-md transition-all hover:bg-brand-700 hover:shadow-lg hover:-translate-y-0.5 group">
-            Report an Issue
-            <span className="size-7 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center transition-colors"><span aria-hidden="true">→</span></span>
-          </button>}
+          {!isAuthenticated && (
+            <a
+              href="/report-issue"
+              className="flex items-center gap-2.5 bg-brand-600 text-white text-sm font-bold pl-5 pr-2 py-2 rounded-full cursor-pointer border-0 shadow-md transition-all hover:bg-brand-700 hover:shadow-lg hover:-translate-y-0.5 group"
+            >
+              Report an Issue
+              <span className="size-7 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center transition-colors">
+                <span aria-hidden="true">→</span>
+              </span>
+            </a>
+          )}
         </div>
 
         {/* Mobile Toggle */}
@@ -94,7 +101,18 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
         ) : (
           <a href="#login" className="px-4 py-2.5 rounded-lg text-sm text-slate-500 hover:bg-slate-50 font-medium" onClick={() => setMenuOpen(false)}>Log in</a>
         )}
-        {!isAuthenticated && <button className="flex items-center justify-center gap-2.5 bg-brand-600 text-white text-sm font-bold px-5 py-2.5 rounded-full cursor-pointer border-0 mt-3 w-fit shadow-md hover:bg-brand-700 transition-colors group">Report an Issue<span className="size-7 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center transition-colors">→</span></button>}
+        {!isAuthenticated && (
+          <a
+            href="/report-issue"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center justify-center gap-2.5 bg-brand-600 text-white text-sm font-bold px-5 py-2.5 rounded-full cursor-pointer border-0 mt-3 w-fit shadow-md hover:bg-brand-700 transition-colors group"
+          >
+            Report an Issue
+            <span className="size-7 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center transition-colors">
+              →
+            </span>
+          </a>
+        )}
       </div>
     </header>
   );
