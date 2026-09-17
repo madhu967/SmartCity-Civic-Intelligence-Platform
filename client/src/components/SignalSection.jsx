@@ -33,12 +33,14 @@ export default function SignalSection() {
     const lerp = (a, b, t) => a + (b - a) * t;
 
     const applyTransforms = (p) => {
-      const N = 4;
-      const segment = 1 / N; // 0.25
-      const active = Math.min(Math.floor(p / segment), N - 1);
+      // 4 cards total. Cards 0, 1, 2 peel away sequentially, revealing Card 3.
+      // Card 3 remains docked at center stage at the culmination of the scroll (no empty void).
+      const totalPeels = 3;
+      const segment = 1 / totalPeels; // 0.3333...
+      const active = Math.min(Math.floor(p / segment), totalPeels - 1);
       const segP = Math.max(0, Math.min(1, (p - active * segment) / segment));
 
-      for (let i = 0; i < N; i++) {
+      for (let i = 0; i < 4; i++) {
         const el = cardRefs.current[i];
         if (!el) continue;
 
@@ -47,26 +49,26 @@ export default function SignalSection() {
 
         if (prefersReducedMotion) {
           // Honour prefers-reduced-motion: hold the resting stack
-          const y = -50 + i * 5;
-          const scale = 1 - i * 0.075;
+          const y = -50 + i * 4;
+          const scale = 1 - i * 0.06;
           transformStr = `translate(-50%, ${y}%) scale(${scale}) rotateX(0deg)`;
           opacity = 1;
         } else if (i < active) {
-          // Parked above
+          // Already peeled away: parked above out of frame
           transformStr = 'translate(-50%, -250%) rotateX(35deg)';
           opacity = 0;
         } else if (i === active) {
-          // Peeling up and tilting away on its bottom edge
+          // Currently peeling up and tilting away on its bottom edge
           const y = lerp(-50, -200, segP);
           const rotX = lerp(0, 35, segP);
           transformStr = `translate(-50%, ${y.toFixed(2)}%) rotateX(${rotX.toFixed(2)}deg) scale(1)`;
-          opacity = segP > 0.92 ? Math.max(0, 1 - (segP - 0.92) / 0.08) : 1;
+          opacity = segP > 0.90 ? Math.max(0, 1 - (segP - 0.90) / 0.10) : 1;
         } else {
-          // Waiting behind, rising and scaling up into place
+          // Waiting behind, rising and scaling up into center focus
           const behind = i - active;
           const delta = behind - segP;
-          const y = -50 + delta * 5;
-          const scale = 1 - delta * 0.075;
+          const y = -50 + delta * 4.5;
+          const scale = 1 - delta * 0.065;
           transformStr = `translate(-50%, ${y.toFixed(2)}%) scale(${scale.toFixed(4)}) rotateX(0deg)`;
           opacity = 1;
         }
@@ -136,31 +138,36 @@ export default function SignalSection() {
   }, [isCardRoute]);
 
   return (
-    <section className="smartcity-stack-container relative w-full bg-[#080B12]">
-      {/* Injected style block containing scoped styling and typography overrides */}
+    <section className="smartcity-stack-container relative w-full bg-white m-0 p-0">
+      {/* Injected style block containing scoped styling and typography overrides using website font */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+        .smartcity-stack-container,
+        .smartcity-stack-container *,
+        .smartcity-editorial-card,
+        .smartcity-editorial-card * {
+          font-family: "Playfair Display", Georgia, serif !important;
+        }
 
         .smartcity-stack-container {
-          background-color: #080B12;
-          color: #ffffff;
+          background-color: #ffffff;
+          color: #0f172a;
         }
 
         .smartcity-card-kicker {
-          font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-          letter-spacing: 0.18em;
+          font-family: "Playfair Display", Georgia, serif !important;
+          letter-spacing: 0.16em;
           text-transform: uppercase;
         }
 
         .smartcity-card-title {
-          font-family: 'Big Shoulders Display', 'Arial Black', -apple-system, BlinkMacSystemFont, sans-serif !important;
-          text-transform: uppercase;
-          line-height: 0.94;
-          letter-spacing: -0.02em;
+          font-family: "Playfair Display", Georgia, serif !important;
+          font-weight: 700;
+          line-height: 1.1;
+          letter-spacing: -0.01em;
         }
 
         .smartcity-card-body {
-          font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+          font-family: "Playfair Display", Georgia, serif !important;
         }
 
         .smartcity-editorial-card {
@@ -193,6 +200,7 @@ export default function SignalSection() {
           .smartcity-visual-col {
             padding: 0 20px 24px 20px !important;
             min-height: 280px !important;
+            height: 300px !important;
           }
         }
 
@@ -214,32 +222,30 @@ export default function SignalSection() {
             margin-top: 14px !important;
             padding-top: 12px !important;
           }
-        }
-
-        .smartcity-img-cover {
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
+          .smartcity-visual-col {
+            min-height: 220px !important;
+            height: 240px !important;
+          }
         }
       `}</style>
 
-      {/* Pinned wrapper: 360svh drives the 4-card sequence smoothly without dead space */}
+      {/* Pinned wrapper: 200svh deals 4 cards smoothly across 100svh travel, unpinning immediately at Card 3 */}
       <div 
         ref={wrapperRef} 
-        style={{ height: isCardRoute ? '100svh' : '360svh' }} 
-        className="relative w-full"
+        style={{ height: isCardRoute ? '100svh' : '200svh' }} 
+        className="relative w-full bg-white m-0 p-0"
       >
         {/* Sticky stage: 100svh pinned in place while scrolling */}
         <div 
           ref={stageRef}
-          className="sticky top-0 w-full h-[100svh] overflow-hidden bg-[#080B12] flex items-center justify-center select-none"
+          className="sticky top-0 w-full h-[100svh] overflow-hidden bg-white flex items-center justify-center select-none"
           style={{ perspective: '1200px' }}
         >
-          {/* Ambient Lighting & Background Grid matching SmartCity UI theme */}
+          {/* Ambient Lighting & Background Grid matching SmartCity UI theme on clean white */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-[5%] left-[5%] w-[550px] h-[550px] rounded-full bg-[#4F8CFF]/12 blur-[130px]" />
-            <div className="absolute bottom-[5%] right-[5%] w-[650px] h-[650px] rounded-full bg-[#7C5CFC]/12 blur-[150px]" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+            <div className="absolute top-[8%] left-[8%] w-[500px] h-[500px] rounded-full bg-blue-100/40 blur-[130px]" />
+            <div className="absolute bottom-[8%] right-[8%] w-[600px] h-[600px] rounded-full bg-indigo-100/40 blur-[150px]" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.06)_1px,transparent_1px)] bg-[size:64px_64px]" />
           </div>
 
           {/* ==================== CARD 0: Brand Systems / Live Intelligence (Deep Civic Sapphire) ==================== */}
@@ -315,29 +321,32 @@ export default function SignalSection() {
               </div>
 
               {/* Visual Column: 4K Real Image of Illuminated Smart City Aerial Grid */}
-              <div className="smartcity-visual-col flex-1 p-5 sm:p-6 flex items-center justify-center relative overflow-hidden">
-                <div 
-                  className="smartcity-img-cover absolute inset-4 rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-                  style={{ 
-                    backgroundImage: `url('https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=2000&q=85')` 
-                  }}
-                >
+              <div className="smartcity-visual-col relative flex-1 w-full h-full min-h-[260px] p-5 sm:p-6 flex items-center justify-center">
+                <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-slate-900">
+                  <img 
+                    src="https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1600&q=80" 
+                    alt="Live Satellite Mesh 4K"
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                    loading="eager"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
                   {/* Subtle Tech Gradient Vignette */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#091428]/90 via-transparent to-[#091428]/40" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#091428]/85 via-transparent to-[#091428]/35 pointer-events-none" />
 
                   {/* High-tech Glass HUD Overlays */}
-                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur-md border border-white/15 text-[10px] font-mono font-bold text-white shadow-lg">
+                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/15 text-[10px] font-bold tracking-wider text-white shadow-lg pointer-events-none">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                     LIVE SATELLITE MESH · 4K
                   </div>
 
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between p-3 rounded-xl bg-slate-950/80 backdrop-blur-md border border-white/10 text-white">
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between p-3 rounded-xl bg-slate-950/85 backdrop-blur-md border border-white/10 text-white pointer-events-none">
                     <div>
-                      <div className="text-[10px] uppercase font-mono text-slate-400">Telemetry Layer</div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-400">Telemetry Layer</div>
                       <div className="text-xs font-bold text-white mt-0.5">Metropolitan Arterial Node #402</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] uppercase font-mono text-emerald-400 font-semibold">99.8% Clarity</div>
+                      <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">99.8% Clarity</div>
                       <div className="text-[10px] text-slate-300">Geo-Tagged Live</div>
                     </div>
                   </div>
@@ -415,27 +424,30 @@ export default function SignalSection() {
               </div>
 
               {/* Visual Column: 4K Real Image of Urban Motion Traffic & Light Trails */}
-              <div className="smartcity-visual-col flex-1 p-5 sm:p-6 flex items-center justify-center relative overflow-hidden">
-                <div 
-                  className="smartcity-img-cover absolute inset-4 rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-                  style={{ 
-                    backgroundImage: `url('https://images.unsplash.com/photo-1508873696983-2df5293cb395?auto=format&fit=crop&w=2000&q=85')` 
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#061B1E]/90 via-transparent to-[#061B1E]/40" />
+              <div className="smartcity-visual-col relative flex-1 w-full h-full min-h-[260px] p-5 sm:p-6 flex items-center justify-center">
+                <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-slate-900">
+                  <img 
+                    src="https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1600&q=80" 
+                    alt="Kinetic Inference Vision 4K"
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                    loading="eager"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#061B1E]/85 via-transparent to-[#061B1E]/35 pointer-events-none" />
 
-                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur-md border border-white/15 text-[10px] font-mono font-bold text-white shadow-lg">
+                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/15 text-[10px] font-bold tracking-wider text-white shadow-lg pointer-events-none">
                     <Activity className="w-3 h-3 text-teal-400" />
                     KINETIC INFERENCE · 4K
                   </div>
 
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between p-3 rounded-xl bg-slate-950/80 backdrop-blur-md border border-white/10 text-white">
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between p-3 rounded-xl bg-slate-950/85 backdrop-blur-md border border-white/10 text-white pointer-events-none">
                     <div>
-                      <div className="text-[10px] uppercase font-mono text-slate-400">Autonomous Classifier</div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-400">Autonomous Classifier</div>
                       <div className="text-xs font-bold text-teal-300 mt-0.5">Hazard Detection: Pothole & Obstruction</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] uppercase font-mono text-teal-400 font-semibold">&lt;1.4s Dispatch</div>
+                      <div className="text-[10px] uppercase tracking-wider text-teal-400 font-semibold">&lt;1.4s Dispatch</div>
                       <div className="text-[10px] text-slate-300">Confidence 99.4%</div>
                     </div>
                   </div>
@@ -512,28 +524,31 @@ export default function SignalSection() {
                 </div>
               </div>
 
-              {/* Visual Column: 4K Real Image of Urban Infrastructure & Bridges Grid */}
-              <div className="smartcity-visual-col flex-1 p-5 sm:p-6 flex items-center justify-center relative overflow-hidden">
-                <div 
-                  className="smartcity-img-cover absolute inset-4 rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-                  style={{ 
-                    backgroundImage: `url('https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=2000&q=85')` 
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#120D2C]/90 via-transparent to-[#120D2C]/40" />
+              {/* Visual Column: 4K Real Image of Urban Architecture & Glass Grid */}
+              <div className="smartcity-visual-col relative flex-1 w-full h-full min-h-[260px] p-5 sm:p-6 flex items-center justify-center">
+                <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-slate-900">
+                  <img 
+                    src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80" 
+                    alt="Spatial Operations Infrastructure 4K"
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                    loading="eager"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#120D2C]/85 via-transparent to-[#120D2C]/35 pointer-events-none" />
 
-                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur-md border border-white/15 text-[10px] font-mono font-bold text-white shadow-lg">
+                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/15 text-[10px] font-bold tracking-wider text-white shadow-lg pointer-events-none">
                     <span className="h-2 w-2 rounded-full bg-[#7C5CFC] animate-ping" />
                     GPS GEOFENCE ACTIVE · 4K
                   </div>
 
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between p-3 rounded-xl bg-slate-950/80 backdrop-blur-md border border-white/10 text-white">
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between p-3 rounded-xl bg-slate-950/85 backdrop-blur-md border border-white/10 text-white pointer-events-none">
                     <div>
-                      <div className="text-[10px] uppercase font-mono text-slate-400">Active Work Order</div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-400">Active Work Order</div>
                       <div className="text-xs font-bold text-violet-300 mt-0.5">#WO-8821 Main St. Infrastructure</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] uppercase font-mono text-emerald-400 font-semibold">Proof Verified</div>
+                      <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Proof Verified</div>
                       <div className="text-[10px] text-slate-300">Crew 04 On-Site</div>
                     </div>
                   </div>
@@ -611,27 +626,30 @@ export default function SignalSection() {
               </div>
 
               {/* Visual Column: 4K Real Image of Cloud Data Center / Command Telemetry */}
-              <div className="smartcity-visual-col flex-1 p-5 sm:p-6 flex items-center justify-center relative overflow-hidden">
-                <div 
-                  className="smartcity-img-cover absolute inset-4 rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-                  style={{ 
-                    backgroundImage: `url('https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=2000&q=85')` 
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A1326]/90 via-transparent to-[#0A1326]/40" />
+              <div className="smartcity-visual-col relative flex-1 w-full h-full min-h-[260px] p-5 sm:p-6 flex items-center justify-center">
+                <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-slate-900">
+                  <img 
+                    src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1600&q=80" 
+                    alt="Predictive Command Telemetry 4K"
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                    loading="eager"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A1326]/85 via-transparent to-[#0A1326]/35 pointer-events-none" />
 
-                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/75 backdrop-blur-md border border-white/15 text-[10px] font-mono font-bold text-white shadow-lg">
+                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/15 text-[10px] font-bold tracking-wider text-white shadow-lg pointer-events-none">
                     <span className="h-2 w-2 rounded-full bg-sky-400" />
                     PREDICTIVE COMMAND · 4K
                   </div>
 
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between p-3 rounded-xl bg-slate-950/80 backdrop-blur-md border border-white/10 text-white">
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between p-3 rounded-xl bg-slate-950/85 backdrop-blur-md border border-white/10 text-white pointer-events-none">
                     <div>
-                      <div className="text-[10px] uppercase font-mono text-slate-400">Municipal Health SLA</div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-400">Municipal Health SLA</div>
                       <div className="text-xs font-bold text-sky-300 mt-0.5">98.6 City Resilience Score</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] uppercase font-mono text-emerald-400 font-semibold">$1.2M Saved</div>
+                      <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">$1.2M Saved</div>
                       <div className="text-[10px] text-slate-300">Preventive Core Active</div>
                     </div>
                   </div>

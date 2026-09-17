@@ -38,7 +38,7 @@ export default function AboutSection() {
   return (
     <section
       id="about"
-      className="relative overflow-hidden border-b border-brand-100 bg-brand-50 py-24 text-slate-900 lg:py-32"
+      className="relative overflow-hidden border-b border-brand-100 bg-brand-50 pt-10 pb-24 text-slate-900 lg:pt-14 lg:pb-32"
     >
       <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-slate-300 to-transparent" />
       <div className="absolute -right-24 top-24 h-72 w-72 rounded-full bg-brand-200/50 blur-3xl" />
