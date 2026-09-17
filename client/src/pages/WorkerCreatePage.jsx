@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, BarChart3, BriefcaseBusiness, Filter, Flame, KeyRound, LayoutDashboard, LogOut, Mail, Menu, Phone, ShieldCheck, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, BarChart3, BriefcaseBusiness, Filter, Flame, KeyRound, LayoutDashboard, LogOut, Mail, Menu, Phone, ShieldCheck, Sparkles, UserRound, Users, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
@@ -8,6 +8,7 @@ const skills = ['Road maintenance', 'Waste management', 'Plumbing', 'Emergency r
 
 const adminPages = [
   { label: 'Admin overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'AI City Insights', href: '/admin/insights', icon: Sparkles },
   { label: 'Hotspot Map', href: '/admin/hotspots', icon: Flame },
   { label: 'Manage users', href: '/admin/users', icon: Users },
   { label: 'Manage workers', href: '/admin/workers', icon: ShieldCheck },

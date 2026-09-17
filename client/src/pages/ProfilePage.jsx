@@ -113,6 +113,7 @@ export default function ProfilePage() {
   const sidebarPages = isAdmin
     ? [
         ['Admin overview', LayoutDashboard, '/admin'],
+        ['AI City Insights', Sparkles, '/admin/insights'],
         ['Hotspot Map', Flame, '/admin/hotspots'],
         ['Manage users', Users, '/admin/users'],
         ['Manage workers', ShieldCheck, '/admin/workers'],
