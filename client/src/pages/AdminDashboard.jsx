@@ -15,6 +15,7 @@ import {
   Eye,
   FileText,
   Filter, 
+  Flame,
   LayoutDashboard, 
   Layers,
   LogOut, 
@@ -37,11 +38,13 @@ import {
   Zap 
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import AdminHotspotMap from '../components/AdminHotspotMap';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { calculateDistanceKm, formatDistance } from '../utils/geolocation';
 
 const adminPages = [
   { label: 'Admin overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'Hotspot Map', href: '/admin/hotspots', icon: Flame },
   { label: 'Manage users', href: '/admin/users', icon: Users },
   { label: 'Manage workers', href: '/admin/workers', icon: ShieldCheck },
   { label: 'Issue dashboard', href: '/admin/issues', icon: Filter },
@@ -61,6 +64,7 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const cleanPath = (pagePath || '/admin').split('#')[0].replace(/\/+$/, '') || '/admin';
+  const isHotspotsPage = cleanPath === '/admin/hotspots' || window.location.hash === '#hotspots';
   const isUsersPage = cleanPath === '/admin/users' || window.location.hash === '#users';
   const isWorkersPage = cleanPath === '/admin/workers' || window.location.hash === '#workers';
   const isIssuesPage = cleanPath === '/admin/issues' || window.location.hash === '#issues';
@@ -136,15 +140,17 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
       <Navbar isAuthenticated user={user} onLogout={logout} />
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'dashboard-sidebar-open' : ''}`}>
         <div className="dashboard-sidebar-brand"><div className="dashboard-sidebar-mark">S</div><div><p className="dashboard-sidebar-title">Admin console</p><p className="dashboard-sidebar-subtitle">SmartCity platform</p></div><button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-close-button" aria-label="Close sidebar"><X size={18} /></button></div>
-        <p className="dashboard-sidebar-label">Administration</p>
-        <nav className="dashboard-sidebar-nav">{adminPages.map(({ label, href, icon: Icon }) => <a key={label} href={href} onClick={() => setSidebarOpen(false)} className={`dashboard-sidebar-link ${href === cleanPath || (href === '/admin/reports' && isReportsPage) ? 'dashboard-sidebar-link-active' : ''}`}><Icon size={18} /><span>{label}</span></a>)}</nav>
+        <div className="dashboard-sidebar-scroll">
+          <p className="dashboard-sidebar-label">Administration</p>
+          <nav className="dashboard-sidebar-nav">{adminPages.map(({ label, href, icon: Icon }) => <a key={label} href={href} onClick={() => setSidebarOpen(false)} className={`dashboard-sidebar-link ${href === cleanPath || (href === '/admin/reports' && isReportsPage) || (href === '/admin/hotspots' && isHotspotsPage) ? 'dashboard-sidebar-link-active' : ''}`}><Icon size={18} /><span>{label}</span></a>)}</nav>
+        </div>
         <div className="dashboard-sidebar-footer"><a href="/profile" className="dashboard-sidebar-link"><ShieldCheck size={18} /><span>Admin profile</span></a><button type="button" className="dashboard-sidebar-link"><Settings size={18} /><span>Settings</span></button><button type="button" onClick={logout} className="dashboard-sidebar-link dashboard-logout"><LogOut size={18} /><span>Log out</span></button></div>
       </aside>
       {sidebarOpen && <button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-sidebar-overlay" aria-label="Close sidebar" />}
       <section className="dashboard-main">
-        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Issue dashboard' : isContactsPage ? 'Contact inbox' : isReportsPage ? 'Reports overview' : 'Admin overview'}</span></div>
+        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isHotspotsPage ? 'Hotspot Map' : isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Issue dashboard' : isContactsPage ? 'Contact inbox' : isReportsPage ? 'Reports overview' : 'Admin overview'}</span></div>
         <div className="dashboard-container">
-          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Admin Issue Dashboard' : isContactsPage ? 'Contact inbox' : isReportsPage ? 'Municipal Reports & Analytics' : 'Admin overview'}</h1><p className="dashboard-description">{isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : isIssuesPage ? 'Review, prioritize, edit, and assign every citizen complaint.' : isContactsPage ? 'Review messages about the website, civic help, and community feedback.' : isReportsPage ? 'Real-time municipal performance analytics, resolution velocity, departmental efficiency, and duplicate reduction.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && !isIssuesPage && !isContactsPage && !isReportsPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
+          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isHotspotsPage ? 'Civic Hotspot & Problem Density Map' : isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Admin Issue Dashboard' : isContactsPage ? 'Contact inbox' : isReportsPage ? 'Municipal Reports & Analytics' : 'Admin overview'}</h1><p className="dashboard-description">{isHotspotsPage ? 'Geographic intelligence mapping problem concentration zones, severity heatmaps, and municipal intervention clusters.' : isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : isIssuesPage ? 'Review, prioritize, edit, and assign every citizen complaint.' : isContactsPage ? 'Review messages about the website, civic help, and community feedback.' : isReportsPage ? 'Real-time municipal performance analytics, resolution velocity, departmental efficiency, and duplicate reduction.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && !isIssuesPage && !isContactsPage && !isReportsPage && !isHotspotsPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
           {isUsersPage ? (
             <UsersTable users={users} onStatusChange={updateStatus} />
           ) : isWorkersPage ? (
@@ -166,6 +172,12 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
               workers={workers}
               users={users}
               contacts={contacts}
+            />
+          ) : isHotspotsPage ? (
+            <AdminHotspotMap
+              issues={issues}
+              workers={workers}
+              onUpdateIssue={updateIssue}
             />
           ) : (
             <AdminOverview
@@ -281,6 +293,16 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
           <div className="kpi-data">
             <span className="kpi-number">{pendingContacts.length}</span>
             <span className="kpi-label">Citizen Inquiries</span>
+          </div>
+        </a>
+
+        <a href="/admin/hotspots" className="admin-kpi-card hover:border-red-300 transition">
+          <div className="kpi-icon-wrap bg-red-50 text-red-600">
+            <Flame size={19} />
+          </div>
+          <div className="kpi-data">
+            <span className="kpi-number text-red-600">Hotspot Map</span>
+            <span className="kpi-label">Problem Clusters</span>
           </div>
         </a>
       </div>
@@ -659,6 +681,22 @@ function AdminReportsOverview({ issues = [], workers = [], users = [], contacts 
       };
     })
     .sort((a, b) => b.resolvedCount - a.resolvedCount || b.totalAssigned - a.totalAssigned);
+
+  // Priority Severity Breakdown
+  const priorities = ['Critical', 'High', 'Medium', 'Low'];
+  const priorityStats = priorities.map((p) => {
+    const pIssues = issues.filter((i) => i.priority === p);
+    const pResolved = pIssues.filter((i) => i.status === 'Resolved');
+    const rate = pIssues.length > 0 ? Math.round((pResolved.length / pIssues.length) * 100) : 100;
+    const percentOfTotal = totalIssues > 0 ? Math.round((pIssues.length / totalIssues) * 100) : 0;
+    return {
+      priority: p,
+      total: pIssues.length,
+      resolved: pResolved.length,
+      rate,
+      percentOfTotal,
+    };
+  });
 
   return (
     <div className="space-y-6">

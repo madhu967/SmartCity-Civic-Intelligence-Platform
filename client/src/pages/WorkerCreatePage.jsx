@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, BarChart3, BriefcaseBusiness, Filter, KeyRound, LayoutDashboard, LogOut, Mail, Menu, Phone, ShieldCheck, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, BarChart3, BriefcaseBusiness, Filter, Flame, KeyRound, LayoutDashboard, LogOut, Mail, Menu, Phone, ShieldCheck, UserRound, Users, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
@@ -8,6 +8,7 @@ const skills = ['Road maintenance', 'Waste management', 'Plumbing', 'Emergency r
 
 const adminPages = [
   { label: 'Admin overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'Hotspot Map', href: '/admin/hotspots', icon: Flame },
   { label: 'Manage users', href: '/admin/users', icon: Users },
   { label: 'Manage workers', href: '/admin/workers', icon: ShieldCheck },
   { label: 'Issue dashboard', href: '/admin/issues', icon: Filter },
@@ -71,20 +72,22 @@ export default function WorkerCreatePage() {
             <X size={18} />
           </button>
         </div>
-        <p className="dashboard-sidebar-label">Administration</p>
-        <nav className="dashboard-sidebar-nav">
-          {adminPages.map(({ label, href, icon: Icon }) => (
-            <a
-              key={label}
-              href={href}
-              onClick={() => setSidebarOpen(false)}
-              className={`dashboard-sidebar-link ${href === '/admin/workers/new' ? 'dashboard-sidebar-link-active' : ''}`}
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-            </a>
-          ))}
-        </nav>
+        <div className="dashboard-sidebar-scroll">
+          <p className="dashboard-sidebar-label">Administration</p>
+          <nav className="dashboard-sidebar-nav">
+            {adminPages.map(({ label, href, icon: Icon }) => (
+              <a
+                key={label}
+                href={href}
+                onClick={() => setSidebarOpen(false)}
+                className={`dashboard-sidebar-link ${href === '/admin/workers/new' ? 'dashboard-sidebar-link-active' : ''}`}
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
         <div className="dashboard-sidebar-footer">
           <a href="/profile" className="dashboard-sidebar-link">
             <UserRound size={18} />
