@@ -1,39 +1,45 @@
 import { useEffect, useState } from 'react';
 import {
-  Activity,
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
-  Bell,
-  Bot,
-  CheckCircle2,
-  ClipboardList,
   Clock,
   ExternalLink,
   Eye,
   FileImage,
-  FileWarning,
-  Home,
-  Layers,
   LoaderCircle,
   LogOut,
   MapPin,
   Menu,
   ShieldAlert,
-  ShieldCheck,
-  Sparkles,
   UserCheck,
   UserRound,
   Users,
   X,
   Zap,
 } from 'lucide-react';
+import {
+  CivicIntelligenceIcon,
+  MunicipalIncidentIcon,
+  CivicCommandMatrixIcon,
+  WardTelemetryIcon,
+  MunicipalDocketIcon,
+  VerifiedResolutionSeal,
+  SpatialGisReticle,
+  PriorityBeaconIcon,
+} from '../components/CivicIcons';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { getUserCurrentLocation, calculateDistanceKm, formatDistance } from '../utils/geolocation';
 
 const issueCategories = ['Roads & Potholes', 'Garbage & Sanitation', 'Water Supply', 'Electricity', 'Streetlights', 'Drainage', 'Traffic'];
-const sidebarPages = [['Overview', Home, '/dashboard'], ['Report an issue', FileWarning, '/report-issue'], ['AI issue assistant', Sparkles, '/ai-report'], ['My reports', ClipboardList, '/reports'], ['Nearby activity', Activity, '/activity'], ['Notifications', Bell, '/notifications']];
+const sidebarPages = [
+  ['Overview', CivicCommandMatrixIcon, '/dashboard'],
+  ['Report an issue', MunicipalIncidentIcon, '/report-issue'],
+  ['Vision Triage Engine', CivicIntelligenceIcon, '/ai-report'],
+  ['My reports', MunicipalDocketIcon, '/reports'],
+  ['Ward telemetry', WardTelemetryIcon, '/activity'],
+  ['Incident alerts', PriorityBeaconIcon, '/notifications'],
+];
 const initialForm = {
   category: issueCategories[0],
   location: '',
@@ -359,7 +365,7 @@ export default function ReportIssuePage() {
             <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5">
               {/* Explanatory Banner */}
               <div className="rounded-xl bg-amber-50/90 border border-amber-200 p-3 text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
-                <Sparkles size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                <CivicIntelligenceIcon size={16} className="text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-amber-950">
                     A matching civic issue was located within your immediate vicinity.
@@ -502,9 +508,9 @@ export default function ReportIssuePage() {
           {error && <p className="worker-error">{error}</p>}
           <form className="worker-form report-issue-form" onSubmit={submit}>
             <div className="worker-form-section report-form-section">
-              <div className="report-section-heading"><div><p className="report-kicker">Step 1 · Upload evidence</p><h2>Show us what is happening</h2></div><span className="report-ai-chip"><Bot size={15} /> AI assisted</span></div>
-              <label className="report-first-image-field"><span><FileImage size={16} /> Issue image <small>Optional, maximum 5 MB</small></span><input type="file" accept="image/*" onChange={updateImage} /></label>
-              {imagePreview && <div className="report-ai-result report-ai-result-expanded"><img src={imagePreview} alt="Selected issue evidence" /><div><div className="report-ai-result-label"><span>{isDetecting ? <><LoaderCircle className="report-spinner" size={14} /> AI is inspecting the image</> : <><CheckCircle2 size={14} /> AI result</>}</span>{!isDetecting && <strong>{detection?.category || 'Needs review'}</strong>}</div>{isDetecting ? <p>Identifying the main visible civic subject and preparing the report details.</p> : <div className="report-ai-copy"><strong>{detection?.title || 'Issue title pending'}</strong><p>{detection?.description || detection?.summary}</p></div>}</div></div>}
+              <div className="report-section-heading"><div><p className="report-kicker">Step 1 · Upload evidence</p><h2>Show us what is happening</h2></div><span className="report-ai-chip"><CivicIntelligenceIcon size={15} /> AI assisted</span></div>
+              <label className="report-first-image-field"><span><OpticalVisionIcon size={16} /> Issue image <small>Optional, maximum 5 MB</small></span><input type="file" accept="image/*" onChange={updateImage} /></label>
+              {imagePreview && <div className="report-ai-result report-ai-result-expanded"><img src={imagePreview} alt="Selected issue evidence" /><div><div className="report-ai-result-label"><span>{isDetecting ? <><LoaderCircle className="report-spinner" size={14} /> AI is inspecting the image</> : <><VerifiedResolutionSeal size={14} /> AI result</>}</span>{!isDetecting && <strong>{detection?.category || 'Needs review'}</strong>}</div>{isDetecting ? <p>Identifying the main visible civic subject and preparing the report details.</p> : <div className="report-ai-copy"><strong>{detection?.title || 'Issue title pending'}</strong><p>{detection?.description || detection?.summary}</p></div>}</div></div>}
               <div className="worker-form-grid report-followup-grid">
                 <label className="worker-field">
                   <span>Issue type</span>

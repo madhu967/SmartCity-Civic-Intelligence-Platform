@@ -245,12 +245,44 @@ body {
 .dashboard-description { margin: 8px 0 0; color: #64748b; font-size: 13px; }
 .dashboard-primary-button { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 11px 15px; border: 0; border-radius: 11px; color: #fff; background: #2563eb; box-shadow: 0 8px 20px rgba(37, 99, 235, .2); font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
 .dashboard-primary-button:hover { background: #1d4e8f; }
-.dashboard-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 34px; }
-.dashboard-stat-card { padding: 18px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; box-shadow: 0 5px 20px rgba(15, 23, 42, .04); }
-.dashboard-stat-top { display: flex; align-items: center; justify-content: space-between; color: #94a3b8; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.dashboard-stat-top svg:first-of-type { color: #3b82f6; }
-.dashboard-stat-card strong { display: block; margin-top: 17px; color: #091428; font-size: 27px; line-height: 1; }
-.dashboard-stat-card small { display: block; margin-top: 7px; color: #94a3b8; font-size: 10px; }
+.dashboard-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 28px; }
+.dashboard-stat-card {
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03), 0 1px 2px rgba(15, 23, 42, 0.02);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dashboard-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.07), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+  border-color: #cbd5e1;
+}
+.dashboard-stat-top { display: flex; align-items: center; justify-content: space-between; color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.dashboard-stat-card strong { display: block; margin-top: 14px; color: #091428; font-size: 28px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.dashboard-stat-card small { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; color: #64748b; font-size: 11px; font-weight: 500; }
+.civic-icon-housing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: #f8fafc;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.civic-icon-housing-blue { background: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
+.civic-icon-housing-amber { background: #fffbeb; border-color: #fde68a; color: #d97706; }
+.civic-icon-housing-emerald { background: #ecfdf5; border-color: #a7f3d0; color: #059669; }
+.civic-icon-housing-indigo { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+.civic-icon-housing-red { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+.civic-icon-housing-purple { background: #faf5ff; border-color: #e9d5ff; color: #7c3aed; }
+.dashboard-stat-card:hover .civic-icon-housing { transform: scale(1.06); }
 .dashboard-status-active { color: #059669 !important; font-size: 21px !important; }
 .dashboard-lower-grid { display: grid; grid-template-columns: 1.35fr .65fr; gap: 16px; margin-top: 16px; }
 .dashboard-panel { min-width: 0; padding: 22px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; box-shadow: 0 5px 20px rgba(15, 23, 42, .04); }

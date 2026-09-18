@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react';
-import { Activity, ArrowLeft, Bell, Bot, CheckCircle2, ClipboardList, FileImage, FileWarning, Home, LoaderCircle, LogOut, Menu, Sparkles, UserRound, X } from 'lucide-react';
+import { ArrowLeft, LoaderCircle, LogOut, Menu, UserRound, X } from 'lucide-react';
+import {
+  CivicIntelligenceIcon,
+  MunicipalIncidentIcon,
+  CivicCommandMatrixIcon,
+  WardTelemetryIcon,
+  MunicipalDocketIcon,
+  VerifiedResolutionSeal,
+  OpticalVisionIcon,
+  PriorityBeaconIcon,
+} from '../components/CivicIcons';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
 const sidebarPages = [
-  ['Overview', Home, '/dashboard'],
-  ['Report an issue', FileWarning, '/report-issue'],
-  ['AI issue assistant', Sparkles, '/ai-report'],
-  ['My reports', ClipboardList, '/reports'],
-  ['Nearby activity', Activity, '/activity'],
-  ['Notifications', Bell, '/notifications'],
+  ['Overview', CivicCommandMatrixIcon, '/dashboard'],
+  ['Report an issue', MunicipalIncidentIcon, '/report-issue'],
+  ['Vision Triage Engine', CivicIntelligenceIcon, '/ai-report'],
+  ['My reports', MunicipalDocketIcon, '/reports'],
+  ['Ward telemetry', WardTelemetryIcon, '/activity'],
+  ['Incident alerts', PriorityBeaconIcon, '/notifications'],
 ];
 
 export default function AiIssuePage() {
@@ -44,6 +54,7 @@ export default function AiIssuePage() {
     setError('');
     setResult(null);
     setIsAnalyzing(true);
+
     const reader = new FileReader();
     reader.onload = async () => {
       const imageData = reader.result;
@@ -86,22 +97,22 @@ export default function AiIssuePage() {
       </aside>
       {sidebarOpen && <button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-sidebar-overlay" aria-label="Close sidebar" />}
       <section className="dashboard-main">
-        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>AI issue assistant</span></div>
+        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>Vision Triage Engine</span></div>
         <div className="dashboard-container ai-issue-container">
           <a href="/dashboard" className="profile-back-link"><ArrowLeft size={15} /> Back to dashboard</a>
-          <div className="dashboard-heading-row worker-heading-row"><div><p className="dashboard-eyebrow">Civic intelligence</p><h1 className="dashboard-heading">Let AI read the issue</h1><p className="dashboard-description">Upload a clear image and get a suggested issue title, description, and type.</p></div><span className="report-ai-chip"><Bot size={15} /> Gemini vision</span></div>
+          <div className="dashboard-heading-row worker-heading-row"><div><p className="dashboard-eyebrow">Civic Optical Intelligence</p><h1 className="dashboard-heading">Autonomous Vision Triage</h1><p className="dashboard-description">Upload photographic evidence to automatically categorize faults, estimate severity, and construct the municipal dispatch dossier.</p></div><span className="report-ai-chip"><CivicIntelligenceIcon size={15} /> Vision Engine</span></div>
           {error && <p className="worker-error">{error}</p>}
           <section className="ai-issue-panel">
             <div className="ai-upload-zone">
-              {image ? <img src={image} alt="Uploaded civic issue" className="ai-upload-preview" /> : <div className="ai-upload-empty"><FileImage size={30} /><strong>Upload an issue image</strong><span>Roads, garbage, drains, lights, wires, or traffic infrastructure</span></div>}
-              <label className="dashboard-primary-button ai-upload-button"><FileImage size={17} /> {image ? 'Choose another image' : 'Choose image'}<input type="file" accept="image/*" onChange={analyzeImage} /></label>
+              {image ? <img src={image} alt="Uploaded civic issue" className="ai-upload-preview" /> : <div className="ai-upload-empty"><OpticalVisionIcon size={34} /><strong>Upload an issue image</strong><span>Roads, garbage, drains, lights, wires, or traffic infrastructure</span></div>}
+              <label className="dashboard-primary-button ai-upload-button"><OpticalVisionIcon size={17} /> {image ? 'Choose another image' : 'Choose image'}<input type="file" accept="image/*" onChange={analyzeImage} /></label>
               <small>JPG, PNG, WEBP · maximum 5 MB</small>
             </div>
             <div className="ai-result-panel">
-              <div className="ai-result-heading"><div><p className="report-kicker">AI analysis</p><h2>{isAnalyzing ? 'Inspecting the image...' : result ? 'Here is what Gemini sees' : 'Your result will appear here'}</h2></div>{isAnalyzing ? <LoaderCircle className="report-spinner" size={21} /> : result && <CheckCircle2 size={21} />}</div>
+              <div className="ai-result-heading"><div><p className="report-kicker">AI analysis</p><h2>{isAnalyzing ? 'Inspecting the image...' : result ? 'Here is what Gemini sees' : 'Your result will appear here'}</h2></div>{isAnalyzing ? <LoaderCircle className="report-spinner" size={21} /> : result && <VerifiedResolutionSeal size={21} />}</div>
               {isAnalyzing && <div className="ai-result-loading"><LoaderCircle className="report-spinner" size={18} /> Checking the visible civic problem</div>}
-              {!isAnalyzing && result && <div className="ai-result-content"><div className="ai-detected-type"><span>Detected issue type</span><strong>{result.category}</strong></div><label className="ai-result-field"><span>Suggested title</span><input readOnly value={result.title || 'Civic infrastructure issue'} /></label><label className="ai-result-field"><span>Suggested description</span><textarea readOnly value={result.description || result.summary || ''} rows="5" /></label><p className="ai-result-summary"><Bot size={15} /> {result.summary}</p><a href="/report-issue" className="dashboard-primary-button">Use this in a report <span>→</span></a></div>}
-              {!isAnalyzing && !result && <div className="ai-result-empty"><Sparkles size={23} /><p>Upload an image to see the AI’s suggested issue type, title, and description.</p></div>}
+              {!isAnalyzing && result && <div className="ai-result-content"><div className="ai-detected-type"><span>Detected issue type</span><strong>{result.category}</strong></div><label className="ai-result-field"><span>Suggested title</span><input readOnly value={result.title || 'Civic infrastructure issue'} /></label><label className="ai-result-field"><span>Suggested description</span><textarea readOnly value={result.description || result.summary || ''} rows="5" /></label><p className="ai-result-summary"><CivicIntelligenceIcon size={15} /> {result.summary}</p><a href="/report-issue" className="dashboard-primary-button">Use this in a report <span>→</span></a></div>}
+              {!isAnalyzing && !result && <div className="ai-result-empty"><OpticalVisionIcon size={30} /><p>Upload an image to see the AI’s suggested issue type, title, and description.</p></div>}
             </div>
           </section>
         </div>

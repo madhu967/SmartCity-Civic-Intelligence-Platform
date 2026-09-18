@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, BarChart3, BriefcaseBusiness, Filter, Flame, KeyRound, LayoutDashboard, LogOut, Mail, Menu, Phone, ShieldCheck, Sparkles, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, KeyRound, LogOut, Menu, Phone, UserRound, X } from 'lucide-react';
+import {
+  CivicIntelligenceIcon,
+  HotspotRadarIcon,
+  MunicipalIncidentIcon,
+  CivicCommandMatrixIcon,
+  CitizenMeshIcon,
+  FieldOpsIcon,
+  CivicTelemetryTrendsIcon,
+  MunicipalCommsIcon,
+} from '../components/CivicIcons';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
@@ -7,15 +17,15 @@ const departments = ['Roads and Infrastructure', 'Sanitation', 'Water Services',
 const skills = ['Road maintenance', 'Waste management', 'Plumbing', 'Emergency response', 'Landscaping', 'Electrical repair'];
 
 const adminPages = [
-  { label: 'Admin overview', href: '/admin', icon: LayoutDashboard },
-  { label: 'AI City Insights', href: '/admin/insights', icon: Sparkles },
-  { label: 'Hotspot Map', href: '/admin/hotspots', icon: Flame },
-  { label: 'Manage users', href: '/admin/users', icon: Users },
-  { label: 'Manage workers', href: '/admin/workers', icon: ShieldCheck },
-  { label: 'Issue dashboard', href: '/admin/issues', icon: Filter },
-  { label: 'Contact inbox', href: '/admin/contacts', icon: Mail },
-  { label: 'Create worker', href: '/admin/workers/new', icon: BriefcaseBusiness },
-  { label: 'Reports overview', href: '/admin/reports', icon: BarChart3 },
+  { label: 'Admin overview', href: '/admin', icon: CivicCommandMatrixIcon },
+  { label: 'AI City Insights', href: '/admin/insights', icon: CivicIntelligenceIcon, isAi: true },
+  { label: 'Hotspot Map', href: '/admin/hotspots', icon: HotspotRadarIcon },
+  { label: 'Manage users', href: '/admin/users', icon: CitizenMeshIcon },
+  { label: 'Manage workers', href: '/admin/workers', icon: FieldOpsIcon },
+  { label: 'Issue dashboard', href: '/admin/issues', icon: MunicipalIncidentIcon },
+  { label: 'Contact inbox', href: '/admin/contacts', icon: MunicipalCommsIcon },
+  { label: 'Create worker', href: '/admin/workers/new', icon: FieldOpsIcon },
+  { label: 'Reports overview', href: '/admin/reports', icon: CivicTelemetryTrendsIcon },
 ];
 
 const initialForm = {

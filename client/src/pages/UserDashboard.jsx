@@ -1,40 +1,45 @@
 import { useEffect, useState } from 'react';
 import {
-  Activity,
-  AlertTriangle,
   ArrowRight,
-  Bell,
   Briefcase,
-  CheckCircle2,
   Clock,
   Eye,
-  FileWarning,
-  Home,
-  Layers,
   LogOut,
   MapPin,
   Menu,
   Plus,
-  Radio,
   RefreshCw,
   Settings,
-  ShieldCheck,
-  Sparkles,
   UserCheck,
   UserRound,
   X,
   Zap,
 } from 'lucide-react';
+import {
+  CivicIntelligenceIcon,
+  HotspotRadarIcon,
+  MunicipalIncidentIcon,
+  CivicCommandMatrixIcon,
+  CitizenMeshIcon,
+  FieldOpsIcon,
+  WardTelemetryIcon,
+  MunicipalDocketIcon,
+  VerifiedResolutionSeal,
+  SpatialGisReticle,
+  OpticalVisionIcon,
+  CivicTelemetryTrendsIcon,
+  PriorityBeaconIcon,
+} from '../components/CivicIcons';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
 const pages = [
-  { label: 'Overview', icon: Home, href: '/dashboard' },
-  { label: 'Report an issue', icon: FileWarning, href: '/report-issue' },
-  { label: 'AI issue assistant', icon: Sparkles, href: '/ai-report' },
-  { label: 'My reports', icon: Layers, href: '/reports' },
-  { label: 'Nearby activity', icon: Activity, href: '/activity' },
-  { label: 'Notifications', icon: Bell, href: '/notifications' },
+  { label: 'Overview', icon: CivicCommandMatrixIcon, href: '/dashboard' },
+  { label: 'Report an issue', icon: MunicipalIncidentIcon, href: '/report-issue' },
+  { label: 'Vision Triage Engine', icon: CivicIntelligenceIcon, href: '/ai-report', isAi: true },
+  { label: 'My reports', icon: MunicipalDocketIcon, href: '/reports' },
+  { label: 'Ward telemetry', icon: WardTelemetryIcon, href: '/activity' },
+  { label: 'Incident alerts', icon: PriorityBeaconIcon, href: '/notifications' },
 ];
 
 export default function UserDashboard() {
@@ -222,8 +227,8 @@ export default function UserDashboard() {
           <div className="dashboard-heading-row">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
-                  <ShieldCheck size={13} className="text-blue-600" /> Verified Resident
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                  <VerifiedResolutionSeal size={13} className="text-blue-600" /> Verified Resident
                 </span>
                 <span className="text-xs font-semibold text-slate-400">· Community Contributor</span>
               </div>
@@ -233,9 +238,15 @@ export default function UserDashboard() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <a href="/ai-report" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-sky-300 bg-gradient-to-r from-sky-50 to-blue-50 text-blue-700 text-xs font-bold shadow-xs hover:border-sky-400 hover:shadow-sm transition">
-                <Sparkles size={16} className="text-sky-600" />
-                <span>AI Photo Assistant</span>
+              <a
+                href="/ai-report"
+                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-100 text-xs font-bold shadow-sm hover:bg-slate-800 hover:border-sky-500/50 transition group"
+              >
+                <div className="p-1 rounded-md bg-sky-500/20 text-sky-400 group-hover:scale-110 transition">
+                  <CivicIntelligenceIcon size={15} />
+                </div>
+                <span>Vision Triage Engine</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-mono tracking-wider bg-sky-500/20 text-sky-300 border border-sky-500/30">AI</span>
               </a>
               <a href="/report-issue" className="dashboard-primary-button">
                 <Plus size={16} /> Report an issue
@@ -246,7 +257,7 @@ export default function UserDashboard() {
           {urgentAlerts.length > 0 && (
             <div className="mt-6 p-4 rounded-xl border border-amber-200 bg-amber-50/80 flex items-start gap-3 shadow-xs">
               <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0 text-amber-700">
-                <AlertTriangle size={18} />
+                <PriorityBeaconIcon size={18} />
               </div>
               <div className="flex-1 text-xs">
                 <strong className="font-bold text-amber-900 block">
@@ -270,10 +281,12 @@ export default function UserDashboard() {
             <div className="dashboard-stat-card border-l-4 border-l-blue-600">
               <div className="dashboard-stat-top">
                 <span>My Reports</span>
-                <Layers size={18} className="text-blue-600" />
+                <div className="civic-icon-housing civic-icon-housing-blue">
+                  <MunicipalDocketIcon size={18} />
+                </div>
               </div>
               <strong>{totalUserReports}</strong>
-              <small className="flex items-center justify-between">
+              <small>
                 <span>Submitted by you</span>
                 <a href="/reports" className="text-blue-600 font-bold hover:underline">View all →</a>
               </small>
@@ -281,19 +294,23 @@ export default function UserDashboard() {
 
             <div className="dashboard-stat-card border-l-4 border-l-amber-500">
               <div className="dashboard-stat-top">
-                <span>Active & In Progress</span>
-                <Clock size={18} className="text-amber-600" />
+                <span>In Field Work</span>
+                <div className="civic-icon-housing civic-icon-housing-amber">
+                  <FieldOpsIcon size={18} />
+                </div>
               </div>
               <strong className="text-amber-600">{inProgressUserReports}</strong>
               <small>
-                {inProgressUserReports > 0 ? `${inProgressUserReports} awaiting field resolution` : 'All your complaints resolved'}
+                <span>{inProgressUserReports > 0 ? `${inProgressUserReports} awaiting resolution` : 'All complaints resolved'}</span>
               </small>
             </div>
 
             <div className="dashboard-stat-card border-l-4 border-l-emerald-600">
               <div className="dashboard-stat-top">
                 <span>Resolved</span>
-                <CheckCircle2 size={18} className="text-emerald-600" />
+                <div className="civic-icon-housing civic-icon-housing-emerald">
+                  <VerifiedResolutionSeal size={18} />
+                </div>
               </div>
               <strong className="text-emerald-600">{resolvedUserReports}</strong>
               <small className="flex items-center gap-1">
@@ -304,10 +321,12 @@ export default function UserDashboard() {
 
             <div className="dashboard-stat-card border-l-4 border-l-indigo-600">
               <div className="dashboard-stat-top">
-                <span>Live Community Signals</span>
-                <Radio size={18} className="text-indigo-600 animate-pulse" />
+                <span>Live Telemetry</span>
+                <div className="civic-icon-housing civic-icon-housing-indigo">
+                  <WardTelemetryIcon size={18} />
+                </div>
               </div>
-              <strong className="text-indigo-900">{totalCommunitySignals}</strong>
+              <strong className="text-indigo-950">{totalCommunitySignals}</strong>
               <small>Active city-wide incidents</small>
             </div>
           </div>
@@ -510,7 +529,7 @@ export default function UserDashboard() {
                   <div>
                     <dt>Account Verification</dt>
                     <dd className="text-emerald-600 font-bold flex items-center gap-1">
-                      <CheckCircle2 size={13} /> Active & Verified
+                      <VerifiedResolutionSeal size={14} /> Active & Verified
                     </dd>
                   </div>
                   <div>
@@ -520,19 +539,23 @@ export default function UserDashboard() {
                 </dl>
               </section>
 
-              <section className="dashboard-panel bg-gradient-to-br from-blue-900 to-slate-900 text-white border-0 shadow-lg">
-                <div className="flex items-center gap-2 text-blue-300 text-xs font-bold uppercase tracking-wider mb-2">
-                  <Sparkles size={14} /> AI Civic Assistant
+              <section className="dashboard-panel bg-slate-900 text-white border border-slate-800 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-36 h-36 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="flex items-center gap-2 text-sky-400 text-xs font-bold uppercase tracking-wider mb-2">
+                  <div className="p-1 rounded bg-sky-500/20 text-sky-400">
+                    <CivicIntelligenceIcon size={14} />
+                  </div>
+                  <span>Autonomous Vision Triage</span>
                 </div>
                 <h3 className="text-base font-bold text-white mb-1">Instant Infrastructure Diagnosis</h3>
                 <p className="text-slate-300 text-xs leading-relaxed mb-4">
-                  Take a photo of any damaged road, leak, or electrical fault. Gemini AI categorizes it in seconds and files the report.
+                  Capture photographic telemetry of fractured roads, drainage leaks, or power faults. The optical engine extracts severity vectors and files the report.
                 </p>
                 <a
                   href="/ai-report"
-                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition"
+                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-md transition"
                 >
-                  <Sparkles size={14} /> Launch AI Camera Assistant
+                  <OpticalVisionIcon size={15} /> Launch Vision Inspection
                 </a>
               </section>
             </div>
@@ -559,7 +582,7 @@ function CitizenIssueCard({ issue, onViewImage }) {
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="category-chip">
-            <Layers size={11} /> {issue.category}
+            <MunicipalDocketIcon size={12} /> {issue.category}
           </span>
           <span
             className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
@@ -585,7 +608,7 @@ function CitizenIssueCard({ issue, onViewImage }) {
           )}
           {issue.department && (
             <span className="dept-tag">
-              <Briefcase size={10} /> {issue.department}
+              <FieldOpsIcon size={11} /> {issue.department}
             </span>
           )}
         </div>
@@ -600,7 +623,9 @@ function CitizenIssueCard({ issue, onViewImage }) {
                 : 'bg-amber-100 text-amber-800'
             }`}
           >
-            {isResolved ? <CheckCircle2 size={13} /> : <Radio size={12} className="animate-pulse" />}
+            {isResolved && <VerifiedResolutionSeal size={13} />}
+            {isInProgress && <FieldOpsIcon size={13} />}
+            {!isResolved && !isInProgress && <Clock size={13} />}
             {currentStatus}
           </span>
           <span className="text-[11px] text-slate-400 flex items-center gap-1">

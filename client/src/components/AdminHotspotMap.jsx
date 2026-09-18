@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Compass,
-  Flame,
   Layers,
   MapPin,
   Maximize2,
@@ -15,6 +14,7 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react';
+import { HotspotRadarIcon } from './CivicIcons';
 import { calculateDistanceKm } from '../utils/geolocation';
 
 // 100% FREE, ZERO API KEY Tile Providers (No Carto, No Mapbox, No API keys required)
@@ -732,7 +732,7 @@ export default function AdminHotspotMap({ issues = [], workers = [], onUpdateIss
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-red-700 uppercase tracking-wider flex items-center gap-1">
-              <Flame size={14} className="text-red-600" /> High Density
+              <HotspotRadarIcon size={14} className="text-red-600" /> High Density
             </span>
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -891,7 +891,7 @@ export default function AdminHotspotMap({ issues = [], workers = [], onUpdateIss
               }`}
               title="Toggle continuous heat intensity gradient"
             >
-              <Flame size={12} /> Heatmap
+              <HotspotRadarIcon size={12} /> Heatmap
             </button>
 
             <button
@@ -1005,7 +1005,7 @@ export default function AdminHotspotMap({ issues = [], workers = [], onUpdateIss
           <div className="p-3 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                <Flame size={15} className="text-red-500" /> Hotspot Priority Feed
+                <HotspotRadarIcon size={15} className="text-red-500" /> Hotspot Priority Feed
               </h3>
               <p className="text-[11px] text-slate-500">
                 {displayedClusters.length} concentration areas active

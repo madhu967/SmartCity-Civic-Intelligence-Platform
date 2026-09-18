@@ -1,5 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { Activity, ArrowLeft, BarChart3, Bell, BriefcaseBusiness, Camera, ClipboardList, FileWarning, Filter, Flame, Home, LayoutDashboard, LoaderCircle, LogOut, Mail, MapPin, Menu, Phone, Settings, ShieldCheck, Sparkles, UserRound, Users, X } from 'lucide-react';
+import { ArrowLeft, Camera, LoaderCircle, LogOut, Menu, Phone, Settings, UserRound, X } from 'lucide-react';
+import {
+  CivicIntelligenceIcon,
+  HotspotRadarIcon,
+  MunicipalIncidentIcon,
+  CivicCommandMatrixIcon,
+  CitizenMeshIcon,
+  FieldOpsIcon,
+  WardTelemetryIcon,
+  MunicipalDocketIcon,
+  VerifiedResolutionSeal,
+  SpatialGisReticle,
+  CivicTelemetryTrendsIcon,
+  MunicipalCommsIcon,
+  PriorityBeaconIcon,
+} from '../components/CivicIcons';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
@@ -112,30 +127,30 @@ export default function ProfilePage() {
   const sidebarTitle = isAdmin ? 'Admin console' : isWorker ? 'Worker space' : 'Citizen space';
   const sidebarPages = isAdmin
     ? [
-        ['Admin overview', LayoutDashboard, '/admin'],
-        ['AI City Insights', Sparkles, '/admin/insights'],
-        ['Hotspot Map', Flame, '/admin/hotspots'],
-        ['Manage users', Users, '/admin/users'],
-        ['Manage workers', ShieldCheck, '/admin/workers'],
-        ['Issue dashboard', Filter, '/admin/issues'],
-        ['Contact inbox', Mail, '/admin/contacts'],
-        ['Create worker', BriefcaseBusiness, '/admin/workers/new'],
-        ['Reports overview', BarChart3, '/admin/reports'],
+        ['Admin overview', CivicCommandMatrixIcon, '/admin'],
+        ['AI City Insights', CivicIntelligenceIcon, '/admin/insights'],
+        ['Hotspot Map', HotspotRadarIcon, '/admin/hotspots'],
+        ['Manage users', CitizenMeshIcon, '/admin/users'],
+        ['Manage workers', FieldOpsIcon, '/admin/workers'],
+        ['Issue dashboard', MunicipalIncidentIcon, '/admin/issues'],
+        ['Contact inbox', MunicipalCommsIcon, '/admin/contacts'],
+        ['Create worker', FieldOpsIcon, '/admin/workers/new'],
+        ['Reports overview', CivicTelemetryTrendsIcon, '/admin/reports'],
       ]
     : isWorker
       ? [
-          ['My dashboard', BriefcaseBusiness, '/worker'],
-          ['Availability', Activity, '/worker/availability'],
-          ['Service location', MapPin, '/worker/location'],
-          ['Assigned issues', ClipboardList, '/worker/issues'],
+          ['My dashboard', CivicCommandMatrixIcon, '/worker'],
+          ['Availability', VerifiedResolutionSeal, '/worker/availability'],
+          ['Service location', SpatialGisReticle, '/worker/location'],
+          ['Assigned issues', MunicipalDocketIcon, '/worker/issues'],
         ]
       : [
-          ['Overview', Home, '/dashboard'],
-          ['Report an issue', FileWarning, '/report-issue'],
-          ['AI issue assistant', Sparkles, '/ai-report'],
-          ['My reports', ClipboardList, '/reports'],
-          ['Nearby activity', Activity, '/activity'],
-          ['Notifications', Bell, '/notifications'],
+          ['Overview', CivicCommandMatrixIcon, '/dashboard'],
+          ['Report an issue', MunicipalIncidentIcon, '/report-issue'],
+          ['Vision Triage Engine', CivicIntelligenceIcon, '/ai-report'],
+          ['My reports', MunicipalDocketIcon, '/reports'],
+          ['Ward telemetry', WardTelemetryIcon, '/activity'],
+          ['Incident alerts', PriorityBeaconIcon, '/notifications'],
         ];
   const backPath = isAdmin ? '/admin' : isWorker ? '/worker' : '/dashboard';
 

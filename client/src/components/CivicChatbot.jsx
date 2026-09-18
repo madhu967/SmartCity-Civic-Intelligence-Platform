@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Bot, LoaderCircle, MessageCircle, Send, Sparkles, X } from 'lucide-react';
+import { LoaderCircle, MessageCircle, Send, X } from 'lucide-react';
+import { CivicIntelligenceIcon } from './CivicIcons';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
 const guestSuggestions = ['How does SmartCity work?', 'How do I report a pothole?', 'What issue categories can I report?'];
@@ -40,9 +41,9 @@ export default function CivicChatbot() {
 
   return <div className="civic-chatbot">
     {isOpen && <section className="civic-chat-window" aria-label="Civic AI chat">
-      <header className="civic-chat-header"><div className="civic-chat-brand"><span className="civic-chat-brand-icon"><Bot size={18} /></span><div><strong>Civic AI</strong><small>SmartCity guide</small></div></div><button type="button" className="civic-chat-close" onClick={() => setIsOpen(false)} aria-label="Close Civic AI"><X size={18} /></button></header>
-      <div className="civic-chat-messages">{messages.map((message, index) => <div className={`civic-chat-message civic-chat-message-${message.role}`} key={`${message.role}-${index}`}><span>{message.role === 'assistant' ? <Bot size={14} /> : 'You'}</span><p>{message.content}</p></div>)}{isSending && <div className="civic-chat-message civic-chat-message-assistant"><span><Bot size={14} /></span><p className="civic-chat-typing"><i /><i /><i /></p></div>}</div>
-      {messages.length === 1 && <div className="civic-chat-suggestions">{suggestions.map((suggestion) => <button type="button" key={suggestion} onClick={() => sendMessage(null, suggestion)}><Sparkles size={13} /> {suggestion}</button>)}</div>}
+      <header className="civic-chat-header"><div className="civic-chat-brand"><span className="civic-chat-brand-icon"><CivicIntelligenceIcon size={18} /></span><div><strong>Civic AI</strong><small>SmartCity guide</small></div></div><button type="button" className="civic-chat-close" onClick={() => setIsOpen(false)} aria-label="Close Civic AI"><X size={18} /></button></header>
+      <div className="civic-chat-messages">{messages.map((message, index) => <div className={`civic-chat-message civic-chat-message-${message.role}`} key={`${message.role}-${index}`}><span>{message.role === 'assistant' ? <CivicIntelligenceIcon size={14} /> : 'You'}</span><p>{message.content}</p></div>)}{isSending && <div className="civic-chat-message civic-chat-message-assistant"><span><CivicIntelligenceIcon size={14} /></span><p className="civic-chat-typing"><i /><i /><i /></p></div>}</div>
+      {messages.length === 1 && <div className="civic-chat-suggestions">{suggestions.map((suggestion) => <button type="button" key={suggestion} onClick={() => sendMessage(null, suggestion)}><CivicIntelligenceIcon size={13} /> {suggestion}</button>)}</div>}
       {error && <p className="civic-chat-error">{error}</p>}
       <form className="civic-chat-composer" onSubmit={sendMessage}><input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask Civic AI..." maxLength={1200} aria-label="Message Civic AI" /><button type="submit" disabled={isSending || !input.trim()} aria-label="Send message">{isSending ? <LoaderCircle className="civic-chat-spin" size={17} /> : <Send size={17} />}</button></form>
     </section>}

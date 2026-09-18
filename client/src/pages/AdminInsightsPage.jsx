@@ -1,15 +1,23 @@
 import { useMemo } from 'react';
 import {
   ArrowRight,
-  BarChart3,
-  CheckCircle2,
   Clock,
-  Flame,
-  MapPin,
-  Radio,
-  ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
+import {
+  CivicIntelligenceIcon,
+  HotspotRadarIcon,
+  MunicipalIncidentIcon,
+  CivicCommandMatrixIcon,
+  CitizenMeshIcon,
+  FieldOpsIcon,
+  WardTelemetryIcon,
+  MunicipalDocketIcon,
+  VerifiedResolutionSeal,
+  SpatialGisReticle,
+  OpticalVisionIcon,
+  CivicTelemetryTrendsIcon,
+  PriorityBeaconIcon,
+} from '../components/CivicIcons';
 
 export default function AdminInsightsPage({ issues = [], workers = [], users = [] }) {
   // 1. Category aggregation from real issues
@@ -98,7 +106,7 @@ export default function AdminInsightsPage({ issues = [], workers = [], users = [
       <section className="rounded-2xl bg-slate-900 p-6 md:p-8 text-white shadow-lg border border-slate-800">
         <div className="max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
-            <Sparkles size={14} className="text-cyan-400" />
+            <CivicIntelligenceIcon size={14} className="text-cyan-400" />
             AI Executive Insight
           </div>
 
@@ -118,7 +126,7 @@ export default function AdminInsightsPage({ issues = [], workers = [], users = [
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
-              <BarChart3 size={18} />
+              <CivicTelemetryTrendsIcon size={18} />
             </span>
             <div>
               <h3 className="text-base font-bold text-slate-900">Complaints by Category</h3>
@@ -160,7 +168,7 @@ export default function AdminInsightsPage({ issues = [], workers = [], users = [
         {/* AI Explanation Box for Category Chart */}
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
           <div className="flex items-center gap-2 text-indigo-900 font-bold text-xs uppercase tracking-wide">
-            <Sparkles size={14} className="text-indigo-600" />
+            <CivicIntelligenceIcon size={14} className="text-indigo-600" />
             <span>AI Chart Explanation</span>
           </div>
           <p className="text-xs md:text-sm text-slate-700 leading-relaxed">
@@ -175,7 +183,7 @@ export default function AdminInsightsPage({ issues = [], workers = [], users = [
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-red-50 text-red-600">
-              <MapPin size={18} />
+              <HotspotRadarIcon size={18} />
             </span>
             <div>
               <h3 className="text-base font-bold text-slate-900">Geographic Concentration</h3>
@@ -218,7 +226,7 @@ export default function AdminInsightsPage({ issues = [], workers = [], users = [
         {/* AI Explanation Box for Geographic Hotspots */}
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
           <div className="flex items-center gap-2 text-indigo-900 font-bold text-xs uppercase tracking-wide">
-            <Sparkles size={14} className="text-indigo-600" />
+            <CivicIntelligenceIcon size={14} className="text-indigo-600" />
             <span>AI Location Explanation</span>
           </div>
           <p className="text-xs md:text-sm text-slate-700 leading-relaxed">
@@ -233,7 +241,7 @@ export default function AdminInsightsPage({ issues = [], workers = [], users = [
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
-              <ShieldCheck size={18} />
+              <FieldOpsIcon size={18} />
             </span>
             <div>
               <h3 className="text-base font-bold text-slate-900">City Resolution & Operations</h3>
@@ -272,7 +280,7 @@ export default function AdminInsightsPage({ issues = [], workers = [], users = [
         {/* AI Operational Explanation */}
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
           <div className="flex items-center gap-2 text-indigo-900 font-bold text-xs uppercase tracking-wide">
-            <Sparkles size={14} className="text-indigo-600" />
+            <CivicIntelligenceIcon size={14} className="text-indigo-600" />
             <span>AI Operations Summary</span>
           </div>
           <p className="text-xs md:text-sm text-slate-700 leading-relaxed">

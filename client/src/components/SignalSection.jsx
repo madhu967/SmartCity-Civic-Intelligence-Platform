@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Activity, 
   Cpu, 
-  Radio, 
-  Sparkles
+  Radio
 } from 'lucide-react';
+import { CivicIntelligenceIcon } from './CivicIcons';
 
 export default function SignalSection() {
   const wrapperRef = useRef(null);
@@ -571,7 +571,7 @@ export default function SignalSection() {
               <div className="smartcity-copy-col flex flex-col justify-between w-full lg:w-[48%] p-8 sm:p-10 z-10 shrink-0">
                 <div>
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/15 border border-sky-500/30 mb-4">
-                    <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                    <CivicIntelligenceIcon className="w-3.5 h-3.5 text-sky-400" />
                     <span className="smartcity-card-kicker text-[11px] font-semibold text-sky-400">
                       04 / CIVIC GOVERNANCE · PREDICTIVE
                     </span>

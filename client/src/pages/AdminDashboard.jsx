@@ -1,13 +1,8 @@
 import { useEffect, useState } from 'react';
 import { 
   Activity,
-  AlertTriangle,
   ArrowUpRight,
-  BarChart3, 
-  Bot, 
-  Briefcase,
   Check,
-  CheckCircle2, 
   ChevronDown,
   Clock,
   Compass, 
@@ -15,28 +10,37 @@ import {
   Eye,
   FileText,
   Filter, 
-  Flame,
-  LayoutDashboard, 
   Layers,
   LogOut, 
-  Mail, 
   MapPin, 
   Menu, 
   Navigation, 
   Phone,
-  Radio, 
   RefreshCw,
   Search, 
   Settings, 
-  ShieldCheck, 
-  Sparkles,
   TrendingUp,
   User,
   UserCheck, 
-  Users, 
   X, 
   Zap 
 } from 'lucide-react';
+import {
+  CivicIntelligenceIcon,
+  HotspotRadarIcon,
+  MunicipalIncidentIcon,
+  CivicCommandMatrixIcon,
+  CitizenMeshIcon,
+  FieldOpsIcon,
+  WardTelemetryIcon,
+  MunicipalDocketIcon,
+  VerifiedResolutionSeal,
+  SpatialGisReticle,
+  OpticalVisionIcon,
+  CivicTelemetryTrendsIcon,
+  MunicipalCommsIcon,
+  PriorityBeaconIcon,
+} from '../components/CivicIcons';
 import Navbar from '../components/Navbar';
 import AdminHotspotMap from '../components/AdminHotspotMap';
 import AdminInsightsPage from './AdminInsightsPage';
@@ -44,15 +48,15 @@ import { apiRequest, getAuthHeaders } from '../config/api';
 import { calculateDistanceKm, formatDistance } from '../utils/geolocation';
 
 const adminPages = [
-  { label: 'Admin overview', href: '/admin', icon: LayoutDashboard },
-  { label: 'AI City Insights', href: '/admin/insights', icon: Sparkles },
-  { label: 'Hotspot Map', href: '/admin/hotspots', icon: Flame },
-  { label: 'Manage users', href: '/admin/users', icon: Users },
-  { label: 'Manage workers', href: '/admin/workers', icon: ShieldCheck },
-  { label: 'Issue dashboard', href: '/admin/issues', icon: Filter },
-  { label: 'Contact inbox', href: '/admin/contacts', icon: Mail },
-  { label: 'Create worker', href: '/admin/workers/new', icon: Briefcase },
-  { label: 'Reports overview', href: '/admin/reports', icon: BarChart3 },
+  { label: 'Admin overview', href: '/admin', icon: CivicCommandMatrixIcon },
+  { label: 'AI City Insights', href: '/admin/insights', icon: CivicIntelligenceIcon, isAi: true },
+  { label: 'Hotspot Map', href: '/admin/hotspots', icon: HotspotRadarIcon },
+  { label: 'Manage users', href: '/admin/users', icon: CitizenMeshIcon },
+  { label: 'Manage workers', href: '/admin/workers', icon: FieldOpsIcon },
+  { label: 'Issue dashboard', href: '/admin/issues', icon: MunicipalIncidentIcon },
+  { label: 'Contact inbox', href: '/admin/contacts', icon: MunicipalCommsIcon },
+  { label: 'Create worker', href: '/admin/workers/new', icon: FieldOpsIcon },
+  { label: 'Reports overview', href: '/admin/reports', icon: CivicTelemetryTrendsIcon },
 ];
 
 const departmentOptions = ['Roads and Infrastructure', 'Sanitation', 'Water Services', 'Public Safety', 'Parks and Recreation', 'Electrical Services'];
@@ -237,8 +241,8 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
       {/* Core Live Operational KPIs */}
       <div className="admin-kpi-grid">
         <a href="/admin/insights" className="admin-kpi-card hover:border-purple-300 transition">
-          <div className="kpi-icon-wrap bg-purple-50 text-purple-600">
-            <Sparkles size={19} />
+          <div className="civic-icon-housing civic-icon-housing-purple">
+            <CivicIntelligenceIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number text-purple-600">AI Insights</span>
@@ -247,8 +251,8 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
         </a>
 
         <a href="/admin/issues" className="admin-kpi-card hover:border-blue-300 transition">
-          <div className="kpi-icon-wrap kpi-icon-total">
-            <Radio size={19} />
+          <div className="civic-icon-housing civic-icon-housing-blue">
+            <WardTelemetryIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number">{totalIssues}</span>
@@ -257,8 +261,8 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
         </a>
 
         <a href="/admin/issues" className="admin-kpi-card hover:border-amber-300 transition">
-          <div className="kpi-icon-wrap kpi-icon-unassigned">
-            <AlertTriangle size={19} />
+          <div className="civic-icon-housing civic-icon-housing-amber">
+            <MunicipalIncidentIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number text-amber-600">{unassignedIssues.length}</span>
@@ -267,8 +271,8 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
         </a>
 
         <a href="/admin/issues" className="admin-kpi-card hover:border-red-300 transition">
-          <div className="kpi-icon-wrap kpi-icon-critical">
-            <Zap size={19} />
+          <div className="civic-icon-housing civic-icon-housing-red">
+            <PriorityBeaconIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number text-red-600">{criticalIssues.length}</span>
@@ -277,8 +281,8 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
         </a>
 
         <a href="/admin/issues" className="admin-kpi-card hover:border-indigo-300 transition">
-          <div className="kpi-icon-wrap kpi-icon-inprogress">
-            <Navigation size={19} />
+          <div className="civic-icon-housing civic-icon-housing-indigo">
+            <SpatialGisReticle size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number text-indigo-600">{inProgressIssues.length}</span>
@@ -287,8 +291,8 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
         </a>
 
         <a href="/admin/issues" className="admin-kpi-card hover:border-emerald-300 transition">
-          <div className="kpi-icon-wrap kpi-icon-resolved">
-            <CheckCircle2 size={19} />
+          <div className="civic-icon-housing civic-icon-housing-emerald">
+            <VerifiedResolutionSeal size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number text-emerald-600">{resolvedIssues.length}</span>
@@ -297,8 +301,8 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
         </a>
 
         <a href="/admin/workers" className="admin-kpi-card hover:border-blue-300 transition">
-          <div className="kpi-icon-wrap kpi-icon-total">
-            <ShieldCheck size={19} />
+          <div className="civic-icon-housing civic-icon-housing-blue">
+            <FieldOpsIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number">{activeWorkers.length} / {workers.length}</span>
@@ -307,8 +311,8 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
         </a>
 
         <a href="/admin/contacts" className="admin-kpi-card hover:border-blue-300 transition">
-          <div className="kpi-icon-wrap kpi-icon-unassigned">
-            <Mail size={19} />
+          <div className="civic-icon-housing civic-icon-housing-amber">
+            <MunicipalCommsIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number">{pendingContacts.length}</span>
@@ -317,8 +321,8 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
         </a>
 
         <a href="/admin/hotspots" className="admin-kpi-card hover:border-red-300 transition">
-          <div className="kpi-icon-wrap bg-red-50 text-red-600">
-            <Flame size={19} />
+          <div className="civic-icon-housing civic-icon-housing-red">
+            <HotspotRadarIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number text-red-600">Hotspot Map</span>
@@ -333,7 +337,7 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
           <div className="flex items-center justify-between pb-3 border-b border-amber-200/60">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700">
-                <AlertTriangle size={18} />
+                <PriorityBeaconIcon size={18} />
               </div>
               <div>
                 <h2 className="text-sm font-bold text-amber-900">
@@ -753,8 +757,8 @@ function AdminReportsOverview({ issues = [], workers = [], users = [], contacts 
         </div>
 
         <div className="admin-kpi-card border-l-4 border-l-indigo-600">
-          <div className="kpi-icon-wrap kpi-icon-total">
-            <Sparkles size={19} />
+          <div className="civic-icon-housing civic-icon-housing-indigo">
+            <CivicIntelligenceIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number text-indigo-600">+{totalDuplicatesPrevented}</span>
@@ -763,8 +767,8 @@ function AdminReportsOverview({ issues = [], workers = [], users = [], contacts 
         </div>
 
         <div className="admin-kpi-card border-l-4 border-l-purple-600">
-          <div className="kpi-icon-wrap kpi-icon-total">
-            <ShieldCheck size={19} />
+          <div className="civic-icon-housing civic-icon-housing-purple">
+            <FieldOpsIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number">{activeWorkers.length} / {workers.length}</span>
@@ -773,8 +777,8 @@ function AdminReportsOverview({ issues = [], workers = [], users = [], contacts 
         </div>
 
         <div className="admin-kpi-card border-l-4 border-l-teal-600">
-          <div className="kpi-icon-wrap kpi-icon-unassigned">
-            <Users size={19} />
+          <div className="civic-icon-housing civic-icon-housing-blue">
+            <CitizenMeshIcon size={19} />
           </div>
           <div className="kpi-data">
             <span className="kpi-number">{activeCitizens}</span>
@@ -787,8 +791,8 @@ function AdminReportsOverview({ issues = [], workers = [], users = [], contacts 
       <section className="dashboard-panel bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-white border-blue-200">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
-              <Sparkles size={20} />
+            <div className="w-10 h-10 rounded-xl bg-slate-900 text-sky-400 border border-slate-700 flex items-center justify-center shadow-xs">
+              <CivicIntelligenceIcon size={20} />
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-900">AI Duplicate Detection & Proximity Clustering</h2>
@@ -1691,7 +1695,7 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
         <div className="issue-ai-box">
           <div className="issue-ai-box-heading">
             <span>
-              <Sparkles size={14} className="text-sky-600" /> Gemini Civic Intelligence Engine
+              <CivicIntelligenceIcon size={14} className="text-sky-600" /> Gemini Civic Intelligence Engine
             </span>
             <strong>{issue.aiDetectedCategory || issue.category}</strong>
           </div>

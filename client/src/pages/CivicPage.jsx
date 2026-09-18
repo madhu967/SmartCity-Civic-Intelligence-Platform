@@ -1,37 +1,38 @@
 import { useEffect, useState } from 'react';
 import {
-  Activity,
   AlertCircle,
-  AlertTriangle,
-  Bell,
   Briefcase,
   CalendarDays,
   CheckCircle2,
-  ClipboardList,
   Clock,
   Compass,
   ExternalLink,
   Eye,
-  FileWarning,
   Filter,
-  Home,
-  Layers,
   Locate,
   LogOut,
   MapPin,
   Menu,
   Navigation,
-  Radio,
   RefreshCw,
   Search,
   Settings,
-  ShieldCheck,
-  Sparkles,
   UserCheck,
   UserRound,
   X,
   Zap,
 } from 'lucide-react';
+import {
+  CivicIntelligenceIcon,
+  MunicipalIncidentIcon,
+  CivicCommandMatrixIcon,
+  WardTelemetryIcon,
+  MunicipalDocketIcon,
+  VerifiedResolutionSeal,
+  SpatialGisReticle,
+  FieldOpsIcon,
+  PriorityBeaconIcon,
+} from '../components/CivicIcons';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { calculateDistanceKm, formatDistance, getUserCurrentLocation } from '../utils/geolocation';
@@ -71,7 +72,7 @@ const pageData = {
     eyebrow: 'Updates',
     title: 'Notifications',
     description: 'Real-time timeline of your reports, field assignments, and city resolutions.',
-    icon: Bell,
+    icon: PriorityBeaconIcon,
     emptyTitle: 'You are all caught up',
     emptyText: 'New report updates, community alerts, and field dispatches will appear here.',
     action: 'View dashboard',
@@ -79,12 +80,12 @@ const pageData = {
 };
 
 const sidebarPages = [
-  ['Overview', Home, '/dashboard'],
-  ['Report an issue', FileWarning, '/report-issue'],
-  ['AI issue assistant', Sparkles, '/ai-report'],
-  ['My reports', ClipboardList, '/reports'],
-  ['Nearby activity', Activity, '/activity'],
-  ['Notifications', Bell, '/notifications'],
+  ['Overview', CivicCommandMatrixIcon, '/dashboard'],
+  ['Report an issue', MunicipalIncidentIcon, '/report-issue'],
+  ['Vision Triage Engine', CivicIntelligenceIcon, '/ai-report'],
+  ['My reports', MunicipalDocketIcon, '/reports'],
+  ['Ward telemetry', WardTelemetryIcon, '/activity'],
+  ['Incident alerts', PriorityBeaconIcon, '/notifications'],
 ];
 
 const formatReportDate = (date) =>
@@ -897,7 +898,7 @@ export default function CivicPage({ pagePath }) {
 
                         {item.aiSummary && (
                           <div className="mt-2 p-2 rounded-lg bg-blue-50/70 border border-blue-100 text-xs text-blue-900 flex items-start gap-1.5">
-                            <Sparkles size={13} className="text-blue-600 shrink-0 mt-0.5" />
+                            <CivicIntelligenceIcon size={13} className="text-blue-600 shrink-0 mt-0.5" />
                             <span>
                               <strong>AI Insight:</strong> {item.aiSummary}
                             </span>

@@ -1,5 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Activity, BriefcaseBusiness, Bot, CheckCircle2, ClipboardList, FileImage, LoaderCircle, LogOut, MapPin, Menu, ShieldCheck, UserRound, X } from 'lucide-react';
+import { BriefcaseBusiness, FileImage, LoaderCircle, LogOut, MapPin, Menu, UserRound, X } from 'lucide-react';
+import {
+  CivicIntelligenceIcon,
+  HotspotRadarIcon,
+  MunicipalIncidentIcon,
+  CivicCommandMatrixIcon,
+  CitizenMeshIcon,
+  FieldOpsIcon,
+  WardTelemetryIcon,
+  MunicipalDocketIcon,
+  VerifiedResolutionSeal,
+  SpatialGisReticle,
+  OpticalVisionIcon,
+  CivicTelemetryTrendsIcon,
+  PriorityBeaconIcon,
+} from '../components/CivicIcons';
 import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { getUserCurrentLocation, reverseGeocode } from '../utils/geolocation';
@@ -349,7 +364,7 @@ function WorkerOverview({
 
       {locationStatus && (
         <div className="mb-4 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 font-medium">
-          <CheckCircle2 size={14} className="text-emerald-600" />
+          <VerifiedResolutionSeal size={14} className="text-emerald-600" />
           <span>{locationStatus}</span>
           {user?.latitude && user?.longitude && (
             <span className="text-emerald-700 text-[11px] ml-auto">
@@ -364,7 +379,9 @@ function WorkerOverview({
         <div className="dashboard-stat-card border-l-4 border-l-blue-600">
           <div className="dashboard-stat-top">
             <span>Total Assigned</span>
-            <ClipboardList size={18} className="text-blue-600" />
+            <div className="civic-icon-housing civic-icon-housing-blue">
+              <MunicipalDocketIcon size={18} />
+            </div>
           </div>
           <strong>{totalAssigned}</strong>
           <small>Work orders in your queue</small>
@@ -373,7 +390,9 @@ function WorkerOverview({
         <div className="dashboard-stat-card border-l-4 border-l-red-500">
           <div className="dashboard-stat-top">
             <span>Urgent / Critical</span>
-            <Activity size={18} className="text-red-500" />
+            <div className="civic-icon-housing civic-icon-housing-red">
+              <PriorityBeaconIcon size={18} />
+            </div>
           </div>
           <strong className="text-red-600">{urgentCount}</strong>
           <small>{urgentCount > 0 ? 'High-priority response needed' : 'No urgent alerts'}</small>
@@ -382,7 +401,9 @@ function WorkerOverview({
         <div className="dashboard-stat-card border-l-4 border-l-amber-500">
           <div className="dashboard-stat-top">
             <span>In Field Work</span>
-            <BriefcaseBusiness size={18} className="text-amber-600" />
+            <div className="civic-icon-housing civic-icon-housing-amber">
+              <FieldOpsIcon size={18} />
+            </div>
           </div>
           <strong className="text-amber-600">{inProgressCount}</strong>
           <small>{inProgressCount} tasks currently underway</small>
@@ -391,7 +412,9 @@ function WorkerOverview({
         <div className="dashboard-stat-card border-l-4 border-l-emerald-600">
           <div className="dashboard-stat-top">
             <span>Resolved</span>
-            <CheckCircle2 size={18} className="text-emerald-600" />
+            <div className="civic-icon-housing civic-icon-housing-emerald">
+              <VerifiedResolutionSeal size={18} />
+            </div>
           </div>
           <strong className="text-emerald-600">{resolvedCount}</strong>
           <small className="flex items-center gap-1 font-semibold text-emerald-700">
@@ -635,7 +658,7 @@ function WorkerIssueCard({ issue, onUpdate }) {
         <div className="issue-ai-details worker-ai-details">
           <div className="issue-ai-details-heading">
             <span>
-              <Bot size={15} /> Gemini AI Civic Analysis
+              <CivicIntelligenceIcon size={15} /> Gemini AI Civic Analysis
             </span>
             <strong>{issue.aiDetectedCategory || issue.category}</strong>
           </div>

@@ -1,10 +1,11 @@
 import React from 'react';
-import { Smartphone, Sparkles, AlertOctagon, Layers, UserCheck, CheckCircle2 } from 'lucide-react';
+import { Smartphone, AlertOctagon, Layers, UserCheck, CheckCircle2 } from 'lucide-react';
+import { CivicIntelligenceIcon } from './CivicIcons';
 
 export default function WorkflowSection() {
   const steps = [
     { icon: <Smartphone className="w-5 h-5 text-sky-500" />, title: "Report", desc: "Citizen submits via app" },
-    { icon: <Sparkles className="w-5 h-5 text-brand-500" />, title: "AI Triage", desc: "Auto-classification" },
+    { icon: <CivicIntelligenceIcon className="w-5 h-5 text-brand-500" />, title: "AI Triage", desc: "Auto-classification" },
     { icon: <AlertOctagon className="w-5 h-5 text-rose-500" />, title: "Priority", desc: "Severity scored" },
     { icon: <Layers className="w-5 h-5 text-amber-500" />, title: "De-dupe", desc: "Matches existing" },
     { icon: <UserCheck className="w-5 h-5 text-teal-500" />, title: "Assign", desc: "Routed to crew" },
@@ -22,7 +23,7 @@ export default function WorkflowSection() {
         {/* AI Intelligence Layer Flow */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-600 text-[11px] font-bold uppercase tracking-wider mb-6">
-            <Sparkles className="w-3.5 h-3.5" /> AI Intelligence Layer
+            <CivicIntelligenceIcon className="w-3.5 h-3.5" /> AI Intelligence Layer
           </div>
           <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
             Zero manual triage. <br className="hidden sm:block"/>
@@ -103,7 +104,7 @@ export default function WorkflowSection() {
               <div className="bg-white p-4 rounded-xl shadow-lg shadow-brand-500/10 border border-brand-100 flex items-center justify-between transform scale-[1.02]">
                 <div className="flex items-center gap-2.5">
                   <div className="bg-brand-50 p-1.5 rounded-md">
-                    <Sparkles className="w-3.5 h-3.5 text-brand-600" />
+                    <CivicIntelligenceIcon className="w-3.5 h-3.5 text-brand-600" />
                   </div>
                   <span className="text-[11px] font-bold text-slate-800">AI Analysis Complete</span>
                 </div>
