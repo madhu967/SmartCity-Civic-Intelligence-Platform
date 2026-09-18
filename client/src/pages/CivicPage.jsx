@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import {
+  Activity,
   AlertCircle,
+  Bell,
   Briefcase,
   CalendarDays,
   CheckCircle2,
+  ClipboardList,
   Clock,
   Compass,
   ExternalLink,
   Eye,
+  FileWarning,
   Filter,
   Locate,
   LogOut,
@@ -17,6 +21,7 @@ import {
   RefreshCw,
   Search,
   Settings,
+  ShieldCheck,
   UserCheck,
   UserRound,
   X,
@@ -33,7 +38,6 @@ import {
   FieldOpsIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
-import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { calculateDistanceKm, formatDistance, getUserCurrentLocation } from '../utils/geolocation';
 
@@ -321,7 +325,6 @@ export default function CivicPage({ pagePath }) {
 
   return (
     <main className="dashboard-page min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <Navbar isAuthenticated user={user} onLogout={logout} />
 
       {/* Lightbox */}
       {selectedImage && (

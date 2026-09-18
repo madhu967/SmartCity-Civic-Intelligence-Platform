@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BriefcaseBusiness, FileImage, LoaderCircle, LogOut, MapPin, Menu, UserRound, X } from 'lucide-react';
+import { Activity, BriefcaseBusiness, CheckCircle2, ClipboardList, FileImage, LoaderCircle, LogOut, MapPin, Menu, ShieldCheck, UserRound, X } from 'lucide-react';
 import {
   CivicIntelligenceIcon,
   HotspotRadarIcon,
@@ -15,7 +15,6 @@ import {
   CivicTelemetryTrendsIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
-import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { getUserCurrentLocation, reverseGeocode } from '../utils/geolocation';
 
@@ -29,11 +28,38 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
   const [error, setError] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState('');
-  const cleanPath = (pagePath || '/worker').split('#')[0].replace(/\/+$/, '') || '/worker';
-  const isAvailabilityPage = cleanPath === '/worker/availability' || window.location.hash === '#availability';
-  const isLocationPage = cleanPath === '/worker/location' || window.location.hash === '#location';
-  const isIssuesPage = cleanPath === '/worker/issues' || window.location.hash === '#issues';
-  const isOverviewPage = (cleanPath === '/worker' || cleanPath === '/worker/') && !isAvailabilityPage && !isLocationPage && !isIssuesPage;
+  const [currentPath, setCurrentPath] = useState(() => (pagePath || window.location.pathname).split('#')[0].replace(/\/+$/, '') || '/worker');
+
+  useEffect(() => {
+    const onPopState = () => {
+      const p = window.location.pathname.split('#')[0].replace(/\/+$/, '') || '/worker';
+      setCurrentPath(p);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  useEffect(() => {
+    if (pagePath) {
+      const p = (pagePath || '/worker').split('#')[0].replace(/\/+$/, '') || '/worker';
+      setCurrentPath(p);
+    }
+  }, [pagePath]);
+
+  const handleWorkerNav = (href, e) => {
+    if (e) e.preventDefault();
+    setCurrentPath(href);
+    if (window.location.pathname !== href) {
+      window.history.pushState({}, '', href);
+    }
+    setSidebarOpen(false);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
+  const isAvailabilityPage = currentPath === '/worker/availability' || window.location.hash === '#availability';
+  const isLocationPage = currentPath === '/worker/location' || window.location.hash === '#location';
+  const isIssuesPage = currentPath === '/worker/issues' || window.location.hash === '#issues';
+  const isOverviewPage = (currentPath === '/worker' || currentPath === '/worker/') && !isAvailabilityPage && !isLocationPage && !isIssuesPage;
 
   const syncWorkerLocation = async (manual = false) => {
     setIsLocating(true);
@@ -192,37 +218,151 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
   const currentDescription = isAvailabilityPage ? 'Keep dispatch informed of when you can respond to civic work.' : isLocationPage ? 'Review your assigned ward and update your current operations location.' : isIssuesPage ? 'Open assigned complaints, update progress, and upload completion proof.' : 'Your assignments, service area, and field status at a glance.';
 
   return (
-    <main className="dashboard-page min-h-screen bg-white text-slate-900">
-      <Navbar isAuthenticated user={user} onLogout={logout} />
+    <main className="dashboard-page min-h-screen bg-slate-50 text-slate-900">
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'dashboard-sidebar-open' : ''}`}>
-        <div className="dashboard-sidebar-brand"><div className="dashboard-sidebar-mark">S</div><div><p className="dashboard-sidebar-title">Worker space</p><p className="dashboard-sidebar-subtitle">SmartCity platform</p></div><button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-close-button"><X size={18} /></button></div>
-        <p className="dashboard-sidebar-label">Workspace</p>
-        <nav className="dashboard-sidebar-nav">
-          <a href="/worker" className={`dashboard-sidebar-link ${isOverviewPage ? 'dashboard-sidebar-link-active' : ''}`}><BriefcaseBusiness size={18} /><span>My dashboard</span></a>
-          <a href="/worker/availability" className={`dashboard-sidebar-link ${isAvailabilityPage ? 'dashboard-sidebar-link-active' : ''}`}><Activity size={18} /><span>Availability</span></a>
-          <a href="/worker/location" className={`dashboard-sidebar-link ${isLocationPage ? 'dashboard-sidebar-link-active' : ''}`}><MapPin size={18} /><span>Service location</span></a>
-          <a href="/worker/issues" className={`dashboard-sidebar-link ${isIssuesPage ? 'dashboard-sidebar-link-active' : ''}`}>
-            <ClipboardList size={18} />
-            <span>Assigned issues</span>
-            {assignedIssues.filter((i) => i.status !== 'Resolved').length > 0 && (
-              <span className="dashboard-notification-count">{assignedIssues.filter((i) => i.status !== 'Resolved').length}</span>
-            )}
+        <div className="dashboard-sidebar-brand">
+          <div className="dashboard-sidebar-mark">S</div>
+          <div>
+            <p className="dashboard-sidebar-title">Worker Space</p>
+            <p className="dashboard-sidebar-subtitle">SmartCity Platform</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="dashboard-close-button"
+            aria-label="Close sidebar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="dashboard-sidebar-scroll">
+          <p className="dashboard-sidebar-label">Operations</p>
+          <nav className="dashboard-sidebar-nav">
+            <a
+              href="/worker"
+              onClick={(e) => handleWorkerNav('/worker', e)}
+              className={`dashboard-sidebar-link ${isOverviewPage ? 'dashboard-sidebar-link-active' : ''}`}
+            >
+              <BriefcaseBusiness size={18} />
+              <span>My dashboard</span>
+            </a>
+            <a
+              href="/worker/availability"
+              onClick={(e) => handleWorkerNav('/worker/availability', e)}
+              className={`dashboard-sidebar-link ${isAvailabilityPage ? 'dashboard-sidebar-link-active' : ''}`}
+            >
+              <Activity size={18} />
+              <span>Availability</span>
+            </a>
+            <a
+              href="/worker/location"
+              onClick={(e) => handleWorkerNav('/worker/location', e)}
+              className={`dashboard-sidebar-link ${isLocationPage ? 'dashboard-sidebar-link-active' : ''}`}
+            >
+              <MapPin size={18} />
+              <span>Service location</span>
+            </a>
+            <a
+              href="/worker/issues"
+              onClick={(e) => handleWorkerNav('/worker/issues', e)}
+              className={`dashboard-sidebar-link ${isIssuesPage ? 'dashboard-sidebar-link-active' : ''}`}
+            >
+              <ClipboardList size={18} />
+              <span>Assigned issues</span>
+              {assignedIssues.filter((i) => i.status !== 'Resolved').length > 0 && (
+                <span className="dashboard-notification-count">
+                  {assignedIssues.filter((i) => i.status !== 'Resolved').length}
+                </span>
+              )}
+            </a>
+          </nav>
+        </div>
+        <div className="dashboard-sidebar-footer">
+          <a href="/profile" className="dashboard-sidebar-link">
+            <UserRound size={18} />
+            <span>Profile details</span>
           </a>
-        </nav>
-        <div className="dashboard-sidebar-footer"><a href="/profile" className="dashboard-sidebar-link"><UserRound size={18} /><span>Profile details</span></a><button type="button" onClick={logout} className="dashboard-sidebar-link dashboard-logout"><LogOut size={18} /><span>Log out</span></button></div>
+          <button type="button" onClick={logout} className="dashboard-sidebar-link dashboard-logout">
+            <LogOut size={18} />
+            <span>Log out</span>
+          </button>
+        </div>
       </aside>
-      {sidebarOpen && <button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-sidebar-overlay" />}
+
+      {sidebarOpen && (
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(false)}
+          className="dashboard-sidebar-overlay"
+          aria-label="Close sidebar"
+        />
+      )}
+
       <section className="dashboard-main">
-        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button"><Menu size={20} /></button><span>{currentTitle}</span></div>
+        {/* Executive Sticky Dashboard Top Bar */}
+        <header className="dashboard-topbar">
+          <div className="dashboard-topbar-left">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="dashboard-mobile-menu-button lg:hidden cursor-pointer"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={18} />
+            </button>
+            <div className="dashboard-topbar-welcome">
+              <div className="dashboard-topbar-title">
+                <span>Welcome back, {user?.name || 'Field Officer'}</span>
+                <span className="dashboard-topbar-badge">
+                  <ShieldCheck size={12} className="text-blue-600" />
+                  Field Officer
+                </span>
+              </div>
+              <p className="dashboard-topbar-sub">
+                Municipal Field Operations · Live GPS Telemetry Active
+              </p>
+            </div>
+          </div>
+
+          <div className="dashboard-topbar-right">
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {availability}
+            </span>
+
+            <a
+              href="/profile"
+              className="dashboard-topbar-profile"
+              title="View worker profile"
+            >
+              <div className="dashboard-topbar-avatar bg-amber-600">
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt={`${user.name} avatar`} />
+                ) : (
+                  user.name?.charAt(0).toUpperCase() || 'W'
+                )}
+              </div>
+              <span className="hidden md:inline max-w-[120px] truncate">{user.name}</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={logout}
+              className="dashboard-topbar-logout"
+              title="Log out of field worker portal"
+            >
+              <LogOut size={14} />
+              <span className="hidden sm:inline">Log out</span>
+            </button>
+          </div>
+        </header>
+
         <div className="dashboard-container">
           <div className="dashboard-heading-row">
             <div>
               <p className="dashboard-eyebrow">Field operations</p>
               <h1 className="dashboard-heading">{currentTitle}</h1>
               <p className="dashboard-description">{currentDescription}</p>
-            </div>
-            <div className="dashboard-admin-badge">
-              <ShieldCheck size={17} /> Municipal Field Officer
             </div>
           </div>
           {isOverviewPage ? (
@@ -297,15 +437,15 @@ function WorkerOverview({
       <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-white shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-            {user.name?.charAt(0).toUpperCase() || 'W'}
+            {user?.name?.charAt(0).toUpperCase() || 'W'}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <strong className="text-slate-900 text-sm font-bold">{user.name}</strong>
-              <span className="text-xs text-slate-500">· {user.department}</span>
+              <strong className="text-slate-900 text-sm font-bold">{user?.name || 'Officer'}</strong>
+              <span className="text-xs text-slate-500">· {user?.department || 'Operations'}</span>
             </div>
             <span className="text-xs text-slate-500 block">
-              Skill: <strong>{user.jobSkill}</strong> · Ward: <strong>{user.serviceArea}</strong> ({user.yearsExperience || 0} yrs exp)
+              Skill: <strong>{user?.jobSkill || 'Field'}</strong> · Ward: <strong>{user?.serviceArea || 'General'}</strong> ({user?.yearsExperience || 0} yrs exp)
             </span>
           </div>
         </div>

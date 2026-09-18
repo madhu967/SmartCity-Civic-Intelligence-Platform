@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  CheckCircle2,
   Clock,
   ExternalLink,
   Eye,
   FileImage,
+  FileWarning,
+  Layers,
   LoaderCircle,
   LogOut,
   MapPin,
@@ -25,9 +29,9 @@ import {
   MunicipalDocketIcon,
   VerifiedResolutionSeal,
   SpatialGisReticle,
+  OpticalVisionIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
-import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { getUserCurrentLocation, calculateDistanceKm, formatDistance } from '../utils/geolocation';
 
@@ -251,8 +255,7 @@ export default function ReportIssuePage() {
   if (!user) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-brand-600">Loading report form...</main>;
 
   return (
-    <main className="dashboard-page min-h-screen bg-white text-slate-900">
-      <Navbar isAuthenticated user={user} onLogout={logout} />
+    <main className="dashboard-page min-h-screen bg-slate-50 text-slate-900">
 
       {/* Floating Animated Toast Notification for Immediate Feedback */}
       {toast && (

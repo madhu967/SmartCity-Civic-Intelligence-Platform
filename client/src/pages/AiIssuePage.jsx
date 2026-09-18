@@ -10,7 +10,6 @@ import {
   OpticalVisionIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
-import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
 const sidebarPages = [
@@ -87,8 +86,7 @@ export default function AiIssuePage() {
   if (!user) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-brand-600">Loading AI assistant...</main>;
 
   return (
-    <main className="dashboard-page min-h-screen bg-white text-slate-900">
-      <Navbar isAuthenticated user={user} onLogout={logout} />
+    <main className="dashboard-page min-h-screen bg-slate-50 text-slate-900">
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'dashboard-sidebar-open' : ''}`}>
         <div className="dashboard-sidebar-brand"><div className="dashboard-sidebar-mark">S</div><div><p className="dashboard-sidebar-title">Citizen space</p><p className="dashboard-sidebar-subtitle">SmartCity platform</p></div><button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-close-button" aria-label="Close sidebar"><X size={18} /></button></div>
         <p className="dashboard-sidebar-label">Workspace</p>

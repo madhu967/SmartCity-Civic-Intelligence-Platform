@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Camera, LoaderCircle, LogOut, Menu, Phone, Settings, UserRound, X } from 'lucide-react';
+import { ArrowLeft, Camera, LoaderCircle, LogOut, Mail, MapPin, Menu, Phone, Settings, ShieldCheck, UserRound, X } from 'lucide-react';
 import {
   CivicIntelligenceIcon,
   HotspotRadarIcon,
@@ -15,7 +15,6 @@ import {
   MunicipalCommsIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
-import Navbar from '../components/Navbar';
 import { apiRequest, getAuthHeaders } from '../config/api';
 
 export default function ProfilePage() {
@@ -155,8 +154,7 @@ export default function ProfilePage() {
   const backPath = isAdmin ? '/admin' : isWorker ? '/worker' : '/dashboard';
 
   return (
-    <main className="profile-page min-h-screen bg-white text-slate-900">
-      <Navbar isAuthenticated user={user} onLogout={logout} />
+    <main className="profile-page min-h-screen bg-slate-50 text-slate-900">
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'dashboard-sidebar-open' : ''}`}>
         <div className="dashboard-sidebar-brand"><div className="dashboard-sidebar-mark">S</div><div><p className="dashboard-sidebar-title">{sidebarTitle}</p><p className="dashboard-sidebar-subtitle">SmartCity platform</p></div><button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-close-button" aria-label="Close sidebar"><X size={18} /></button></div>
         <div className="dashboard-sidebar-scroll">

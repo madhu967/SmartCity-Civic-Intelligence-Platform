@@ -135,24 +135,34 @@ export default function App() {
     if (hasSavedSession) {
       if (user?.role === "admin") return <AdminDashboard pagePath="/admin" />;
       if (user?.role === "worker") return <WorkerDashboard pagePath="/worker" />;
-      return <UserDashboard />;
+      return <UserDashboard initialNav="/dashboard" />;
     }
     return <AuthPage />;
   }
 
-  // 2. Generic Dashboard route (dispatches based on active role)
-  if (currentPath === "/dashboard") {
-    if (user?.role === "admin") return <AdminDashboard pagePath="/admin" />;
-    if (user?.role === "worker") return <WorkerDashboard pagePath="/worker" />;
-    return <UserDashboard />;
+  // 2. Citizen Dashboard & Core Workspace routes (persistent sidebar shell, zero page reloads)
+  if (
+    currentPath === "/dashboard" ||
+    currentPath === "/reports" ||
+    currentPath === "/activity" ||
+    currentPath === "/notifications" ||
+    currentPath === "/report-issue" ||
+    currentPath === "/ai-report"
+  ) {
+    if (hasSavedSession) {
+      if (user?.role === "admin") return <AdminDashboard pagePath={currentPath.startsWith("/admin") ? currentPath : "/admin"} />;
+      if (user?.role === "worker") return <WorkerDashboard pagePath={currentPath.startsWith("/worker") ? currentPath : "/worker"} />;
+      return <UserDashboard initialNav={currentPath} />;
+    }
+    return <AuthPage />;
   }
 
   // 3. Admin Routes (starts with /admin)
   if (currentPath.startsWith("/admin")) {
-    if (currentPath === "/admin/workers/new") {
-      return <WorkerCreatePage />;
+    if (hasSavedSession) {
+      return <AdminDashboard pagePath={currentPath} />;
     }
-    return <AdminDashboard pagePath={currentPath} />;
+    return <AuthPage />;
   }
 
   // 4. Worker Routes (starts with /worker)
@@ -160,26 +170,11 @@ export default function App() {
     return <WorkerDashboard pagePath={currentPath} />;
   }
 
-  // 5. Citizen Report & AI Assistance Pages
-  if (currentPath === "/report-issue") {
-    return <ReportIssuePage />;
-  }
-
-  if (currentPath === "/ai-report") {
-    return <AiIssuePage />;
-  }
-
-  // 6. Civic Intelligence & Reports Pages
-  if (
-    currentPath === "/reports" ||
-    currentPath === "/activity" ||
-    currentPath === "/notifications"
-  ) {
-    return <CivicPage pagePath={currentPath} />;
-  }
-
-  // 7. Profile Page
+  // 5. Profile Page
   if (currentPath === "/profile") {
+    if (hasSavedSession && user?.role === "citizen") {
+      return <UserDashboard initialNav="/profile" />;
+    }
     return <ProfilePage />;
   }
 

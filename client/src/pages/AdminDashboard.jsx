@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
 import { 
   Activity,
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
   ArrowUpRight,
+  BarChart3,
+  Briefcase,
   Check,
+  CheckCircle2,
   ChevronDown,
   Clock,
   Compass, 
@@ -10,18 +16,25 @@ import {
   Eye,
   FileText,
   Filter, 
+  KeyRound,
   Layers,
   LogOut, 
+  Mail,
   MapPin, 
   Menu, 
   Navigation, 
   Phone,
+  Plus,
+  Radio,
   RefreshCw,
   Search, 
   Settings, 
   TrendingUp,
   User,
   UserCheck, 
+  UserRound,
+  Users,
+  ShieldCheck,
   X, 
   Zap 
 } from 'lucide-react';
@@ -41,7 +54,6 @@ import {
   MunicipalCommsIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
-import Navbar from '../components/Navbar';
 import AdminHotspotMap from '../components/AdminHotspotMap';
 import AdminInsightsPage from './AdminInsightsPage';
 import { apiRequest, getAuthHeaders } from '../config/api';
@@ -69,14 +81,42 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
   const [contacts, setContacts] = useState([]);
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const cleanPath = (pagePath || '/admin').split('#')[0].replace(/\/+$/, '') || '/admin';
-  const isInsightsPage = cleanPath === '/admin/insights' || window.location.hash === '#insights';
-  const isHotspotsPage = cleanPath === '/admin/hotspots' || window.location.hash === '#hotspots';
-  const isUsersPage = cleanPath === '/admin/users' || window.location.hash === '#users';
-  const isWorkersPage = cleanPath === '/admin/workers' || window.location.hash === '#workers';
-  const isIssuesPage = cleanPath === '/admin/issues' || window.location.hash === '#issues';
-  const isContactsPage = cleanPath === '/admin/contacts' || window.location.hash === '#contacts';
-  const isReportsPage = cleanPath === '/admin/reports' || window.location.hash === '#reports';
+  const [currentPath, setCurrentPath] = useState(() => (pagePath || window.location.pathname).split('#')[0].replace(/\/+$/, '') || '/admin');
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const p = window.location.pathname.split('#')[0].replace(/\/+$/, '') || '/admin';
+      setCurrentPath(p);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (pagePath) {
+      const p = (pagePath || '/admin').split('#')[0].replace(/\/+$/, '') || '/admin';
+      setCurrentPath(p);
+    }
+  }, [pagePath]);
+
+  const handleAdminNav = (href, e) => {
+    if (e) e.preventDefault();
+    setCurrentPath(href);
+    if (window.location.pathname !== href) {
+      window.history.pushState({}, '', href);
+    }
+    setSidebarOpen(false);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
+  const isInsightsPage = currentPath === '/admin/insights' || window.location.hash === '#insights';
+  const isHotspotsPage = currentPath === '/admin/hotspots' || window.location.hash === '#hotspots';
+  const isUsersPage = currentPath === '/admin/users' || window.location.hash === '#users';
+  const isWorkersPage = currentPath === '/admin/workers' || window.location.hash === '#workers';
+  const isIssuesPage = currentPath === '/admin/issues' || window.location.hash === '#issues';
+  const isContactsPage = currentPath === '/admin/contacts' || window.location.hash === '#contacts';
+  const isReportsPage = currentPath === '/admin/reports' || window.location.hash === '#reports';
+  const isNewWorkerPage = currentPath === '/admin/workers/new' || window.location.hash === '#workers/new';
 
   useEffect(() => {
     const loadAdmin = async () => {
@@ -143,25 +183,196 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
   if (!user) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-brand-600">Loading admin dashboard...</main>;
 
   return (
-    <main className="dashboard-page min-h-screen bg-white text-slate-900">
-      <Navbar isAuthenticated user={user} onLogout={logout} />
+    <main className="dashboard-page min-h-screen bg-slate-50 text-slate-900">
+      {/* Persistent Full-Height Sidebar (Starts at top: 0, no navbar) */}
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'dashboard-sidebar-open' : ''}`}>
-        <div className="dashboard-sidebar-brand"><div className="dashboard-sidebar-mark">S</div><div><p className="dashboard-sidebar-title">Admin console</p><p className="dashboard-sidebar-subtitle">SmartCity platform</p></div><button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-close-button" aria-label="Close sidebar"><X size={18} /></button></div>
+        <div className="dashboard-sidebar-brand">
+          <div className="dashboard-sidebar-mark">S</div>
+          <div>
+            <p className="dashboard-sidebar-title">Admin Console</p>
+            <p className="dashboard-sidebar-subtitle">SmartCity Platform</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="dashboard-close-button"
+            aria-label="Close sidebar"
+          >
+            <X size={18} />
+          </button>
+        </div>
         <div className="dashboard-sidebar-scroll">
           <p className="dashboard-sidebar-label">Administration</p>
-          <nav className="dashboard-sidebar-nav">{adminPages.map(({ label, href, icon: Icon }) => <a key={label} href={href} onClick={() => setSidebarOpen(false)} className={`dashboard-sidebar-link ${href === cleanPath || (href === '/admin/reports' && isReportsPage) || (href === '/admin/hotspots' && isHotspotsPage) || (href === '/admin/insights' && isInsightsPage) ? 'dashboard-sidebar-link-active' : ''}`}><Icon size={18} /><span>{label}</span></a>)}</nav>
+          <nav className="dashboard-sidebar-nav">
+            {adminPages.map(({ label, href, icon: Icon, isAi }) => {
+              const isActive =
+                href === currentPath ||
+                (href === '/admin/reports' && isReportsPage) ||
+                (href === '/admin/hotspots' && isHotspotsPage) ||
+                (href === '/admin/insights' && isInsightsPage);
+              return (
+                <a
+                  key={label}
+                  href={href}
+                  onClick={(e) => handleAdminNav(href, e)}
+                  className={`dashboard-sidebar-link ${isActive ? 'dashboard-sidebar-link-active' : ''}`}
+                >
+                  <Icon size={18} />
+                  <span>{label}</span>
+                  {isAi && (
+                    <span className="ml-auto px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-400/30">
+                      AI
+                    </span>
+                  )}
+                </a>
+              );
+            })}
+          </nav>
         </div>
-        <div className="dashboard-sidebar-footer"><a href="/profile" className="dashboard-sidebar-link"><ShieldCheck size={18} /><span>Admin profile</span></a><button type="button" className="dashboard-sidebar-link"><Settings size={18} /><span>Settings</span></button><button type="button" onClick={logout} className="dashboard-sidebar-link dashboard-logout"><LogOut size={18} /><span>Log out</span></button></div>
+        <div className="dashboard-sidebar-footer">
+          <a href="/profile" className="dashboard-sidebar-link">
+            <ShieldCheck size={18} />
+            <span>Admin profile</span>
+          </a>
+          <button type="button" onClick={logout} className="dashboard-sidebar-link dashboard-logout">
+            <LogOut size={18} />
+            <span>Log out</span>
+          </button>
+        </div>
       </aside>
-      {sidebarOpen && <button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-sidebar-overlay" aria-label="Close sidebar" />}
+
+      {sidebarOpen && (
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(false)}
+          className="dashboard-sidebar-overlay"
+          aria-label="Close sidebar"
+        />
+      )}
+
+      {/* Main Content Workspace (To the right of the persistent sidebar) */}
       <section className="dashboard-main">
-        <div className="dashboard-mobile-toolbar"><button type="button" onClick={() => setSidebarOpen(true)} className="dashboard-mobile-menu-button" aria-label="Open sidebar"><Menu size={20} /></button><span>{isInsightsPage ? 'AI City Insights' : isHotspotsPage ? 'Hotspot Map' : isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Issue dashboard' : isContactsPage ? 'Contact inbox' : isReportsPage ? 'Reports overview' : 'Admin overview'}</span></div>
+        {/* Executive Sticky Dashboard Top Bar */}
+        <header className="dashboard-topbar">
+          <div className="dashboard-topbar-left">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="dashboard-mobile-menu-button lg:hidden cursor-pointer"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={18} />
+            </button>
+            <div className="dashboard-topbar-welcome">
+              <div className="dashboard-topbar-title">
+                <span>Welcome back, {user?.name || 'Administrator'}</span>
+                <span className="dashboard-topbar-badge dashboard-topbar-badge-admin">
+                  <CivicCommandMatrixIcon size={12} className="text-purple-600" />
+                  Administrator Console
+                </span>
+              </div>
+              <p className="dashboard-topbar-sub">
+                Municipal Operations Command · Live Incident & Fleet Telemetry Active
+              </p>
+            </div>
+          </div>
+
+          <div className="dashboard-topbar-right">
+            <button
+              type="button"
+              onClick={(e) => handleAdminNav('/admin/insights', e)}
+              className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-xs font-bold text-purple-800 hover:bg-purple-100 transition cursor-pointer shadow-xs"
+            >
+              <CivicIntelligenceIcon size={14} className="text-purple-600" />
+              <span>AI Insights</span>
+            </button>
+
+            <a
+              href="/profile"
+              className="dashboard-topbar-profile"
+              title="View administrator profile"
+            >
+              <div className="dashboard-topbar-avatar bg-purple-600">
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt={`${user.name} avatar`} />
+                ) : (
+                  user.name?.charAt(0).toUpperCase() || 'A'
+                )}
+              </div>
+              <span className="hidden md:inline max-w-[120px] truncate">{user.name}</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={logout}
+              className="dashboard-topbar-logout"
+              title="Log out of administrator console"
+            >
+              <LogOut size={14} />
+              <span className="hidden sm:inline">Log out</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Dynamic White Workspace Container */}
         <div className="dashboard-container">
-          <div className="dashboard-heading-row"><div><p className="dashboard-eyebrow">Administrator console</p><h1 className="dashboard-heading">{isInsightsPage ? 'AI City Insights & Analytics' : isHotspotsPage ? 'Civic Hotspot & Problem Density Map' : isUsersPage ? 'Manage users' : isWorkersPage ? 'Manage workers' : isIssuesPage ? 'Admin Issue Dashboard' : isContactsPage ? 'Contact inbox' : isReportsPage ? 'Municipal Reports & Analytics' : 'Admin overview'}</h1><p className="dashboard-description">{isInsightsPage ? 'Cognitive civic analytics where AI interprets chart anomalies, explains escalation trends, and delivers municipal action directives.' : isHotspotsPage ? 'Geographic intelligence mapping problem concentration zones, severity heatmaps, and municipal intervention clusters.' : isUsersPage ? 'Review citizen accounts and manage their access.' : isWorkersPage ? 'View every field worker and their current service status.' : isIssuesPage ? 'Review, prioritize, edit, and assign every citizen complaint.' : isContactsPage ? 'Review messages about the website, civic help, and community feedback.' : isReportsPage ? 'Real-time municipal performance analytics, resolution velocity, departmental efficiency, and duplicate reduction.' : 'A clear view of your SmartCity platform.'}</p></div>{!isUsersPage && !isWorkersPage && !isIssuesPage && !isContactsPage && !isReportsPage && !isHotspotsPage && !isInsightsPage && <div className="dashboard-admin-badge"><ShieldCheck size={17} /> Administrator access</div>}</div>
-          {isUsersPage ? (
+          <div className="dashboard-heading-row">
+            <div>
+              <p className="dashboard-eyebrow">Administrator console</p>
+              <h1 className="dashboard-heading">
+                {isNewWorkerPage
+                  ? 'Create a Field Officer'
+                  : isInsightsPage
+                  ? 'AI City Insights & Analytics'
+                  : isHotspotsPage
+                  ? 'Civic Hotspot & Problem Density Map'
+                  : isUsersPage
+                  ? 'Manage Users'
+                  : isWorkersPage
+                  ? 'Manage Field Officers'
+                  : isIssuesPage
+                  ? 'Admin Issue Dashboard'
+                  : isContactsPage
+                  ? 'Contact Inbox'
+                  : isReportsPage
+                  ? 'Municipal Reports & Analytics'
+                  : 'Municipal Operations Overview'}
+              </h1>
+              <p className="dashboard-description">
+                {isNewWorkerPage
+                  ? 'Create secure credentials and assign a civic service profile for municipal field operations.'
+                  : isInsightsPage
+                  ? 'Cognitive civic analytics where AI interprets chart anomalies, explains escalation trends, and delivers municipal action directives.'
+                  : isHotspotsPage
+                  ? 'Geographic intelligence mapping problem concentration zones, severity heatmaps, and municipal intervention clusters.'
+                  : isUsersPage
+                  ? 'Review citizen accounts and manage their access credentials.'
+                  : isWorkersPage
+                  ? 'View every field worker, active workloads, and current service status.'
+                  : isIssuesPage
+                  ? 'Review, prioritize, edit, and dispatch field personnel to citizen complaints.'
+                  : isContactsPage
+                  ? 'Review messages about the platform, civic help requests, and community feedback.'
+                  : isReportsPage
+                  ? 'Real-time municipal performance analytics, resolution velocity, and departmental efficiency metrics.'
+                  : 'A consolidated real-time command overview of your SmartCity platform.'}
+              </p>
+            </div>
+          </div>
+
+          {isNewWorkerPage ? (
+            <AdminCreateWorker
+              departments={departmentOptions}
+              onWorkerCreated={(newWorker) => {
+                setWorkers((current) => [newWorker, ...current]);
+                handleAdminNav('/admin/workers');
+              }}
+              onCancel={(e) => handleAdminNav('/admin/workers', e)}
+            />
+          ) : isUsersPage ? (
             <UsersTable users={users} onStatusChange={updateStatus} />
           ) : isWorkersPage ? (
-            <WorkersTable workers={workers} />
+            <WorkersTable workers={workers} onAddWorker={(e) => handleAdminNav('/admin/workers/new', e)} />
           ) : isIssuesPage ? (
             <AdminIssues issues={issues} workers={workers} onUpdate={updateIssue} />
           ) : isContactsPage ? (
@@ -983,7 +1194,7 @@ function UsersTable({ users, onStatusChange }) {
   return <section className="dashboard-panel admin-users-panel"><div className="dashboard-panel-heading"><div><h2>Citizen accounts</h2><p>{users.length} registered users</p></div><Users size={21} /></div><div className="admin-users-list">{users.length === 0 ? <div className="admin-empty-users">No citizen accounts have been registered yet.</div> : users.map((user) => <div className="admin-user-row" key={user.id}><div className="dashboard-avatar">{user.profileImage ? <img src={user.profileImage} alt={`${user.name} profile`} /> : user.name?.charAt(0).toUpperCase()}</div><div className="admin-user-info"><strong>{user.name}</strong><span>{user.email}</span></div><div className={`admin-status ${user.isActive ? 'admin-status-active' : 'admin-status-inactive'}`}>{user.isActive ? 'Active' : 'Inactive'}</div><button type="button" onClick={() => onStatusChange(user.id, !user.isActive)} className="admin-status-button">{user.isActive ? 'Deactivate' : 'Activate'}</button></div>)}</div></section>;
 }
 
-function WorkersTable({ workers }) {
+function WorkersTable({ workers, onAddWorker }) {
   const [selectedDepartment, setSelectedDepartment] = useState('All departments');
   const departments = [...new Set(workers.map((worker) => worker.department || 'Unassigned department'))].sort((firstDepartment, secondDepartment) => firstDepartment.localeCompare(secondDepartment));
   const visibleWorkers = selectedDepartment === 'All departments' ? workers : workers.filter((worker) => (worker.department || 'Unassigned department') === selectedDepartment);
@@ -1001,7 +1212,19 @@ function WorkersTable({ workers }) {
           <h2>Field workers</h2>
           <p>{workers.length} workers registered with real-time GPS operations</p>
         </div>
-        <ShieldCheck size={21} />
+        <div className="flex items-center gap-3">
+          {onAddWorker && (
+            <button
+              type="button"
+              onClick={onAddWorker}
+              className="dashboard-primary-button cursor-pointer text-xs py-1.5 px-3 flex items-center gap-1.5"
+            >
+              <Plus size={13} />
+              <span>Create Worker</span>
+            </button>
+          )}
+          <ShieldCheck size={21} />
+        </div>
       </div>
       {workers.length === 0 ? (
         <div className="admin-empty-users">No workers have been created yet.</div>
@@ -2041,5 +2264,266 @@ function AdminIssueCard({ issue, workers, departments, onUpdate }) {
         </div>
       )}
     </article>
+  );
+}
+
+const defaultWorkerSkills = [
+  'Road maintenance',
+  'Waste management',
+  'Plumbing',
+  'Emergency response',
+  'Landscaping',
+  'Electrical repair',
+];
+
+function AdminCreateWorker({ departments = [], onWorkerCreated, onCancel }) {
+  const initialForm = {
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    department: departments[0] || 'Roads and Infrastructure',
+    jobSkill: defaultWorkerSkills[0],
+    serviceArea: '',
+    yearsExperience: '',
+    availability: 'Available',
+    location: '',
+  };
+
+  const [form, setForm] = useState(initialForm);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const updateField = (event) => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      [event.target.name]: event.target.value,
+    }));
+  };
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setMessage('');
+    setIsSubmitting(true);
+    try {
+      const data = await apiRequest('/admin/workers', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          ...form,
+          yearsExperience: Number(form.yearsExperience) || 0,
+        }),
+      });
+      setMessage('Worker account created successfully. They can now log in with the email and password provided.');
+      setForm(initialForm);
+      if (onWorkerCreated && data?.worker) {
+        onWorkerCreated(data.worker);
+      }
+    } catch (requestError) {
+      setError(
+        requestError.details
+          ? `${requestError.message}: ${requestError.details}`
+          : requestError.message
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between pb-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="profile-back-link cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-blue-600"
+        >
+          <ArrowLeft size={14} /> Back to Field Officers
+        </button>
+      </div>
+
+      {message && (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <span>{message}</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+          <AlertTriangle size={16} className="text-rose-600 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form className="worker-form space-y-6" onSubmit={submit}>
+        <div className="worker-form-section dashboard-panel">
+          <div className="pb-3 border-b border-slate-100 mb-4">
+            <h2 className="text-sm font-bold text-slate-900">Identity & System Access</h2>
+            <p className="text-xs text-slate-500">Provide personal credentials for mobile/field app authentication.</p>
+          </div>
+          <div className="worker-form-grid">
+            <WorkerInputField
+              label="Full name"
+              name="name"
+              value={form.name}
+              onChange={updateField}
+              placeholder="Alex Morgan"
+              icon={<UserRound size={15} />}
+            />
+            <WorkerInputField
+              label="Email address"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={updateField}
+              placeholder="alex@smartcity.local"
+              icon={<Mail size={15} />}
+            />
+            <WorkerInputField
+              label="Phone number"
+              name="phone"
+              value={form.phone}
+              onChange={updateField}
+              placeholder="+1 555 0100"
+              icon={<Phone size={15} />}
+            />
+            <WorkerInputField
+              label="Worker password"
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={updateField}
+              placeholder="Minimum 6 characters"
+              icon={<KeyRound size={15} />}
+            />
+          </div>
+        </div>
+
+        <div className="worker-form-section dashboard-panel">
+          <div className="pb-3 border-b border-slate-100 mb-4">
+            <h2 className="text-sm font-bold text-slate-900">Service Assignment</h2>
+            <p className="text-xs text-slate-500">Assign operational ward jurisdiction and municipal specialty.</p>
+          </div>
+          <div className="worker-form-grid">
+            <WorkerSelectField
+              label="Department"
+              name="department"
+              value={form.department}
+              onChange={updateField}
+              options={departments}
+            />
+            <WorkerSelectField
+              label="Job / skill"
+              name="jobSkill"
+              value={form.jobSkill}
+              onChange={updateField}
+              options={defaultWorkerSkills}
+            />
+            <WorkerInputField
+              label="Service area / ward"
+              name="serviceArea"
+              value={form.serviceArea}
+              onChange={updateField}
+              placeholder="Ward 04 - North District"
+              icon={<MapPin size={15} />}
+            />
+            <WorkerInputField
+              label="Location"
+              name="location"
+              value={form.location}
+              onChange={updateField}
+              placeholder="North operations hub"
+              icon={<Navigation size={15} />}
+            />
+            <WorkerInputField
+              label="Years of experience"
+              name="yearsExperience"
+              type="number"
+              min="0"
+              value={form.yearsExperience}
+              onChange={updateField}
+              placeholder="5"
+              icon={<Briefcase size={15} />}
+            />
+            <WorkerSelectField
+              label="Availability"
+              name="availability"
+              value={form.availability}
+              onChange={updateField}
+              options={['Available', 'On duty', 'Unavailable']}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="dashboard-primary-button cursor-pointer flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw size={14} className="animate-spin" />
+                <span>Creating Worker...</span>
+              </>
+            ) : (
+              <>
+                <span>Create Worker Account</span>
+                <ArrowRight size={14} />
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function WorkerInputField({ label, icon, ...props }) {
+  return (
+    <label className="worker-field block">
+      <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 mb-1.5">
+        {icon}
+        {label}
+      </span>
+      <input
+        required
+        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-500 focus:outline-none transition"
+        {...props}
+      />
+    </label>
+  );
+}
+
+function WorkerSelectField({ label, name, value, onChange, options }) {
+  return (
+    <label className="worker-field block">
+      <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 mb-1.5">
+        {label}
+      </span>
+      <select
+        required
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-500 focus:outline-none transition"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
