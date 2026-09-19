@@ -1686,8 +1686,8 @@ export default function UserDashboard({ initialNav = '/dashboard' }) {
                   {/* Upload box */}
                   <div className="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/70 text-center">
                     {aiImage ? (
-                      <div className="w-full max-w-sm rounded-xl overflow-hidden border border-slate-200 shadow-md">
-                        <img src={aiImage} alt="Civic problem uploaded" className="w-full h-56 object-cover" />
+                      <div className="w-full max-w-md rounded-xl overflow-hidden border border-slate-200 shadow-md">
+                        <img src={aiImage} alt="Civic problem uploaded" className="w-full h-64 object-cover" />
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -1697,7 +1697,7 @@ export default function UserDashboard({ initialNav = '/dashboard' }) {
                         <strong className="block text-sm font-bold text-slate-800">
                           Upload Civic Fault Photograph
                         </strong>
-                        <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                        <p className="text-xs text-slate-500 max-w-md mx-auto">
                           Road fractures, leaking mains, broken poles, waste heaps, or dangling wires.
                         </p>
                       </div>

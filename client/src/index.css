@@ -393,14 +393,14 @@ body {
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
 }
 
-.dashboard-container { max-width: 1280px; margin: 0 auto; padding: 28px 36px 60px; }
-.dashboard-heading-row { display: flex; align-items: end; justify-content: space-between; gap: 22px; }
+.dashboard-container { width: 100%; max-width: 100%; margin: 0; padding: 28px 32px 60px; box-sizing: border-box; }
+.dashboard-heading-row { display: flex; align-items: end; justify-content: space-between; gap: 22px; width: 100%; }
 .dashboard-eyebrow { margin: 0 0 8px; color: #2563eb; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
 .dashboard-heading { margin: 0; color: #091428; font-size: 32px; font-weight: 800; line-height: 1.1; }
-.dashboard-description { margin: 8px 0 0; color: #64748b; font-size: 13px; }
+.dashboard-description { margin: 8px 0 0; color: #64748b; font-size: 13px; max-width: 900px; }
 .dashboard-primary-button { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 11px 15px; border: 0; border-radius: 11px; color: #fff; background: #2563eb; box-shadow: 0 8px 20px rgba(37, 99, 235, .2); font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
 .dashboard-primary-button:hover { background: #1d4e8f; }
-.dashboard-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 28px; }
+.dashboard-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 28px; width: 100%; }
 .dashboard-stat-card {
   position: relative;
   overflow: hidden;
@@ -688,7 +688,7 @@ body {
   .worker-profile-actions { width: 100%; justify-content: flex-end; }
 }
 .civic-report-assignment { margin: 12px 0 0; color: #1d4e8f; font-size: 11px; }
-.worker-issues-panel { max-width: 1040px; margin-top: 30px; }
+.worker-issues-panel { width: 100%; max-width: 100%; margin-top: 24px; }
 .worker-issues-list { display: grid; gap: 14px; margin-top: 20px; }
 .worker-issue-card { padding: 18px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 4px 15px rgba(15, 23, 42, .04); }
 .worker-issue-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
@@ -710,10 +710,10 @@ body {
 .worker-proof-input input { display: none; }
 .worker-proof-status { margin: 10px 0 0; color: #b45309; font-size: 11px; font-weight: 800; }
 .worker-heading-row { margin-bottom: 24px; }
-.worker-form { display: grid; gap: 16px; max-width: 920px; }
+.worker-form { display: grid; gap: 18px; width: 100%; max-width: 100%; }
 .worker-form-section { padding: 22px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; box-shadow: 0 5px 20px rgba(15, 23, 42, .04); }
 .worker-form-section h2 { margin: 0 0 18px; color: #091428; font-size: 16px; font-weight: 800; }
-.worker-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+.worker-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 .worker-field { display: grid; gap: 7px; color: #475569; font-size: 11px; font-weight: 800; }
 .worker-field > span { display: flex; align-items: center; gap: 6px; }
 .worker-field input,
@@ -723,7 +723,7 @@ body {
 .worker-field select:focus,
 .worker-field textarea:focus { border-color: #60a5fa; background: #fff; box-shadow: 0 0 0 3px #eff6ff; }
 .worker-submit { justify-self: start; }
-.report-issue-form { max-width: 920px; }
+.report-issue-form { width: 100%; max-width: 100%; }
 .report-description-field { grid-column: 1 / -1; }
 .report-image-field { grid-column: 1 / -1; }
 .report-image-field small { color: #94a3b8; font-size: 10px; font-weight: 600; }
@@ -755,8 +755,8 @@ body {
 .report-submit-panel strong { color: #091428; font-size: 13px; }
 .report-submit-panel span { color: #64748b; font-size: 11px; }
 @keyframes report-spin { to { transform: rotate(360deg); } }
-.ai-issue-container { max-width: 1180px; }
-.ai-issue-panel { display: grid; grid-template-columns: minmax(280px, .9fr) minmax(360px, 1.1fr); gap: 18px; }
+.ai-issue-container { width: 100%; max-width: 100%; }
+.ai-issue-panel { display: grid; grid-template-columns: minmax(280px, .9fr) minmax(360px, 1.1fr); gap: 18px; width: 100%; }
 .ai-upload-zone, .ai-result-panel { min-height: 420px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; box-shadow: 0 5px 20px rgba(15, 23, 42, .04); }
 .ai-upload-zone { display: grid; align-content: center; justify-items: center; gap: 14px; text-align: center; background: #f8fbff; }
 .ai-upload-empty { display: grid; justify-items: center; gap: 8px; color: #64748b; }
@@ -902,9 +902,9 @@ body {
 .civic-report-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #f1f5f9; color: #94a3b8; font-size: 10px; }
 .civic-report-resolved { color: #059669; font-weight: 700; }
 .worker-stat-text { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px !important; }
-.worker-availability-panel { max-width: 920px; margin-top: 30px; }
-.worker-availability-form { display: grid; grid-template-columns: 1fr 1.5fr auto; align-items: end; gap: 14px; margin-top: 22px; }
-.worker-static-panel { max-width: 920px; margin-top: 30px; }
+.worker-availability-panel { width: 100%; max-width: 100%; margin-top: 24px; }
+.worker-availability-form { display: grid; grid-template-columns: 240px 1fr auto; align-items: end; gap: 16px; margin-top: 22px; width: 100%; }
+.worker-static-panel { width: 100%; max-width: 100%; margin-top: 24px; }
 .worker-static-panel h2 { margin: 0; color: #091428; font-size: 17px; }
 .worker-static-panel p { margin: 7px 0 0; color: #64748b; font-size: 12px; }
 .worker-static-items { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
@@ -914,7 +914,7 @@ body {
 .worker-static-callout span { display: block; margin-top: 3px; color: #64748b; font-size: 11px; }
 .admin-worker-meta { display: block; margin-top: 3px; color: #64748b; font-size: 10px; }
 
-.profile-content { max-width: 940px; margin: 0 auto 0 256px; padding: 36px 42px 70px; }
+.profile-content { width: calc(100% - 256px); max-width: 100%; margin: 0 0 0 256px; padding: 28px 32px 60px; box-sizing: border-box; }
 .dashboard-navbar { z-index: 70; }
 .profile-mobile-toolbar { display: none; }
 .profile-back-link { display: inline-flex; align-items: center; gap: 7px; color: #64748b; font-size: 12px; font-weight: 700; text-decoration: none; }
@@ -922,7 +922,7 @@ body {
 .profile-heading { margin-top: 38px; }
 .profile-heading h1 { margin: 7px 0 0; color: #091428; font-size: 32px; font-weight: 800; }
 .profile-heading > p:last-child { margin: 8px 0 0; color: #64748b; font-size: 13px; }
-.profile-card { margin-top: 30px; overflow: hidden; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; box-shadow: 0 8px 28px rgba(15, 23, 42, .06); }
+.profile-card { margin-top: 30px; overflow: hidden; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; box-shadow: 0 8px 28px rgba(15, 23, 42, .06); width: 100%; max-width: 100%; }
 .profile-card-banner { display: flex; align-items: center; gap: 15px; padding: 28px; color: #fff; background: #091428; }
 .profile-avatar-upload { position: relative; flex: 0 0 auto; }
 .profile-large-avatar { display: grid; width: 78px; height: 78px; place-items: center; overflow: hidden; border: 3px solid #93c5fd; border-radius: 50%; color: #1d4e8f; background: #dbeafe; font-size: 28px; font-weight: 800; }
@@ -943,7 +943,7 @@ body {
 .profile-image-actions .dashboard-primary-button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; }
 .profile-card-banner h2 { margin: 0; font-size: 20px; font-weight: 800; }
 .profile-card-banner p { margin: 4px 0 0; color: #93c5fd; font-size: 11px; text-transform: capitalize; }
-.profile-detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #e2e8f0; }
+.profile-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: #e2e8f0; }
 .profile-detail-grid > div { padding: 22px 25px; background: #fff; }
 .profile-detail-grid span { display: flex; align-items: center; gap: 7px; color: #94a3b8; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .profile-detail-grid span svg { color: #3b82f6; }

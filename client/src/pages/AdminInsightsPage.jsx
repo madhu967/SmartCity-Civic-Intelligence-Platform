@@ -103,8 +103,8 @@ export default function AdminInsightsPage({ issues = [], workers = [], users = [
   return (
     <div className="space-y-6">
       {/* 1. HERO AI BRIEFING */}
-      <section className="rounded-2xl bg-slate-900 p-6 md:p-8 text-white shadow-lg border border-slate-800">
-        <div className="max-w-3xl space-y-3">
+      <section className="rounded-2xl bg-slate-900 p-6 md:p-8 text-white shadow-lg border border-slate-800 w-full">
+        <div className="w-full space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
             <CivicIntelligenceIcon size={14} className="text-cyan-400" />
             AI Executive Insight
