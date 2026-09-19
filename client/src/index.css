@@ -127,10 +127,67 @@ body {
 .dashboard-sidebar-brand {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  padding: 0 6px 16px;
+  padding: 0 4px 16px;
   border-bottom: 1px solid rgba(147, 197, 253, 0.16);
   flex-shrink: 0;
+}
+
+.dashboard-sidebar-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  min-width: 0;
+  flex: 1;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.dashboard-sidebar-brand-link:hover {
+  opacity: 0.9;
+}
+
+.dashboard-sidebar-logo-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.dashboard-sidebar-brand-link:hover .dashboard-sidebar-logo-icon {
+  transform: scale(1.06);
+}
+
+.dashboard-sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dashboard-sidebar-brand-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.dashboard-sidebar-brand-title span {
+  color: #60a5fa;
+}
+
+.dashboard-sidebar-brand-tagline {
+  margin: 2px 0 0;
+  color: #93c5fd;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .dashboard-sidebar-mark {

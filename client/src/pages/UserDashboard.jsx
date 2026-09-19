@@ -576,11 +576,19 @@ export default function UserDashboard({ initialNav = '/dashboard' }) {
       {/* Persistent Full-Height Sidebar (Starts at top: 0, no navbar) */}
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'dashboard-sidebar-open' : ''}`}>
         <div className="dashboard-sidebar-brand">
-          <div className="dashboard-sidebar-mark">S</div>
-          <div>
-            <p className="dashboard-sidebar-title">Citizen Space</p>
-            <p className="dashboard-sidebar-subtitle">SmartCity Platform</p>
-          </div>
+          <a href="/" className="dashboard-sidebar-brand-link" title="SmartCity Home">
+            <svg className="dashboard-sidebar-logo-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M54 0c5.523 0 10 4.477 10 10v44c0 5.523-4.477 10-10 10H37.871C35.368 46.753 41.8 29.002 55.437 17.423a52 52 0 0 0-8.057 3.847C31.593 30.553 22.59 46.956 22.043 64H10c-1.127 0-2.21-.19-3.222-.533-.18-3.525.037-7.127.692-10.75 4.105-22.71 23.963-38.605 46.276-38.46a47 47 0 0 0-7.84-2.128C27.81 8.858 10.266 16.473 0 30.304V10C0 4.477 4.477 0 10 0z" fill="#3B82F6"/>
+            </svg>
+            <div className="dashboard-sidebar-brand-text">
+              <span className="dashboard-sidebar-brand-title">
+                Smart<span>City</span>
+              </span>
+              <span className="dashboard-sidebar-brand-tagline">
+                Civic Intelligence
+              </span>
+            </div>
+          </a>
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
