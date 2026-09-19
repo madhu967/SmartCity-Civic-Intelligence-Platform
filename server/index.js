@@ -12,11 +12,48 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use((request, response, next) => {
-	const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+	const requestOrigin = request.headers.origin;
 
-	response.header('Access-Control-Allow-Origin', allowedOrigin);
+	const envOrigins = (process.env.CLIENT_URL || '')
+		.split(',')
+		.map((url) => url.trim().replace(/\/+$/, ''))
+		.filter(Boolean);
+
+	const defaultOrigins = [
+		'http://localhost:5173',
+		'http://localhost:3000',
+		'http://127.0.0.1:5173',
+		'http://127.0.0.1:3000',
+		'https://smart-city-civic-intelligence-platf-kohl.vercel.app',
+	];
+
+	const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
+
+	const isLocalhost = Boolean(
+		requestOrigin && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(requestOrigin)
+	);
+	const isVercel = Boolean(
+		requestOrigin && /^https:\/\/[a-zA-Z0-9_-]+\.vercel\.app$/.test(requestOrigin)
+	);
+	const isAllowed =
+		requestOrigin && (allowedOrigins.has(requestOrigin) || isLocalhost || isVercel);
+
+	if (isAllowed) {
+		response.header('Access-Control-Allow-Origin', requestOrigin);
+		response.header('Access-Control-Allow-Credentials', 'true');
+	} else if (!requestOrigin) {
+		response.header('Access-Control-Allow-Origin', '*');
+	} else {
+		response.header('Access-Control-Allow-Origin', envOrigins[0] || 'http://localhost:5173');
+	}
+
+	response.header('Vary', 'Origin');
 	response.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-	response.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+	response.header(
+		'Access-Control-Allow-Headers',
+		'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+	);
+	response.header('Access-Control-Max-Age', '86400');
 
 	if (request.method === 'OPTIONS') {
 		return response.sendStatus(204);
