@@ -28,8 +28,14 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-bold mb-6 text-sm tracking-wide uppercase">Platform</h4>
             <ul className="space-y-4">
-              {['Features', 'Command Center', 'Citizen App', 'Field Worker App', 'Pricing'].map(item => (
-                <li key={item}><a href="#" className="text-slate-400 hover:text-brand-400 transition-colors text-sm font-medium">{item}</a></li>
+              {[
+                { name: 'Features', href: '#platform' },
+                { name: 'Command Center', href: '#live-intelligence' },
+                { name: 'Citizen App', href: '#apps' },
+                { name: 'Infrastructure', href: '#city-infrastructure' },
+                { name: 'FAQ', href: '#faq' },
+              ].map(item => (
+                <li key={item.name}><a href={item.href} className="text-slate-400 hover:text-brand-400 transition-colors text-sm font-medium">{item.name}</a></li>
               ))}
             </ul>
           </div>

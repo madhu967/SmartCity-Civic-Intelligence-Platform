@@ -7,6 +7,7 @@ import MarqueeSection from "./components/MarqueeSection";
 import WorkflowSection from "./components/WorkflowSection";
 import CommandCenter from "./components/CommandCenter";
 import PlatformRoles from "./components/PlatformRoles";
+import FaqSection from "./components/FaqSection";
 import Newsletter from "./components/Newsletter";
 import Footer from "./components/Footer";
 import AuthPage from "./pages/AuthPage";
@@ -206,6 +207,7 @@ export default function App() {
       <div id="apps">
         <PlatformRoles />
       </div>
+      <FaqSection />
       <Newsletter />
       <Footer />
     </div>
