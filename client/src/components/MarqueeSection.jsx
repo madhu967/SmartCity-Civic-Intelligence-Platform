@@ -5,13 +5,13 @@ const infrastructureData = [
     category: "Mobility & Transit",
     title: "Smart Traffic Corridors",
     desc: "Real-time municipal road network flow & traffic intelligence",
-    image: "https://images.unsplash.com/photo-1477959858617-67f30bc75b82?q=80&h=800&w=1200&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?q=80&h=800&w=1200&auto=format&fit=crop",
   },
   {
     category: "Roads & Pavement",
     title: "Street & Highway Repair",
     desc: "Rapid response pothole patching & street surfacing crews",
-    image: "https://images.unsplash.com/photo-1541888946425-d0fbb186f5f7?q=80&h=800&w=1200&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&h=800&w=1200&auto=format&fit=crop",
   },
   {
     category: "Water & Drainage",
