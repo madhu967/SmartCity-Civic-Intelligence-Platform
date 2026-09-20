@@ -105,12 +105,86 @@ export const login = async (request, response) => {
             return response.status(400).json({ message: 'Email and password are required' });
         }
 
-        if (email.trim().toLowerCase() === process.env.ADMIN_EMAIL?.trim().toLowerCase() && password === process.env.ADMIN_PASSWORD) {
+        const normalizedEmail = email.trim().toLowerCase();
+
+        // 1. Admin Login (Env or Direct Fallback Credentials)
+        const adminEmail = (process.env.ADMIN_EMAIL || 'admin@smartcity.local').trim().toLowerCase();
+        const adminPassword = process.env.ADMIN_PASSWORD || 'SmartCityAdmin2026!';
+        if (normalizedEmail === adminEmail && password === adminPassword) {
             const token = createToken('admin', 'admin');
             return response.json({ token, user: await getAdminUser() });
         }
 
-        const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+password');
+        // 2. Default Citizen Demo Login (Zero-config instant demo access)
+        if (normalizedEmail === 'citizen@smartcity.local' && password === 'CitizenDemo2026!') {
+            let demoCitizen = await User.findOne({ email: 'citizen@smartcity.local' });
+            if (!demoCitizen) {
+                demoCitizen = await User.create({
+                    name: 'Alex Johnson (Resident)',
+                    email: 'citizen@smartcity.local',
+                    password: await bcrypt.hash('CitizenDemo2026!', 12),
+                    role: 'citizen',
+                    phone: '+1 (555) 234-5678',
+                    isActive: true,
+                });
+            } else if (!demoCitizen.isActive) {
+                await User.updateOne({ _id: demoCitizen._id }, { $set: { isActive: true, role: 'citizen' } });
+                demoCitizen.isActive = true;
+                demoCitizen.role = 'citizen';
+            }
+            const token = createToken(demoCitizen._id.toString(), 'citizen');
+            return response.json({ token, user: publicUser(demoCitizen) });
+        }
+
+        // 3. Default Worker Demo Login (Zero-config instant field ops access)
+        if (normalizedEmail === 'worker@smartcity.local' && password === 'WorkerDemo2026!') {
+            let demoWorker = await User.findOne({ email: 'worker@smartcity.local' });
+            if (!demoWorker) {
+                demoWorker = await User.create({
+                    name: 'Marcus Vance (Field Ops)',
+                    email: 'worker@smartcity.local',
+                    password: await bcrypt.hash('WorkerDemo2026!', 12),
+                    role: 'worker',
+                    phone: '+1 (555) 987-6543',
+                    department: 'Roads and Infrastructure',
+                    jobSkill: 'Road maintenance',
+                    serviceArea: 'Downtown Central District',
+                    yearsExperience: 5,
+                    availability: 'Available',
+                    location: 'Downtown Ward 4 Corridor',
+                    isActive: true,
+                });
+            } else {
+                await User.updateOne(
+                    { _id: demoWorker._id },
+                    {
+                        $set: {
+                            role: 'worker',
+                            isActive: true,
+                            department: 'Roads and Infrastructure',
+                            jobSkill: 'Road maintenance',
+                            serviceArea: 'Downtown Central District',
+                        },
+                    }
+                );
+                demoWorker.role = 'worker';
+                demoWorker.isActive = true;
+                demoWorker.department = 'Roads and Infrastructure';
+                demoWorker.jobSkill = 'Road maintenance';
+            }
+            if (location || typeof latitude === 'number') {
+                if (location) demoWorker.location = String(location).trim().slice(0, 200);
+                if (typeof latitude === 'number') demoWorker.latitude = latitude;
+                if (typeof longitude === 'number') demoWorker.longitude = longitude;
+                demoWorker.locationUpdatedAt = new Date();
+                await demoWorker.save().catch(() => {});
+            }
+            const token = createToken(demoWorker._id.toString(), 'worker');
+            return response.json({ token, user: publicUser(demoWorker) });
+        }
+
+        // 4. Standard Database User Login
+        const user = await User.findOne({ email: normalizedEmail }).select('+password');
         const passwordMatches = user && (await bcrypt.compare(password, user.password));
 
         if (!user || !passwordMatches || !user.isActive) {
@@ -128,7 +202,8 @@ export const login = async (request, response) => {
         const token = createToken(user._id.toString(), user.role);
         return response.json({ token, user: publicUser(user) });
     } catch (error) {
-        return response.status(500).json({ message: 'Unable to log in user' });
+        console.error('Login error:', error);
+        return response.status(500).json({ message: error.message || 'Unable to log in user' });
     }
 };
 
