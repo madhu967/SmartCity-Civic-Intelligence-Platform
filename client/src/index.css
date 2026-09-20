@@ -497,6 +497,42 @@ body {
   50% { opacity: 0.75; transform: scale(1.08); }
 }
 
+/* Premium Civic Skeleton Shimmer Motion */
+@keyframes civicSkeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.civic-skeleton {
+  background: linear-gradient(
+    90deg,
+    #e2e8f0 0%,
+    #edf2f7 35%,
+    #f8fafc 50%,
+    #edf2f7 65%,
+    #e2e8f0 100%
+  );
+  background-size: 250% 100%;
+  animation: civicSkeletonShimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.civic-skeleton-dark {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.09) 35%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.09) 65%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 250% 100%;
+  animation: civicSkeletonShimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 .dashboard-stat-card {
   position: relative;
   overflow: hidden;

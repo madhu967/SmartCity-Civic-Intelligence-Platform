@@ -53,6 +53,7 @@ import {
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
 import { CivicStatCard } from '../components/CivicStatCard';
+import { DashboardSkeleton } from '../components/DashboardSkeleton';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { getUserCurrentLocation, calculateDistanceKm, formatDistance } from '../utils/geolocation';
 
@@ -425,14 +426,7 @@ export default function UserDashboard({ initialNav = '/dashboard' }) {
   }
 
   if (loading || !user) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-blue-600">
-        <div className="flex flex-col items-center gap-3">
-          <RefreshCw className="animate-spin text-blue-600" size={28} />
-          <span>Synchronizing live civic intelligence...</span>
-        </div>
-      </main>
-    );
+    return <DashboardSkeleton role="citizen" statCardCount={4} sidebarItemCount={6} />;
   }
 
   // Metrics

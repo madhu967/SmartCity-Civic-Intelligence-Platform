@@ -16,6 +16,7 @@ import {
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
 import { apiRequest, getAuthHeaders } from '../config/api';
+import { DashboardSkeleton } from '../components/DashboardSkeleton';
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -117,7 +118,7 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-    return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-brand-600">Loading profile...</main>;
+    return <DashboardSkeleton role="citizen" statCardCount={0} sidebarItemCount={6} />;
   }
 
   const initials = user.name?.trim().charAt(0).toUpperCase() || 'C';

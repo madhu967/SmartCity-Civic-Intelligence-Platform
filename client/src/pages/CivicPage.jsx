@@ -34,11 +34,11 @@ import {
   WardTelemetryIcon,
   MunicipalDocketIcon,
   VerifiedResolutionSeal,
-  SpatialGisReticle,
   FieldOpsIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
 import { CivicStatCard } from '../components/CivicStatCard';
+import { DashboardSkeleton } from '../components/DashboardSkeleton';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { calculateDistanceKm, formatDistance, getUserCurrentLocation } from '../utils/geolocation';
 
@@ -184,11 +184,7 @@ export default function CivicPage({ pagePath }) {
     );
   }
   if (!user) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-blue-600 font-sans">
-        Loading live civic data...
-      </main>
-    );
+    return <DashboardSkeleton role="citizen" statCardCount={3} sidebarItemCount={6} />;
   }
 
   // Derive real notifications dynamically from the user's reports

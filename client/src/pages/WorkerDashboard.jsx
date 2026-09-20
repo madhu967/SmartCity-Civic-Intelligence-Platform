@@ -16,6 +16,7 @@ import {
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
 import { CivicStatCard } from '../components/CivicStatCard';
+import { DashboardSkeleton } from '../components/DashboardSkeleton';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { getUserCurrentLocation, reverseGeocode } from '../utils/geolocation';
 
@@ -213,7 +214,7 @@ export default function WorkerDashboard({ pagePath = '/worker' }) {
   };
 
   if (error && !user) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm text-slate-500">{error}. <a href="/login" className="ml-1 font-bold text-brand-600">Log in again</a></main>;
-  if (!user) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-brand-600">Loading worker dashboard...</main>;
+  if (!user) return <DashboardSkeleton role="worker" statCardCount={4} sidebarItemCount={6} />;
 
   const currentTitle = isAvailabilityPage ? 'Availability' : isLocationPage ? 'Service location' : isIssuesPage ? 'Assigned issues' : 'My dashboard';
   const currentDescription = isAvailabilityPage ? 'Keep dispatch informed of when you can respond to civic work.' : isLocationPage ? 'Review your assigned ward and update your current operations location.' : isIssuesPage ? 'Open assigned complaints, update progress, and upload completion proof.' : 'Your assignments, service area, and field status at a glance.';

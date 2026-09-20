@@ -11,6 +11,7 @@ import {
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
 import { apiRequest, getAuthHeaders } from '../config/api';
+import { DashboardSkeleton } from '../components/DashboardSkeleton';
 
 const sidebarPages = [
   ['Overview', CivicCommandMatrixIcon, '/dashboard'],
@@ -83,7 +84,7 @@ export default function AiIssuePage() {
   };
 
   if (error && !user) return <main className="grid min-h-screen place-items-center bg-slate-50 px-6 text-center text-sm text-slate-500">{error}. <a href="/login" className="ml-1 font-bold text-brand-600">Log in again</a></main>;
-  if (!user) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-brand-600">Loading AI assistant...</main>;
+  if (!user) return <DashboardSkeleton role="citizen" statCardCount={0} sidebarItemCount={6} />;
 
   return (
     <main className="dashboard-page min-h-screen bg-slate-50 text-slate-900">

@@ -55,6 +55,7 @@ import {
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
 import { CivicStatCard, CivicCircularGauge } from '../components/CivicStatCard';
+import { DashboardSkeleton } from '../components/DashboardSkeleton';
 import AdminHotspotMap from '../components/AdminHotspotMap';
 import AdminInsightsPage from './AdminInsightsPage';
 import { apiRequest, getAuthHeaders } from '../config/api';
@@ -181,7 +182,7 @@ export default function AdminDashboard({ pagePath = '/admin' }) {
   };
 
   if (error) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm text-slate-500">{error}. <a href="/login" className="ml-1 font-bold text-brand-600">Log in again</a></main>;
-  if (!user) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-semibold text-brand-600">Loading admin dashboard...</main>;
+  if (!user) return <DashboardSkeleton role="admin" statCardCount={4} sidebarItemCount={8} />;
 
   return (
     <main className="dashboard-page min-h-screen bg-slate-50 text-slate-900">
