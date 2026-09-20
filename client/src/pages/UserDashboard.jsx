@@ -52,6 +52,7 @@ import {
   MunicipalCommsIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
+import { CivicStatCard } from '../components/CivicStatCard';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { getUserCurrentLocation, calculateDistanceKm, formatDistance } from '../utils/geolocation';
 
@@ -791,65 +792,58 @@ export default function UserDashboard({ initialNav = '/dashboard' }) {
                 </div>
               )}
 
-              {/* 4 Stat Cards */}
+              {/* Handcrafted Executive Civic Stat Cards with Animated Circular Radial Graphs */}
               <div className="dashboard-stat-grid">
-                <div className="dashboard-stat-card border-l-4 border-l-blue-600">
-                  <div className="dashboard-stat-top">
-                    <span>My Reports</span>
-                    <div className="civic-icon-housing civic-icon-housing-blue">
-                      <MunicipalDocketIcon size={18} />
-                    </div>
-                  </div>
-                  <strong>{totalUserReports}</strong>
-                  <small>
-                    <span>Submitted by you</span>
-                    <button
-                      type="button"
-                      onClick={(e) => handleNavChange('reports', '/reports', e)}
-                      className="text-blue-600 font-bold hover:underline cursor-pointer"
-                    >
-                      View all →
-                    </button>
-                  </small>
-                </div>
+                <CivicStatCard
+                  title="My Reports"
+                  value={totalUserReports}
+                  subtitle="Recorded in municipal log"
+                  icon={MunicipalDocketIcon}
+                  variant="blue"
+                  percentage={totalUserReports > 0 ? 100 : 0}
+                  gaugeLabel={totalUserReports > 0 ? `${totalUserReports}` : '0'}
+                  trend={totalUserReports > 0 ? `${totalUserReports} registered` : 'No reports'}
+                  trendType="positive"
+                  actionText="View all"
+                  onAction={(e) => handleNavChange('reports', '/reports', e)}
+                />
 
-                <div className="dashboard-stat-card border-l-4 border-l-amber-500">
-                  <div className="dashboard-stat-top">
-                    <span>In Field Work</span>
-                    <div className="civic-icon-housing civic-icon-housing-amber">
-                      <FieldOpsIcon size={18} />
-                    </div>
-                  </div>
-                  <strong className="text-amber-600">{inProgressUserReports}</strong>
-                  <small>
-                    <span>{inProgressUserReports > 0 ? `${inProgressUserReports} awaiting resolution` : 'All complaints resolved'}</span>
-                  </small>
-                </div>
+                <CivicStatCard
+                  title="In Field Work"
+                  value={inProgressUserReports}
+                  subtitle={inProgressUserReports > 0 ? `${inProgressUserReports} awaiting fix` : 'All tasks addressed'}
+                  icon={FieldOpsIcon}
+                  variant="amber"
+                  percentage={totalUserReports > 0 ? Math.round((inProgressUserReports / totalUserReports) * 100) : 0}
+                  gaugeLabel={`${totalUserReports > 0 ? Math.round((inProgressUserReports / totalUserReports) * 100) : 0}%`}
+                  trend={inProgressUserReports > 0 ? 'Dispatched' : 'Clear'}
+                  trendType={inProgressUserReports > 0 ? 'neutral' : 'positive'}
+                />
 
-                <div className="dashboard-stat-card border-l-4 border-l-emerald-600">
-                  <div className="dashboard-stat-top">
-                    <span>Resolved</span>
-                    <div className="civic-icon-housing civic-icon-housing-emerald">
-                      <VerifiedResolutionSeal size={18} />
-                    </div>
-                  </div>
-                  <strong className="text-emerald-600">{resolvedUserReports}</strong>
-                  <small className="flex items-center gap-1">
-                    <span className="font-bold text-emerald-700">{userResolutionRate}%</span>
-                    <span>completion rate</span>
-                  </small>
-                </div>
+                <CivicStatCard
+                  title="Resolved & Verified"
+                  value={resolvedUserReports}
+                  subtitle="Civic fixes verified"
+                  icon={VerifiedResolutionSeal}
+                  variant="emerald"
+                  percentage={userResolutionRate}
+                  gaugeLabel={`${userResolutionRate}%`}
+                  trend={`${userResolutionRate}% completion`}
+                  trendType="positive"
+                />
 
-                <div className="dashboard-stat-card border-l-4 border-l-indigo-600">
-                  <div className="dashboard-stat-top">
-                    <span>Live Telemetry</span>
-                    <div className="civic-icon-housing civic-icon-housing-indigo">
-                      <WardTelemetryIcon size={18} />
-                    </div>
-                  </div>
-                  <strong className="text-indigo-950">{totalCommunitySignals}</strong>
-                  <small>Active city-wide incidents</small>
-                </div>
+                <CivicStatCard
+                  title="Live Telemetry"
+                  value={totalCommunitySignals}
+                  subtitle="City-wide incident signals"
+                  icon={WardTelemetryIcon}
+                  variant="indigo"
+                  isLive={true}
+                  percentage={Math.min(100, Math.max(20, totalCommunitySignals > 0 ? Math.min(96, 25 + totalCommunitySignals * 6) : 85))}
+                  gaugeLabel="Sync"
+                  trend="Real-time"
+                  trendType="live"
+                />
               </div>
 
               {/* Lower Split Grid */}
@@ -1131,31 +1125,40 @@ export default function UserDashboard({ initialNav = '/dashboard' }) {
                 </button>
               </div>
 
-              <div className="dashboard-stat-grid">
-                <div className="dashboard-stat-card border-l-4 border-l-blue-600">
-                  <div className="dashboard-stat-top">
-                    <span>Total Submitted</span>
-                    <MunicipalDocketIcon size={18} className="text-blue-600" />
-                  </div>
-                  <strong>{totalUserReports}</strong>
-                  <small>Recorded in municipal register</small>
-                </div>
-                <div className="dashboard-stat-card border-l-4 border-l-amber-500">
-                  <div className="dashboard-stat-top">
-                    <span>Active Work</span>
-                    <FieldOpsIcon size={18} className="text-amber-500" />
-                  </div>
-                  <strong className="text-amber-600">{inProgressUserReports}</strong>
-                  <small>Under review or dispatched</small>
-                </div>
-                <div className="dashboard-stat-card border-l-4 border-l-emerald-600">
-                  <div className="dashboard-stat-top">
-                    <span>Resolved</span>
-                    <VerifiedResolutionSeal size={18} className="text-emerald-600" />
-                  </div>
-                  <strong className="text-emerald-600">{resolvedUserReports}</strong>
-                  <small>{userResolutionRate}% completion velocity</small>
-                </div>
+              <div className="dashboard-stat-grid grid-cols-1 sm:grid-cols-3">
+                <CivicStatCard
+                  title="Total Submitted"
+                  value={totalUserReports}
+                  subtitle="Recorded in municipal register"
+                  icon={MunicipalDocketIcon}
+                  variant="blue"
+                  percentage={100}
+                  gaugeLabel={`${totalUserReports}`}
+                  trend="Logged"
+                  trendType="positive"
+                />
+                <CivicStatCard
+                  title="Active Work"
+                  value={inProgressUserReports}
+                  subtitle="Under review or dispatched"
+                  icon={FieldOpsIcon}
+                  variant="amber"
+                  percentage={totalUserReports > 0 ? Math.round((inProgressUserReports / totalUserReports) * 100) : 0}
+                  gaugeLabel={`${totalUserReports > 0 ? Math.round((inProgressUserReports / totalUserReports) * 100) : 0}%`}
+                  trend={inProgressUserReports > 0 ? 'Underway' : 'Queue clear'}
+                  trendType={inProgressUserReports > 0 ? 'neutral' : 'positive'}
+                />
+                <CivicStatCard
+                  title="Resolved"
+                  value={resolvedUserReports}
+                  subtitle="Verified fixes completed"
+                  icon={VerifiedResolutionSeal}
+                  variant="emerald"
+                  percentage={userResolutionRate}
+                  gaugeLabel={`${userResolutionRate}%`}
+                  trend={`${userResolutionRate}% velocity`}
+                  trendType="positive"
+                />
               </div>
 
               {/* Filter controls */}

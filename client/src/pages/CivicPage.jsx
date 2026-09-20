@@ -38,6 +38,7 @@ import {
   FieldOpsIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
+import { CivicStatCard } from '../components/CivicStatCard';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { calculateDistanceKm, formatDistance, getUserCurrentLocation } from '../utils/geolocation';
 
@@ -424,37 +425,42 @@ export default function CivicPage({ pagePath }) {
           {/* VIEW 1: MY REPORTS */}
           {pagePath === '/reports' && (
             <div className="mt-6 space-y-6">
-              <div className="dashboard-stat-grid">
-                <div className="dashboard-stat-card border-l-4 border-l-blue-600">
-                  <div className="dashboard-stat-top">
-                    <span>Total Submitted</span>
-                    <ClipboardList size={18} className="text-blue-600" />
-                  </div>
-                  <strong>{reports.length}</strong>
-                  <small>Your complaint history</small>
-                </div>
+              <div className="dashboard-stat-grid grid-cols-1 sm:grid-cols-3">
+                <CivicStatCard
+                  title="Total Submitted"
+                  value={reports.length}
+                  subtitle="Recorded complaint history"
+                  icon={MunicipalDocketIcon}
+                  variant="blue"
+                  percentage={100}
+                  gaugeLabel={`${reports.length}`}
+                  trend="Logged"
+                  trendType="positive"
+                />
 
-                <div className="dashboard-stat-card border-l-4 border-l-emerald-600">
-                  <div className="dashboard-stat-top">
-                    <span>Resolved</span>
-                    <CheckCircle2 size={18} className="text-emerald-600" />
-                  </div>
-                  <strong className="text-emerald-600">
-                    {reports.filter((r) => r.status === 'Resolved').length}
-                  </strong>
-                  <small>Verified municipal fixes</small>
-                </div>
+                <CivicStatCard
+                  title="Resolved"
+                  value={reports.filter((r) => r.status === 'Resolved').length}
+                  subtitle="Verified municipal fixes"
+                  icon={VerifiedResolutionSeal}
+                  variant="emerald"
+                  percentage={reports.length > 0 ? Math.round((reports.filter((r) => r.status === 'Resolved').length / reports.length) * 100) : 100}
+                  gaugeLabel={`${reports.length > 0 ? Math.round((reports.filter((r) => r.status === 'Resolved').length / reports.length) * 100) : 100}%`}
+                  trend={`${reports.length > 0 ? Math.round((reports.filter((r) => r.status === 'Resolved').length / reports.length) * 100) : 100}% velocity`}
+                  trendType="positive"
+                />
 
-                <div className="dashboard-stat-card border-l-4 border-l-amber-500">
-                  <div className="dashboard-stat-top">
-                    <span>In Progress</span>
-                    <Clock size={18} className="text-amber-600" />
-                  </div>
-                  <strong className="text-amber-600">
-                    {reports.filter((r) => r.status !== 'Resolved').length}
-                  </strong>
-                  <small>Active in field work</small>
-                </div>
+                <CivicStatCard
+                  title="In Progress"
+                  value={reports.filter((r) => r.status !== 'Resolved').length}
+                  subtitle="Active in field work"
+                  icon={FieldOpsIcon}
+                  variant="amber"
+                  percentage={reports.length > 0 ? Math.round((reports.filter((r) => r.status !== 'Resolved').length / reports.length) * 100) : 0}
+                  gaugeLabel={`${reports.length > 0 ? Math.round((reports.filter((r) => r.status !== 'Resolved').length / reports.length) * 100) : 0}%`}
+                  trend={reports.filter((r) => r.status !== 'Resolved').length > 0 ? 'Underway' : 'Queue clear'}
+                  trendType={reports.filter((r) => r.status !== 'Resolved').length > 0 ? 'neutral' : 'positive'}
+                />
               </div>
 
               {reports.length > 0 && (

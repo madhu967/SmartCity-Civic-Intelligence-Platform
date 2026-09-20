@@ -15,6 +15,7 @@ import {
   CivicTelemetryTrendsIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
+import { CivicStatCard } from '../components/CivicStatCard';
 import { apiRequest, getAuthHeaders } from '../config/api';
 import { getUserCurrentLocation, reverseGeocode } from '../utils/geolocation';
 
@@ -522,53 +523,55 @@ function WorkerOverview({
         </div>
       )}
 
-      {/* 100% Dynamic Operational Metrics Grid */}
+      {/* Handcrafted Executive Operational Metrics Grid with Circular Telemetry Gauges */}
       <div className="dashboard-stat-grid">
-        <div className="dashboard-stat-card border-l-4 border-l-blue-600">
-          <div className="dashboard-stat-top">
-            <span>Total Assigned</span>
-            <div className="civic-icon-housing civic-icon-housing-blue">
-              <MunicipalDocketIcon size={18} />
-            </div>
-          </div>
-          <strong>{totalAssigned}</strong>
-          <small>Work orders in your queue</small>
-        </div>
+        <CivicStatCard
+          title="Total Assigned"
+          value={totalAssigned}
+          subtitle="Work orders in queue"
+          icon={MunicipalDocketIcon}
+          variant="blue"
+          percentage={totalAssigned > 0 ? 100 : 0}
+          gaugeLabel={`${totalAssigned}`}
+          trend={totalAssigned > 0 ? `${totalAssigned} assigned` : 'Queue clear'}
+          trendType="positive"
+        />
 
-        <div className="dashboard-stat-card border-l-4 border-l-red-500">
-          <div className="dashboard-stat-top">
-            <span>Urgent / Critical</span>
-            <div className="civic-icon-housing civic-icon-housing-red">
-              <PriorityBeaconIcon size={18} />
-            </div>
-          </div>
-          <strong className="text-red-600">{urgentCount}</strong>
-          <small>{urgentCount > 0 ? 'High-priority response needed' : 'No urgent alerts'}</small>
-        </div>
+        <CivicStatCard
+          title="Urgent / Critical"
+          value={urgentCount}
+          subtitle={urgentCount > 0 ? 'High-priority response needed' : 'No urgent alerts'}
+          icon={PriorityBeaconIcon}
+          variant="rose"
+          percentage={totalAssigned > 0 ? Math.round((urgentCount / totalAssigned) * 100) : 0}
+          gaugeLabel={`${totalAssigned > 0 ? Math.round((urgentCount / totalAssigned) * 100) : 0}%`}
+          trend={urgentCount > 0 ? 'Urgent Alert' : 'Normal'}
+          trendType={urgentCount > 0 ? 'negative' : 'positive'}
+        />
 
-        <div className="dashboard-stat-card border-l-4 border-l-amber-500">
-          <div className="dashboard-stat-top">
-            <span>In Field Work</span>
-            <div className="civic-icon-housing civic-icon-housing-amber">
-              <FieldOpsIcon size={18} />
-            </div>
-          </div>
-          <strong className="text-amber-600">{inProgressCount}</strong>
-          <small>{inProgressCount} tasks currently underway</small>
-        </div>
+        <CivicStatCard
+          title="In Field Work"
+          value={inProgressCount}
+          subtitle={`${inProgressCount} tasks currently underway`}
+          icon={FieldOpsIcon}
+          variant="amber"
+          percentage={totalAssigned > 0 ? Math.round((inProgressCount / totalAssigned) * 100) : 0}
+          gaugeLabel={`${totalAssigned > 0 ? Math.round((inProgressCount / totalAssigned) * 100) : 0}%`}
+          trend={inProgressCount > 0 ? 'Active Work' : 'Idle'}
+          trendType="neutral"
+        />
 
-        <div className="dashboard-stat-card border-l-4 border-l-emerald-600">
-          <div className="dashboard-stat-top">
-            <span>Resolved</span>
-            <div className="civic-icon-housing civic-icon-housing-emerald">
-              <VerifiedResolutionSeal size={18} />
-            </div>
-          </div>
-          <strong className="text-emerald-600">{resolvedCount}</strong>
-          <small className="flex items-center gap-1 font-semibold text-emerald-700">
-            <span>{completionRate}% success rate</span>
-          </small>
-        </div>
+        <CivicStatCard
+          title="Resolved"
+          value={resolvedCount}
+          subtitle="Successfully closed orders"
+          icon={VerifiedResolutionSeal}
+          variant="emerald"
+          percentage={completionRate}
+          gaugeLabel={`${completionRate}%`}
+          trend={`${completionRate}% success`}
+          trendType="positive"
+        />
       </div>
 
       {/* Active Work Order Dispatch Queue */}

@@ -54,6 +54,7 @@ import {
   MunicipalCommsIcon,
   PriorityBeaconIcon,
 } from '../components/CivicIcons';
+import { CivicStatCard, CivicCircularGauge } from '../components/CivicStatCard';
 import AdminHotspotMap from '../components/AdminHotspotMap';
 import AdminInsightsPage from './AdminInsightsPage';
 import { apiRequest, getAuthHeaders } from '../config/api';
@@ -457,95 +458,113 @@ function AdminOverview({ users = [], workers = [], issues = [], contacts = [], o
 
   return (
     <div className="space-y-6">
-      {/* Core Live Operational KPIs */}
-      <div className="admin-kpi-grid">
-        <a href="/admin/insights" className="admin-kpi-card hover:border-purple-300 transition">
-          <div className="civic-icon-housing civic-icon-housing-purple">
-            <CivicIntelligenceIcon size={19} />
+      {/* Executive Municipal Operational Telemetry - Primary Circular Gauge Cards */}
+      <div className="dashboard-stat-grid">
+        <CivicStatCard
+          title="Total Reports"
+          value={totalIssues}
+          subtitle="Municipal Incident Register"
+          icon={WardTelemetryIcon}
+          variant="blue"
+          percentage={100}
+          gaugeLabel={`${totalIssues}`}
+          trend="Live Register"
+          trendType="positive"
+          href="/admin/issues"
+        />
+
+        <CivicStatCard
+          title="Dispatch Queue"
+          value={unassignedIssues.length}
+          subtitle={unassignedIssues.length > 0 ? `${criticalIssues.length} critical priority` : 'All assigned'}
+          icon={PriorityBeaconIcon}
+          variant="amber"
+          percentage={totalIssues > 0 ? Math.round((unassignedIssues.length / totalIssues) * 100) : 0}
+          gaugeLabel={`${totalIssues > 0 ? Math.round((unassignedIssues.length / totalIssues) * 100) : 0}%`}
+          trend={unassignedIssues.length > 0 ? `${unassignedIssues.length} pending` : 'Clear'}
+          trendType={unassignedIssues.length > 0 ? 'negative' : 'positive'}
+          href="/admin/issues"
+        />
+
+        <CivicStatCard
+          title="Resolution Rate"
+          value={resolvedIssues.length}
+          subtitle={`${resolutionRate}% municipal velocity`}
+          icon={VerifiedResolutionSeal}
+          variant="emerald"
+          percentage={resolutionRate}
+          gaugeLabel={`${resolutionRate}%`}
+          trend={`${resolutionRate}% resolved`}
+          trendType="positive"
+          href="/admin/issues"
+        />
+
+        <CivicStatCard
+          title="Field Deployment"
+          value={`${activeWorkers.length} / ${workers.length}`}
+          subtitle={`${inProgressIssues.length} active assignments`}
+          icon={FieldOpsIcon}
+          variant="indigo"
+          isLive={true}
+          percentage={workers.length > 0 ? Math.round((activeWorkers.length / workers.length) * 100) : 0}
+          gaugeLabel={`${workers.length > 0 ? Math.round((activeWorkers.length / workers.length) * 100) : 0}%`}
+          trend="Field Force"
+          trendType="live"
+          href="/admin/workers"
+        />
+      </div>
+
+      {/* Secondary Strategic Command Links */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <a
+          href="/admin/insights"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-purple-200/80 bg-purple-50/50 hover:bg-purple-50 transition-all duration-200 group hover:-translate-y-0.5 shadow-2xs"
+        >
+          <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <CivicIntelligenceIcon size={18} />
           </div>
-          <div className="kpi-data">
-            <span className="kpi-number text-purple-600">AI Insights</span>
-            <span className="kpi-label">Cognitive Analytics</span>
+          <div className="min-w-0">
+            <span className="block text-xs font-bold text-purple-950 truncate">AI City Insights</span>
+            <span className="text-[10px] text-purple-700 font-semibold">Cognitive Telemetry</span>
           </div>
         </a>
 
-        <a href="/admin/issues" className="admin-kpi-card hover:border-blue-300 transition">
-          <div className="civic-icon-housing civic-icon-housing-blue">
-            <WardTelemetryIcon size={19} />
+        <a
+          href="/admin/hotspots"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-rose-200/80 bg-rose-50/50 hover:bg-rose-50 transition-all duration-200 group hover:-translate-y-0.5 shadow-2xs"
+        >
+          <div className="w-9 h-9 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <HotspotRadarIcon size={18} />
           </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{totalIssues}</span>
-            <span className="kpi-label">Total Reports</span>
-          </div>
-        </a>
-
-        <a href="/admin/issues" className="admin-kpi-card hover:border-amber-300 transition">
-          <div className="civic-icon-housing civic-icon-housing-amber">
-            <MunicipalIncidentIcon size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number text-amber-600">{unassignedIssues.length}</span>
-            <span className="kpi-label">Needs Dispatch</span>
+          <div className="min-w-0">
+            <span className="block text-xs font-bold text-rose-950 truncate">Hotspot Radar</span>
+            <span className="text-[10px] text-rose-700 font-semibold">Problem Clusters</span>
           </div>
         </a>
 
-        <a href="/admin/issues" className="admin-kpi-card hover:border-red-300 transition">
-          <div className="civic-icon-housing civic-icon-housing-red">
-            <PriorityBeaconIcon size={19} />
+        <a
+          href="/admin/issues"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-blue-200/80 bg-blue-50/50 hover:bg-blue-50 transition-all duration-200 group hover:-translate-y-0.5 shadow-2xs"
+        >
+          <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <SpatialGisReticle size={18} />
           </div>
-          <div className="kpi-data">
-            <span className="kpi-number text-red-600">{criticalIssues.length}</span>
-            <span className="kpi-label">Urgent / Critical</span>
-          </div>
-        </a>
-
-        <a href="/admin/issues" className="admin-kpi-card hover:border-indigo-300 transition">
-          <div className="civic-icon-housing civic-icon-housing-indigo">
-            <SpatialGisReticle size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number text-indigo-600">{inProgressIssues.length}</span>
-            <span className="kpi-label">In Field Work</span>
+          <div className="min-w-0">
+            <span className="block text-xs font-bold text-blue-950 truncate">Field Work ({inProgressIssues.length})</span>
+            <span className="text-[10px] text-blue-700 font-semibold">Active Dispatch</span>
           </div>
         </a>
 
-        <a href="/admin/issues" className="admin-kpi-card hover:border-emerald-300 transition">
-          <div className="civic-icon-housing civic-icon-housing-emerald">
-            <VerifiedResolutionSeal size={19} />
+        <a
+          href="/admin/contacts"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-amber-200/80 bg-amber-50/50 hover:bg-amber-50 transition-all duration-200 group hover:-translate-y-0.5 shadow-2xs"
+        >
+          <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <MunicipalCommsIcon size={18} />
           </div>
-          <div className="kpi-data">
-            <span className="kpi-number text-emerald-600">{resolvedIssues.length}</span>
-            <span className="kpi-label">Resolved ({resolutionRate}%)</span>
-          </div>
-        </a>
-
-        <a href="/admin/workers" className="admin-kpi-card hover:border-blue-300 transition">
-          <div className="civic-icon-housing civic-icon-housing-blue">
-            <FieldOpsIcon size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{activeWorkers.length} / {workers.length}</span>
-            <span className="kpi-label">Field Force Active</span>
-          </div>
-        </a>
-
-        <a href="/admin/contacts" className="admin-kpi-card hover:border-blue-300 transition">
-          <div className="civic-icon-housing civic-icon-housing-amber">
-            <MunicipalCommsIcon size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{pendingContacts.length}</span>
-            <span className="kpi-label">Citizen Inquiries</span>
-          </div>
-        </a>
-
-        <a href="/admin/hotspots" className="admin-kpi-card hover:border-red-300 transition">
-          <div className="civic-icon-housing civic-icon-housing-red">
-            <HotspotRadarIcon size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number text-red-600">Hotspot Map</span>
-            <span className="kpi-label">Problem Clusters</span>
+          <div className="min-w-0">
+            <span className="block text-xs font-bold text-amber-950 truncate">Inquiries ({pendingContacts.length})</span>
+            <span className="text-[10px] text-amber-700 font-semibold">Community Desk</span>
           </div>
         </a>
       </div>
@@ -943,67 +962,79 @@ function AdminReportsOverview({ issues = [], workers = [], users = [], contacts 
 
   return (
     <div className="space-y-6">
-      {/* 6 Top Analytics Metric Cards */}
-      <div className="admin-kpi-grid">
-        <div className="admin-kpi-card border-l-4 border-l-blue-600">
-          <div className="kpi-icon-wrap kpi-icon-total">
-            <BarChart3 size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{totalIssues}</span>
-            <span className="kpi-label">Total Citizen Complaints</span>
-          </div>
-        </div>
+      {/* 6 Top Analytics Metric Cards with Circular Gauges & Motion */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CivicStatCard
+          title="Total Complaints"
+          value={totalIssues}
+          subtitle="All citizen reports recorded"
+          icon={BarChart3}
+          variant="blue"
+          percentage={100}
+          gaugeLabel={`${totalIssues}`}
+          trend="Total Log"
+          trendType="positive"
+        />
 
-        <div className="admin-kpi-card border-l-4 border-l-emerald-600">
-          <div className="kpi-icon-wrap kpi-icon-resolved">
-            <CheckCircle2 size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number text-emerald-600">{resolutionRate}%</span>
-            <span className="kpi-label">City Resolution Rate ({resolvedIssues.length} closed)</span>
-          </div>
-        </div>
+        <CivicStatCard
+          title="Resolution Velocity"
+          value={`${resolutionRate}%`}
+          subtitle={`${resolvedIssues.length} of ${totalIssues} closed`}
+          icon={VerifiedResolutionSeal}
+          variant="emerald"
+          percentage={resolutionRate}
+          gaugeLabel={`${resolutionRate}%`}
+          trend={`${resolutionRate}% velocity`}
+          trendType="positive"
+        />
 
-        <div className="admin-kpi-card border-l-4 border-l-amber-500">
-          <div className="kpi-icon-wrap kpi-icon-inprogress">
-            <Navigation size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number text-amber-600">{inProgressIssues.length + inReviewIssues.length}</span>
-            <span className="kpi-label">Active Field Dispatches</span>
-          </div>
-        </div>
+        <CivicStatCard
+          title="Active Dispatches"
+          value={inProgressIssues.length + inReviewIssues.length}
+          subtitle="Currently underway in field"
+          icon={FieldOpsIcon}
+          variant="amber"
+          percentage={totalIssues > 0 ? Math.round(((inProgressIssues.length + inReviewIssues.length) / totalIssues) * 100) : 0}
+          gaugeLabel={`${totalIssues > 0 ? Math.round(((inProgressIssues.length + inReviewIssues.length) / totalIssues) * 100) : 0}%`}
+          trend="Active Fleet"
+          trendType="neutral"
+        />
 
-        <div className="admin-kpi-card border-l-4 border-l-indigo-600">
-          <div className="civic-icon-housing civic-icon-housing-indigo">
-            <CivicIntelligenceIcon size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number text-indigo-600">+{totalDuplicatesPrevented}</span>
-            <span className="kpi-label">AI Duplicate Reports Merged</span>
-          </div>
-        </div>
+        <CivicStatCard
+          title="AI Duplicates Merged"
+          value={`+${totalDuplicatesPrevented}`}
+          subtitle="Redundant reports suppressed"
+          icon={CivicIntelligenceIcon}
+          variant="indigo"
+          percentage={Math.min(100, Math.max(10, totalDuplicatesPrevented * 12 || 40))}
+          gaugeLabel="AI"
+          trend="Automated"
+          trendType="live"
+        />
 
-        <div className="admin-kpi-card border-l-4 border-l-purple-600">
-          <div className="civic-icon-housing civic-icon-housing-purple">
-            <FieldOpsIcon size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{activeWorkers.length} / {workers.length}</span>
-            <span className="kpi-label">Field Staff On Duty</span>
-          </div>
-        </div>
+        <CivicStatCard
+          title="Field Force Ready"
+          value={`${activeWorkers.length} / ${workers.length}`}
+          subtitle="Municipal staff on active shift"
+          icon={FieldOpsIcon}
+          variant="purple"
+          percentage={workers.length > 0 ? Math.round((activeWorkers.length / workers.length) * 100) : 0}
+          gaugeLabel={`${workers.length > 0 ? Math.round((activeWorkers.length / workers.length) * 100) : 0}%`}
+          trend="Deployment"
+          trendType="positive"
+        />
 
-        <div className="admin-kpi-card border-l-4 border-l-teal-600">
-          <div className="civic-icon-housing civic-icon-housing-blue">
-            <CitizenMeshIcon size={19} />
-          </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{activeCitizens}</span>
-            <span className="kpi-label">Active Resident Accounts</span>
-          </div>
-        </div>
+        <CivicStatCard
+          title="Citizen Accounts"
+          value={activeCitizens}
+          subtitle="Verified resident profiles"
+          icon={CitizenMeshIcon}
+          variant="blue"
+          percentage={users.length > 0 ? Math.round((activeCitizens / users.length) * 100) : 100}
+          gaugeLabel={`${users.length > 0 ? Math.round((activeCitizens / users.length) * 100) : 100}%`}
+          trend="Active Users"
+          trendType="positive"
+        />
       </div>
 
       {/* AI Intelligence & Duplicate Suppression Banner */}
@@ -1392,76 +1423,111 @@ function AdminIssues({ issues, workers, onUpdate }) {
 
   return (
     <section className="dashboard-panel admin-issues-panel">
-      {/* Executive Operational KPI Metrics */}
+      {/* Executive Operational KPI Filter Cards with Micro Circular Gauges */}
       <div className="admin-kpi-grid">
         <div 
           onClick={() => { setStatusTab('all'); setPriorityFilter('All'); }} 
-          className={`admin-kpi-card ${statusTab === 'all' && priorityFilter === 'All' ? 'kpi-active' : ''}`}
+          className={`admin-kpi-card justify-between ${statusTab === 'all' && priorityFilter === 'All' ? 'kpi-active ring-2 ring-blue-500/20' : ''}`}
           title="Click to view all issues"
         >
-          <div className="kpi-icon-wrap kpi-icon-total">
-            <Radio size={19} />
+          <div className="flex items-center gap-3">
+            <div className="kpi-icon-wrap kpi-icon-total">
+              <Radio size={18} />
+            </div>
+            <div className="kpi-data">
+              <span className="kpi-number">{totalCount}</span>
+              <span className="kpi-label">Total Reports</span>
+            </div>
           </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{totalCount}</span>
-            <span className="kpi-label">Total Reports</span>
-          </div>
+          <CivicCircularGauge percentage={100} size={42} strokeWidth={3.5} variant="blue" label={`${totalCount}`} />
         </div>
 
         <div 
           onClick={() => setStatusTab('unassigned')} 
-          className={`admin-kpi-card ${statusTab === 'unassigned' ? 'kpi-active' : ''}`}
+          className={`admin-kpi-card justify-between ${statusTab === 'unassigned' ? 'kpi-active ring-2 ring-amber-500/20' : ''}`}
           title="Click to view unassigned complaints"
         >
-          <div className="kpi-icon-wrap kpi-icon-unassigned">
-            <AlertTriangle size={19} />
+          <div className="flex items-center gap-3">
+            <div className="kpi-icon-wrap kpi-icon-unassigned">
+              <AlertTriangle size={18} />
+            </div>
+            <div className="kpi-data">
+              <span className="kpi-number">{unassignedCount}</span>
+              <span className="kpi-label">Needs Dispatch</span>
+            </div>
           </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{unassignedCount}</span>
-            <span className="kpi-label">Needs Dispatch</span>
-          </div>
+          <CivicCircularGauge 
+            percentage={totalCount > 0 ? Math.round((unassignedCount / totalCount) * 100) : 0} 
+            size={42} 
+            strokeWidth={3.5} 
+            variant="amber" 
+          />
         </div>
 
         <div 
           onClick={() => { setPriorityFilter('Critical'); setStatusTab('all'); }} 
-          className={`admin-kpi-card ${priorityFilter === 'Critical' ? 'kpi-active' : ''}`}
+          className={`admin-kpi-card justify-between ${priorityFilter === 'Critical' ? 'kpi-active ring-2 ring-red-500/20' : ''}`}
           title="Click to filter critical urgency issues"
         >
-          <div className="kpi-icon-wrap kpi-icon-critical">
-            <Zap size={19} />
+          <div className="flex items-center gap-3">
+            <div className="kpi-icon-wrap kpi-icon-critical">
+              <Zap size={18} />
+            </div>
+            <div className="kpi-data">
+              <span className="kpi-number">{criticalCount}</span>
+              <span className="kpi-label">Urgent / Critical</span>
+            </div>
           </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{criticalCount}</span>
-            <span className="kpi-label">Urgent / Critical</span>
-          </div>
+          <CivicCircularGauge 
+            percentage={totalCount > 0 ? Math.round((criticalCount / totalCount) * 100) : 0} 
+            size={42} 
+            strokeWidth={3.5} 
+            variant="rose" 
+          />
         </div>
 
         <div 
           onClick={() => setStatusTab('In progress')} 
-          className={`admin-kpi-card ${statusTab === 'In progress' ? 'kpi-active' : ''}`}
+          className={`admin-kpi-card justify-between ${statusTab === 'In progress' ? 'kpi-active ring-2 ring-indigo-500/20' : ''}`}
           title="Click to filter issues currently in progress"
         >
-          <div className="kpi-icon-wrap kpi-icon-inprogress">
-            <Navigation size={19} />
+          <div className="flex items-center gap-3">
+            <div className="kpi-icon-wrap kpi-icon-inprogress">
+              <Navigation size={18} />
+            </div>
+            <div className="kpi-data">
+              <span className="kpi-number">{inProgressCount}</span>
+              <span className="kpi-label">In Field Work</span>
+            </div>
           </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{inProgressCount}</span>
-            <span className="kpi-label">In Field Work</span>
-          </div>
+          <CivicCircularGauge 
+            percentage={totalCount > 0 ? Math.round((inProgressCount / totalCount) * 100) : 0} 
+            size={42} 
+            strokeWidth={3.5} 
+            variant="indigo" 
+          />
         </div>
 
         <div 
           onClick={() => setStatusTab('Resolved')} 
-          className={`admin-kpi-card ${statusTab === 'Resolved' ? 'kpi-active' : ''}`}
+          className={`admin-kpi-card justify-between ${statusTab === 'Resolved' ? 'kpi-active ring-2 ring-emerald-500/20' : ''}`}
           title="Click to filter resolved issues"
         >
-          <div className="kpi-icon-wrap kpi-icon-resolved">
-            <CheckCircle2 size={19} />
+          <div className="flex items-center gap-3">
+            <div className="kpi-icon-wrap kpi-icon-resolved">
+              <CheckCircle2 size={18} />
+            </div>
+            <div className="kpi-data">
+              <span className="kpi-number">{resolvedCount}</span>
+              <span className="kpi-label">Resolved</span>
+            </div>
           </div>
-          <div className="kpi-data">
-            <span className="kpi-number">{resolvedCount}</span>
-            <span className="kpi-label">Resolved</span>
-          </div>
+          <CivicCircularGauge 
+            percentage={totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 0} 
+            size={42} 
+            strokeWidth={3.5} 
+            variant="emerald" 
+          />
         </div>
       </div>
 

@@ -457,7 +457,46 @@ body {
 .dashboard-description { margin: 8px 0 0; color: #64748b; font-size: 13px; max-width: 900px; }
 .dashboard-primary-button { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 11px 15px; border: 0; border-radius: 11px; color: #fff; background: #2563eb; box-shadow: 0 8px 20px rgba(37, 99, 235, .2); font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
 .dashboard-primary-button:hover { background: #1d4e8f; }
-.dashboard-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 28px; width: 100%; }
+.dashboard-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; width: 100%; }
+
+/* Handcrafted Civic Intelligence Stat Cards & Circular Gauges */
+.civic-stat-card {
+  position: relative;
+  isolation: isolate;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
+}
+
+.civic-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px -10px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+}
+
+.civic-circular-graph-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.civic-circular-graph-container:hover {
+  transform: scale(1.06);
+}
+
+@keyframes civicBeaconPing {
+  0% { transform: scale(0.95); opacity: 0.85; }
+  50% { transform: scale(1.7); opacity: 0; }
+  100% { transform: scale(0.95); opacity: 0; }
+}
+
+@keyframes civicRadialPulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.08); }
+}
+
 .dashboard-stat-card {
   position: relative;
   overflow: hidden;
@@ -1050,7 +1089,10 @@ body {
   .civic-report-item-header { flex-direction: column; }
   .civic-report-status { align-self: flex-start; }
   .civic-report-footer { align-items: flex-start; flex-direction: column; }
-  .dashboard-stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 25px; }
+  .dashboard-stat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
+  @media (max-width: 560px) {
+    .dashboard-stat-grid { grid-template-columns: 1fr; }
+  }
   .dashboard-stat-card { padding: 14px; }
   .dashboard-stat-card strong { font-size: 23px; }
   .dashboard-lower-grid { grid-template-columns: 1fr; }
