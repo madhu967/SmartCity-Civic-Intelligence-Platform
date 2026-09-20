@@ -28,13 +28,6 @@ export default function FaqSection() {
 
   return (
     <section id="faq" className="faq-section relative z-10 py-24 bg-slate-50/60 border-t border-slate-100 overflow-hidden">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&display=swap');
-
-        .faq-section, .faq-section * {
-          font-family: 'Poppins', sans-serif !important;
-        }
-      `}</style>
 
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-start justify-center gap-10 px-4 md:px-6">
         {/* Left Side: Civic Support / Inquiry Photo */}
