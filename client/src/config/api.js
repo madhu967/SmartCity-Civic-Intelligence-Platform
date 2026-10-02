@@ -21,6 +21,11 @@ const resolveApiBaseUrl = () => {
 export const API_BASE_URL = resolveApiBaseUrl().replace(/\/+$/, '');
 const API_PREFIX = '/api';
 
+// Wake the deployed API while the app is loading so login does not pay the hosting cold-start delay.
+if (API_BASE_URL && typeof window !== 'undefined' && !['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+  fetch(`${API_BASE_URL}/`, { cache: 'no-store', keepalive: true }).catch(() => {});
+}
+
 export const apiRequest = async (path, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
     ...options,

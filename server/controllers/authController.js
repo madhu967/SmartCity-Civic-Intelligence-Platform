@@ -41,9 +41,18 @@ const adminUser = {
     isActive: true,
 };
 
+const demoUserCache = new Map();
+let cachedAdminUser = null;
+
 const getAdminUser = async () => {
     const profile = await AdminProfile.findOne({ key: 'primary-admin' });
     return { ...adminUser, profileImage: profile?.profileImage || null };
+};
+
+const getCachedAdminUser = async () => {
+    if (cachedAdminUser) return cachedAdminUser;
+    cachedAdminUser = await getAdminUser();
+    return cachedAdminUser;
 };
 
 export const updateProfileImage = async (request, response) => {
@@ -55,7 +64,8 @@ export const updateProfileImage = async (request, response) => {
         const imageUrl = await uploadIssueImage(profileImage);
         if (request.user.role === 'admin' && request.user.userId === 'admin') {
             await AdminProfile.findOneAndUpdate({ key: 'primary-admin' }, { profileImage: imageUrl }, { upsert: true, new: true, setDefaultsOnInsert: true });
-            return response.json({ user: await getAdminUser() });
+            cachedAdminUser = { ...adminUser, profileImage: imageUrl };
+            return response.json({ user: cachedAdminUser });
         }
         const user = await User.findByIdAndUpdate(request.user.userId, { profileImage: imageUrl }, { new: true, runValidators: true });
         if (!user) return response.status(404).json({ message: 'User not found' });
@@ -112,12 +122,12 @@ export const login = async (request, response) => {
         const adminPassword = process.env.ADMIN_PASSWORD || 'SmartCityAdmin2026!';
         if (normalizedEmail === adminEmail && password === adminPassword) {
             const token = createToken('admin', 'admin');
-            return response.json({ token, user: await getAdminUser() });
+            return response.json({ token, user: await getCachedAdminUser() });
         }
 
         // 2. Default Citizen Demo Login (Zero-config instant demo access)
         if (normalizedEmail === 'citizen@smartcity.local' && password === 'CitizenDemo2026!') {
-            let demoCitizen = await User.findOne({ email: 'citizen@smartcity.local' });
+            let demoCitizen = demoUserCache.get('citizen') || await User.findOne({ email: 'citizen@smartcity.local' });
             if (!demoCitizen) {
                 demoCitizen = await User.create({
                     name: 'Alex Johnson (Resident)',
@@ -132,13 +142,14 @@ export const login = async (request, response) => {
                 demoCitizen.isActive = true;
                 demoCitizen.role = 'citizen';
             }
+            demoUserCache.set('citizen', demoCitizen);
             const token = createToken(demoCitizen._id.toString(), 'citizen');
             return response.json({ token, user: publicUser(demoCitizen) });
         }
 
         // 3. Default Worker Demo Login (Zero-config instant field ops access)
         if (normalizedEmail === 'worker@smartcity.local' && password === 'WorkerDemo2026!') {
-            let demoWorker = await User.findOne({ email: 'worker@smartcity.local' });
+            let demoWorker = demoUserCache.get('worker') || await User.findOne({ email: 'worker@smartcity.local' });
             if (!demoWorker) {
                 demoWorker = await User.create({
                     name: 'Marcus Vance (Field Ops)',
@@ -154,7 +165,7 @@ export const login = async (request, response) => {
                     location: 'Downtown Ward 4 Corridor',
                     isActive: true,
                 });
-            } else {
+            } else if (location || typeof latitude === 'number' || typeof longitude === 'number') {
                 await User.updateOne(
                     { _id: demoWorker._id },
                     {
@@ -179,6 +190,7 @@ export const login = async (request, response) => {
                 demoWorker.locationUpdatedAt = new Date();
                 await demoWorker.save().catch(() => {});
             }
+            demoUserCache.set('worker', demoWorker);
             const token = createToken(demoWorker._id.toString(), 'worker');
             return response.json({ token, user: publicUser(demoWorker) });
         }
